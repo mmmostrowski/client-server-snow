@@ -5,14 +5,25 @@ namespace TechBit\Snow\App;
 final class AppArgumentsFactory
 {
 
-    public function create(array $argv, bool $isDeveloperMode): AppArguments
+    public function create(array $argv, string $projectRootDir, bool $isDeveloperMode): AppArguments
     {
         array_shift($argv);
 
+        $serverSessionId = null;
+        $serverCanvasWidth = 0;
+        $serverCanvasHeight = 0;
+        if ($this->isServer($argv)) {
+            $this->read($argv);
+            $serverSessionId = $this->read($argv);
+            $serverCanvasWidth = (int)$this->read($argv);
+            $serverCanvasHeight = (int)$this->read($argv);
+        }
         $customScene = $this->isResource($argv) ? $this->readResource($argv) : null;
         $presetName = $this->read($argv);
 
-        return new AppArguments($isDeveloperMode, [], $presetName, $customScene);
+        return new AppArguments($projectRootDir, $isDeveloperMode, 
+            [], $presetName, $customScene, 
+            $serverSessionId, $serverCanvasWidth, $serverCanvasHeight);
     }
 
     private function isResource(array $argv): bool
@@ -24,6 +35,12 @@ final class AppArgumentsFactory
         }
 
         return str_starts_with($value, 'base64:') || @file_exists($value) || @file_get_contents($value);
+    }
+
+    private function isServer(array $argv): bool
+    {
+        $value = $argv[0] ?? '';
+        return $value == 'server';
     }
 
     private function readResource(array &$argv): string

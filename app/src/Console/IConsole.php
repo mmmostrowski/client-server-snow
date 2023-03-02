@@ -19,8 +19,6 @@ interface IConsole
 
     public function isIn(float $x, float $y): bool;
 
-    public function notIn(float $x, float $y): bool;
-
     public function centerX(): float;
 
     public function centerY(): float;

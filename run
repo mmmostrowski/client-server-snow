@@ -1,9 +1,18 @@
 #!/usr/bin/env sh
 
+mkdir -p "${PWD-$(pwd)}/.pipes";
+
 docker run -t"$( [ -t 0 ] && echo 'i' )" --rm \
-    --user="$(id -u):$(id -g)" \
     --volume "${PWD-$(pwd)}/app/:/app/" \
+    --volume "${PWD-$(pwd)}/java-proxy/:/java-proxy/" \
+    --volume "${PWD-$(pwd)}/.pipes/:/app/.pipes/" \
     --env PHP_SNOW_APP_MODE=develop \
-    $( docker build --file docker/Dockerfile --quiet . ) \
+    $(
+        docker build --quiet \
+          --file docker/Dockerfile \
+          --build-arg="UID=$(id -u)" \
+          --build-arg="GID=$(id -g)" \
+          .
+    ) \
     "${@}" \
 ;

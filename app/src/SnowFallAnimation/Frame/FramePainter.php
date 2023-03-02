@@ -22,9 +22,13 @@ final class FramePainter implements IFramePainter, IAnimationObject
         $this->console = $context->console();
     }
 
+	public function startNewFrame(): void 
+    {
+        $this->console->refreshConsoleSize();
+	}
+    
     public function eraseParticle(int $idx): void
     {
-        $this->console->switchToColor(ConsoleColor::BLACK);
         $this->console->printAt(
             (int)$this->particles->x($idx),
             (int)$this->particles->y($idx),
@@ -42,9 +46,9 @@ final class FramePainter implements IFramePainter, IAnimationObject
         );
     }
 
-    public function renderBasisParticle(int $x, int $y, string $shape): void
+    public function renderBasisParticle(float $x, float $y, string $shape): void
     {
-        $this->console->printAt($x, $y, $shape);
+        $this->console->printAt((int)$x, (int)$y, $shape);
     }
 
     public function renderBackgroundPixel(float $x, float $y, string $char, ConsoleColor $color): void
@@ -53,7 +57,7 @@ final class FramePainter implements IFramePainter, IAnimationObject
         $this->console->printAt($x, $y, $char);
     }
 
-    public function clearWindow(): void
+    public function startFirstFrame(): void
     {
         $this->console->switchToColor(ConsoleColor::BLACK);
         $this->console->clear();

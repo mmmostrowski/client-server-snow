@@ -8,7 +8,7 @@ class DefaultConfig implements Config
 
     public function showFps(): bool
     {
-        return false;
+        return true;
     }
 
     public function hasWind(): bool

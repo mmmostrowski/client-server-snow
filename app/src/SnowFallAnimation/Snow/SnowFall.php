@@ -4,7 +4,7 @@ namespace TechBit\Snow\SnowFallAnimation\Snow;
 
 use TechBit\Snow\SnowFallAnimation\AnimationContext;
 use TechBit\Snow\SnowFallAnimation\Config\Config;
-use TechBit\Snow\SnowFallAnimation\Frame\FramePainter;
+use TechBit\Snow\SnowFallAnimation\Frame\IFramePainter;
 use TechBit\Snow\SnowFallAnimation\Object\IAnimationConfigurableObject;
 use TechBit\Snow\SnowFallAnimation\Object\IAnimationVisibleObject;
 use TechBit\Snow\SnowFallAnimation\Wind\IWind;
@@ -17,7 +17,7 @@ final class SnowFall implements IAnimationVisibleObject, IAnimationConfigurableO
 
     private readonly SnowParticles $particles;
 
-    private readonly FramePainter $renderer;
+    private readonly IFramePainter $renderer;
 
     private readonly IConsole $console;
 
@@ -59,10 +59,8 @@ final class SnowFall implements IAnimationVisibleObject, IAnimationConfigurableO
 
             $this->moveParticle($idx);
 
-            if ($this->console->notIn($data[SnowParticles::X], $data[SnowParticles::Y])) {
-                if (!isset($this->particlesOutOfVisibleAreaTracker[$idx])) {
-                    $this->particlesOutOfVisibleAreaTracker[$idx] = 0;
-                }
+            if (! $this->console->isIn($data[SnowParticles::X], $data[SnowParticles::Y])) {
+                $this->particlesOutOfVisibleAreaTracker[$idx] = $this->particlesOutOfVisibleAreaTracker[$idx] ?? 0;                    
                 if (++$this->particlesOutOfVisibleAreaTracker[$idx] > 35) {
                     $this->particles->remove($idx);
                     unset($this->particlesOutOfVisibleAreaTracker[$idx]);
@@ -70,10 +68,6 @@ final class SnowFall implements IAnimationVisibleObject, IAnimationConfigurableO
                 }
             } else {
                 $this->particlesOutOfVisibleAreaTracker[$idx] = 0;
-            }
-
-            if ($this->basis->isHitAt($data[SnowParticles::X], $data[SnowParticles::Y])) {
-                continue;
             }
 
             $this->renderer->renderParticle($idx);

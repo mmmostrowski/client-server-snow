@@ -3,7 +3,7 @@
 namespace TechBit\Snow\Console;
 
 
-final class Console implements IConsole
+class Console implements IConsole
 {
 
     private float $cols = 0.0;
@@ -35,12 +35,10 @@ final class Console implements IConsole
         }
     }
 
-    private function refreshConsoleSize(): void
+    public function refreshConsoleSize(): void
     {
-        if (0 == $this->refreshingCounter++ % 500) {
-            $this->cols = (float)exec('tput cols');
-            $this->rows = (float)exec('tput lines');
-        }
+        $this->cols = (float)exec('tput cols');
+        $this->rows = (float)exec('tput lines');
     }
 
     public function switchToColor(ConsoleColor $color): void
@@ -88,11 +86,6 @@ final class Console implements IConsole
         return $x >= $this->minX() && $x <= $this->maxX() && $y >= $this->minY() && $y <= $this->maxY();
     }
 
-    public function notIn(float $x, float $y): bool
-    {
-        return !$this->isIn($x, $y);
-    }
-
     public function centerX(): float
     {
         return ($this->maxX() - $this->minX()) / 2;
@@ -114,8 +107,6 @@ final class Console implements IConsole
 
     public function printAt(float $x, float $y, string $txt): void
     {
-        $this->refreshConsoleSize();
-
         if ($x < $this->minX() || $x > $this->maxX() || $y < $this->minY() || $y > $this->maxY()) {
             return;
         }

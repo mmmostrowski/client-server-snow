@@ -5,7 +5,7 @@ namespace TechBit\Snow\SnowFallAnimation\Snow;
 use TechBit\Snow\Console\ConsoleColor;
 use TechBit\Snow\Console\IConsole;
 use TechBit\Snow\SnowFallAnimation\AnimationContext;
-use TechBit\Snow\SnowFallAnimation\Frame\FramePainter;
+use TechBit\Snow\SnowFallAnimation\Frame\IFramePainter;
 use TechBit\Snow\SnowFallAnimation\Object\IAnimationAliveObject;
 use TechBit\Snow\SnowFallAnimation\Object\IAnimationVisibleObject;
 use TechBit\Snow\SnowFallAnimation\Object\IAnimationConfigurableObject;
@@ -19,7 +19,7 @@ final class SnowBasis implements IAnimationAliveObject, IAnimationVisibleObject,
 
     private readonly IConsole $console;
 
-    private readonly FramePainter $renderer;
+    private readonly IFramePainter $renderer;
 
     private int $pressingSpeedMin;
 

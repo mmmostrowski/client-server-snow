@@ -4,7 +4,7 @@ namespace TechBit\Snow\SnowFallAnimation\Snow;
 
 use TechBit\Snow\SnowFallAnimation\AnimationContext;
 use TechBit\Snow\SnowFallAnimation\Config\Config;
-use TechBit\Snow\SnowFallAnimation\Frame\FramePainter;
+use TechBit\Snow\SnowFallAnimation\Frame\IFramePainter;
 use TechBit\Snow\SnowFallAnimation\Object\IAnimationConfigurableObject;
 use TechBit\Snow\SnowFallAnimation\Object\IAnimationVisibleObject;
 use TechBit\Snow\Console\IConsole;
@@ -17,7 +17,7 @@ final class Snow implements IAnimationVisibleObject, IAnimationConfigurableObjec
 
     private readonly SnowParticles $particles;
 
-    private readonly FramePainter $renderer;
+    private readonly IFramePainter $renderer;
 
     private readonly IConsole $console;
 
@@ -61,8 +61,7 @@ final class Snow implements IAnimationVisibleObject, IAnimationConfigurableObjec
                 continue;
             }
 
-            $idx = $this->particles->addNew($newParticle);
-            $this->renderer->renderParticle($idx);
+            $this->particles->addNew($newParticle);
         }
     }
 

@@ -5,9 +5,9 @@ use TechBit\Snow\App\Bootstrap;
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/lib/Perlin.php';
 
-$app = Bootstrap::createApp();
-
-$arguments = Bootstrap::createArguments($argv,
+$arguments = Bootstrap::createArguments($argv, __DIR__,
     isDeveloperMode: getenv("PHP_SNOW_APP_MODE") === 'develop');
+
+$app = Bootstrap::createApp($arguments);
 
 exit(Bootstrap::run($app, $arguments));

@@ -49,13 +49,13 @@ final class AnimationFactory implements IAnimationFactory
 
     public function __construct(
         string           $defaultPreset = 'slideshow:random',
+        private          readonly IFramePainter $renderer = new FramePainter(),
+        private          readonly StartupConfig $startupConfig = new StartupConfig(),
         private          readonly ISnowFlakeShape $flakeShapes = new SnowFlakeShape(),
         private          readonly ISceneFactory $sceneFactory = new SceneFactory(),
-        private          readonly IFramePainter $renderer = new FramePainter(),
         private          readonly SnowBasis $snowBasis = new SnowBasis(),
         private          readonly IConsole $console = new Console(),
         private          readonly IPresetFactory $presetFactory = new PresetFactory(),
-        private          readonly StartupConfig $startupConfig = new StartupConfig(),
         Interpolation               $presetInterpolator = new LinearInterpolation(),
         IAnimationObject            $frameStabilizer = new FrameStabilizer(),
         ObjectsPool                 $objectsPool = new ObjectsPool(),
