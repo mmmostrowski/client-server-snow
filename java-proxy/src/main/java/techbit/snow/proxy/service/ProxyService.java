@@ -22,15 +22,20 @@ public class ProxyService {
     private final Map<String, SnowStream> streams = Maps.newHashMap();
 
     public void stream(String sessionId, OutputStream out) throws IOException {
-        snowStream(sessionId).streamTo(out);
+        try {
+            snowStream(sessionId).streamTo(out);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private synchronized SnowStream snowStream(String sessionId) {
+    private synchronized SnowStream snowStream(String sessionId) throws IOException {
         if (session.exists(sessionId)) {
             return streams.get(sessionId);
         }
         SnowStream snow = snowStreamFactory.create(sessionId);
         snow.startPhpApp();
+        snow.startConsumingSnowData();
         streams.put(sessionId, snow);
         session.create(sessionId);
         return snow;

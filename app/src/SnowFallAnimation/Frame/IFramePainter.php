@@ -7,9 +7,11 @@ use TechBit\Snow\Console\ConsoleColor;
 interface IFramePainter
 {
 
-    public function startFirstFrame(): void;
+    public function startAnimation(): void;
 
-    public function startNewFrame(): void;
+    public function startFrame(): void;
+
+    public function endFrame(): void;
 
     public function renderParticle(int $idx): void;
 

@@ -51,7 +51,7 @@ final class SnowFallAnimation implements IAnimation
 
     public function play(): void
     {
-        $this->painter->startFirstFrame();
+        $this->painter->startAnimation();
 
         $visibleObjects = $this->objects->allVisibleObjects();
         $aliveObjects = $this->objects->allAliveObjects();
@@ -63,7 +63,7 @@ final class SnowFallAnimation implements IAnimation
 
         $maxFrames = $this->context->config()->animationLengthInFrames();
         while (--$maxFrames) {
-            $this->painter->startNewFrame();
+            $this->painter->startFrame();
 
             foreach ($configurableObjects as $object) {
                 $object->onConfigChange($this->config);
@@ -76,6 +76,8 @@ final class SnowFallAnimation implements IAnimation
             foreach ($visibleObjects as $object) {
                 $object->renderLoopFrame();
             }
+
+            $this->painter->endFrame();
         }
 
         echo "\n";

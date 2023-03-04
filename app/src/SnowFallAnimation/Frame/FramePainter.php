@@ -22,7 +22,17 @@ final class FramePainter implements IFramePainter, IAnimationObject
         $this->console = $context->console();
     }
 
-	public function startNewFrame(): void 
+	public function startAnimation(): void 
+    {
+        $this->console->switchToColor(ConsoleColor::BLACK);
+        $this->console->clear();
+	}
+	
+	public function startFrame(): void 
+    {
+	}
+	
+	public function endFrame(): void 
     {
         $this->console->refreshConsoleSize();
 	}
@@ -57,9 +67,4 @@ final class FramePainter implements IFramePainter, IAnimationObject
         $this->console->printAt($x, $y, $char);
     }
 
-    public function startFirstFrame(): void
-    {
-        $this->console->switchToColor(ConsoleColor::BLACK);
-        $this->console->clear();
-    }
 }

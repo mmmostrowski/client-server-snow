@@ -1,18 +1,24 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-mkdir -p "${PWD-$(pwd)}/.pipes";
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-docker run -t"$( [ -t 0 ] && echo 'i' )" --rm \
-    --volume "${PWD-$(pwd)}/app/:/app/" \
-    --volume "${PWD-$(pwd)}/java-proxy/:/java-proxy/" \
-    --volume "${PWD-$(pwd)}/.pipes/:/app/.pipes/" \
-    --env PHP_SNOW_APP_MODE=develop \
-    $(
-        docker build --quiet \
-          --file docker/Dockerfile \
-          --build-arg="UID=$(id -u)" \
-          --build-arg="GID=$(id -g)" \
-          .
-    ) \
-    "${@}" \
-;
+(
+    cd "${SCRIPT_DIR}"
+    mkdir -p ".pipes";
+
+    docker run -t"$( [ -t 0 ] && echo 'i' )" --rm \
+        --volume "${SCRIPT_DIR}/app/:/app/" \
+        --volume "${SCRIPT_DIR}/java-proxy/:/java-proxy/" \
+        --volume "${SCRIPT_DIR}/.pipes/:/app/.pipes/" \
+        --env PHP_SNOW_APP_MODE=develop \
+        $(
+            docker build --quiet \
+              --file "docker/Dockerfile" \
+              --build-arg="UID=$(id -u)" \
+              --build-arg="GID=$(id -g)" \
+              .
+        ) \
+        "${@}" \
+    ;
+)
+

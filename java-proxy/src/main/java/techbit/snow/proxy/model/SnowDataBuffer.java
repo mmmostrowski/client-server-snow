@@ -2,6 +2,7 @@ package techbit.snow.proxy.model;
 
 import lombok.RequiredArgsConstructor;
 import techbit.snow.proxy.collection.FramesBag;
+import techbit.snow.proxy.model.serializable.SnowDataFrame;
 
 @RequiredArgsConstructor(staticName = "ofSize")
 public class SnowDataBuffer {
@@ -24,14 +25,18 @@ public class SnowDataBuffer {
             } else {
                 frames.removeFrame(++tailFrameNum);
             }
-            if (++headFrameNum != frame.frameNum()) {
+            if (++headFrameNum != frame.frameNum) {
                 throw new IllegalStateException("Expected sequenced frames");
             }
         }
         frames.putFrame(frame);
     }
 
+    public SnowDataFrame firstFrame() throws InterruptedException {
+        return frames.takeFrame(tailFrameNum);
+    }
+
     public SnowDataFrame nextFrame(SnowDataFrame frame) throws InterruptedException {
-        return frames.takeFrame(Math.max(frame.frameNum(), tailFrameNum) + 1);
+        return frames.takeFrame(Math.max(frame.frameNum, tailFrameNum) + 1);
     }
 }

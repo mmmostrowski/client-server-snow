@@ -21,6 +21,10 @@ public class ProxyController {
         throw new IllegalArgumentException("Invalid url! Missing session id, e.x: http://domain.com/<session-id>");
     }
 
+    @GetMapping(value = "/favicon.ico")
+    public void favicon() {
+    }
+
     @GetMapping(value = "/{sessionId}")
     public StreamingResponseBody streamToClient(final @PathVariable String sessionId) {
         return out -> streaming.stream(sessionId, out);

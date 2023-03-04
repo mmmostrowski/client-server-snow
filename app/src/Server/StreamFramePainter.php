@@ -20,6 +20,8 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
 
     private $pipe;
 
+    private array $particlesBuffer = [];
+
     public function __construct(
         private readonly string $sessionId,
         private readonly string $pipesDir,        
@@ -46,22 +48,35 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
         $this->pipe = fopen($pipeFile, "w+");
     }
 
-    public function startFirstFrame(): void
+    public function startAnimation(): void
     {
-        fwrite($this->pipe, pack('LLL', 
+        fwrite($this->pipe, pack('NNN', 
             $this->canvasWidth,
             $this->canvasHeight,
             $this->startupConfig->targetFps(),
         ));
     }
 
-	public function startNewFrame(): void 
+	public function startFrame(): void 
     {
-        fwrite($this->pipe, pack('LL', 
-            ++$this->frameCounter, 
-            $this->particles->count(),
-        ));
+        $this->particlesBuffer = [];
 	}
+
+    public function endFrame(): void
+    {        
+        fwrite($this->pipe, pack('NN', 
+            ++$this->frameCounter, 
+            count($this->particlesBuffer),
+        ));
+
+        foreach($this->particlesBuffer as $particle) {
+            fwrite($this->pipe, pack('GGC', 
+                $particle[0],
+                $particle[1],
+                $particle[2],
+            ));
+        }
+    }
 
     public function renderParticle(int $idx): void
     {
@@ -75,11 +90,9 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
             return;            
         }
 
-        fwrite($this->pipe, pack('ffC', 
-            $x, 
-            $y, 
-            $this->particles->shape($idx),
-        ));
+        $this->particlesBuffer[] = [
+            $x, $y, $this->particles->shape($idx),
+        ];
     }
 
     public function renderBasisParticle(float $x, float $y, string $shape): void

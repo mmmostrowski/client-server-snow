@@ -2,7 +2,7 @@ package techbit.snow.proxy.collection;
 
 import com.google.common.collect.Maps;
 import lombok.RequiredArgsConstructor;
-import techbit.snow.proxy.model.SnowDataFrame;
+import techbit.snow.proxy.model.serializable.SnowDataFrame;
 
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -13,7 +13,7 @@ public class FramesBag {
     private final Map<Integer, BlockingQueue<SnowDataFrame>> map = Maps.newConcurrentMap();
 
     public void putFrame(SnowDataFrame frame) throws InterruptedException {
-        ensureQueueExists(frame.frameNum()).put(frame);
+        ensureQueueExists(frame.frameNum).put(frame);
     }
 
     public SnowDataFrame takeFrame(int frameNum) throws InterruptedException {
@@ -21,7 +21,7 @@ public class FramesBag {
     }
 
     public void removeFrame(SnowDataFrame frame) {
-        map.remove(frame.frameNum());
+        map.remove(frame.frameNum);
     }
 
     public void removeFrame(int frameNum) {
