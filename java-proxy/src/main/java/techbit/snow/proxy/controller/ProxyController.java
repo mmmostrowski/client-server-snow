@@ -1,14 +1,14 @@
 package techbit.snow.proxy.controller;
 
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import org.slf4j.Logger;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import techbit.snow.proxy.service.ProxyService;
+
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 public class ProxyController {
@@ -26,8 +26,15 @@ public class ProxyController {
     }
 
     @GetMapping(value = "/{sessionId}")
-    public StreamingResponseBody streamToClient(final @PathVariable String sessionId) {
-        return out -> streaming.stream(sessionId, out);
+    @Async("streamExecutor")
+    public CompletableFuture<StreamingResponseBody> streamToClient(final @PathVariable String sessionId) {
+        return CompletableFuture.supplyAsync(() -> out -> {
+            try {
+                streaming.stream(sessionId, out);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
 }

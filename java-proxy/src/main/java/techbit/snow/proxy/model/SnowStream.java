@@ -22,9 +22,9 @@ public class SnowStream {
 
     private Process process;
 
-    private SnowDataBuffer buffer = SnowDataBuffer.ofSize(33);
+    private final SnowDataBuffer buffer = SnowDataBuffer.ofSize (33);
 
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private SnowAnimationMetadata metadata;
 
@@ -39,30 +39,22 @@ public class SnowStream {
         started = true;
     }
 
-    public void startConsumingSnowData() {
+    public void startConsumingSnowData() throws InterruptedException, IOException {
         File pipe = new File(System.getProperty("user.dir") + "/../.pipes/" + sessionId);
 
         while(!pipe.exists()) {
-            try {
-                Thread.sleep(150);
-            } catch (InterruptedException e) {
-            }
+            Thread.sleep(150);
         }
 
+        FileInputStream stream = new FileInputStream(pipe);
+        metadata = new SnowAnimationMetadata(new DataInputStream(stream));
+
         executor.submit(() -> {
-            try {
-                try(FileInputStream stream = new FileInputStream(pipe)) {
-                    DataInputStream dataStream = new DataInputStream(stream);
-
-                    metadata = new SnowAnimationMetadata(dataStream);
-
-                    while(process.isAlive()) {
-                        buffer.push(new SnowDataFrame(dataStream));
-                    }
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+            try (DataInputStream dataStream = new DataInputStream(stream)) {
+                while (process.isAlive()) {
+                    buffer.push(new SnowDataFrame(dataStream));
                 }
-            } catch (IOException e) {
+            } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -77,12 +69,7 @@ public class SnowStream {
             throw new IllegalStateException("You must startPhpApp() first!");
         }
 
-        out.write(Integer.toString(metadata.width).getBytes(StandardCharsets.UTF_8));
-        out.write("\n\n".getBytes(StandardCharsets.UTF_8));
-        out.write(Integer.toString(metadata.height).getBytes(StandardCharsets.UTF_8));
-        out.write("\n\n".getBytes(StandardCharsets.UTF_8));
-        out.write(Integer.toString(metadata.fps).getBytes(StandardCharsets.UTF_8));
-        out.write("\n\n".getBytes(StandardCharsets.UTF_8));
+        out.write(metadata.toString().getBytes(StandardCharsets.UTF_8));
         out.write("\n\n".getBytes(StandardCharsets.UTF_8));
 
         SnowDataFrame currentFrame = buffer.firstFrame();

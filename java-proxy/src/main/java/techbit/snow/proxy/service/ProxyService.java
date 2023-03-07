@@ -21,15 +21,11 @@ public class ProxyService {
 
     private final Map<String, SnowStream> streams = Maps.newHashMap();
 
-    public void stream(String sessionId, OutputStream out) throws IOException {
-        try {
-            snowStream(sessionId).streamTo(out);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    public void stream(String sessionId, OutputStream out) throws IOException, InterruptedException {
+        snowStream(sessionId).streamTo(out);
     }
 
-    private synchronized SnowStream snowStream(String sessionId) throws IOException {
+    private synchronized SnowStream snowStream(String sessionId) throws IOException, InterruptedException {
         if (session.exists(sessionId)) {
             return streams.get(sessionId);
         }
