@@ -2,6 +2,9 @@ package techbit.snow.proxy.model;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 import techbit.snow.proxy.config.PhpSnowConfig;
 import techbit.snow.proxy.model.serializable.SnowAnimationMetadata;
 import techbit.snow.proxy.model.serializable.SnowDataFrame;
@@ -21,25 +24,28 @@ public class SnowStream {
 
     private final String sessionId;
 
-    private final SnowDataBuffer buffer = SnowDataBuffer.ofSize (33);
+    private final SnowDataBuffer buffer;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private final PhpSnowApp phpSnow;
 
     private final NamedPipe pipe;
+
     private final PhpSnowConfig phpSnowConfig;
 
     private SnowAnimationMetadata metadata;
 
-        private boolean running = false;
+    private boolean running = false;
 
 
-    public SnowStream(String sessionId, Map<String, String> config) {
+    public SnowStream(String sessionId, Map<String, String> config, int bufferSizeInFrames) {
         this.sessionId = sessionId;
         this.pipe = new NamedPipe(sessionId);
         this.phpSnowConfig = new PhpSnowConfig(config);
         this.phpSnow = new PhpSnowApp(sessionId, phpSnowConfig);
+
+        this.buffer = SnowDataBuffer.ofSize(bufferSizeInFrames);
     }
 
     public void startPhpApp() throws IOException {

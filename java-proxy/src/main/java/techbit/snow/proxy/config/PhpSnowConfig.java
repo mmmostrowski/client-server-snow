@@ -16,6 +16,8 @@ public class PhpSnowConfig {
     private Duration animationDuration = Duration.ofMinutes(5);
     private int fps = 33;
 
+
+
     public PhpSnowConfig(Map<String, String> config) {
         Set<String> unknownKeys = new HashSet<>(config.keySet());
 

@@ -11,6 +11,7 @@ class SnowAnimationMetadataTest {
     @Test
     void whenBinaryDataGiven_entityShouldBeCreated() throws IOException {
         byte[] binary = new byte[]{
+                'h', 'e', 'l', 'l', 'o', '-', 'p', 'h', 'p', '-', 's', 'n', 'o', 'w',
                 0x0, 0x0, 0x0, 0x7F,
                 0x0, 0x1, 0x0, 0x0,
                 0x1, 0x0, 0x0, 0x0,

@@ -3,7 +3,10 @@ package techbit.snow.proxy.service;
 import com.google.common.collect.Maps;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import techbit.snow.proxy.model.SnowStream;
 
@@ -18,6 +21,9 @@ public class ProxyService {
 
     @Autowired
     private SessionService session;
+
+    @Autowired
+    private ObjectProvider<SnowStream> snowFactory;
 
     private final Map<String, SnowStream> streams = Maps.newHashMap();
 
@@ -43,7 +49,7 @@ public class ProxyService {
             return stream;
         }
         logger.debug(() -> String.format("snowStream( %s ) | Creating new stream | %s", sessionId, confMap.toString()));
-        SnowStream snow = new SnowStream(sessionId, confMap);
+        SnowStream snow = snowFactory.getObject(sessionId, confMap);
         snow.startPhpApp();
         snow.startConsumingSnowData();
         streams.put(sessionId, snow);

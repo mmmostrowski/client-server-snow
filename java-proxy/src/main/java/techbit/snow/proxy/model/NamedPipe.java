@@ -13,8 +13,7 @@ public class NamedPipe {
 
     private final File pipeFile;
 
-    public NamedPipe(String sessionId)
-    {
+    public NamedPipe(String sessionId) {
         this.pipeFile = pipesDir().resolve(sessionId).toFile();
     }
 
@@ -38,7 +37,7 @@ public class NamedPipe {
     private void waitUntilPipeExists() throws InterruptedException {
         for (int i = 100; i >= 0 && !pipeFile.exists(); --i) {
             if (i == 0) {
-                throw new IllegalStateException("Cannot find file file: " + pipeFile.toString());
+                throw new IllegalStateException("Cannot find file file: " + pipeFile);
             }
             Thread.sleep(150);
         }

@@ -24,6 +24,9 @@ public class SnowDataBuffer {
     private SnowDataBuffer(int maxNumOfFrames) {
         this.frames = new BlockingBag<>();
         this.maxNumOfFrames = maxNumOfFrames;
+        if (maxNumOfFrames < 1) {
+            throw new IllegalArgumentException("Buffer must have a positive size!");
+        }
     }
 
     public void push(SnowDataFrame frame) throws InterruptedException {
