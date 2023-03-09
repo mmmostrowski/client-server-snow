@@ -33,9 +33,9 @@ final class BlowWind implements IWind
 
     private float $maxStrength;
 
-    private int $minAnimationLength;
+    private int $minanimationDuration;
 
-    private int $maxAnimationLength;
+    private int $maxanimationDuration;
 
     private float $time = 0.0;
 
@@ -63,8 +63,8 @@ final class BlowWind implements IWind
         $this->maxNumOfWindBlows = $config->windBlowsMaxNumAtSameTime();
         $this->minStrength = $config->windBlowsMinStrength();
         $this->maxStrength = $config->windBlowsMaxStrength();
-        $this->minAnimationLength = $config->windBlowsMinAnimationLength();
-        $this->maxAnimationLength = $config->windBlowsMaxAnimationLength();
+        $this->minanimationDuration = $config->windBlowsMinanimationDuration();
+        $this->maxanimationDuration = $config->windBlowsMaxanimationDuration();
 	}
 
     public function update(): void
@@ -88,7 +88,7 @@ final class BlowWind implements IWind
         $belowEdge = 10;
         $strength = rand((int)($this->minStrength * 10000), (int)($this->maxStrength * 10000)) / 10000;
         $coreRadiusRatio = (float)(rand(70, 100) / 100);
-        $animationLength = (int)(rand((int)($this->minAnimationLength * 10000), (int)($this->maxAnimationLength * 10000)) / 10000);
+        $animationDuration = (int)(rand((int)($this->minanimationDuration * 10000), (int)($this->maxanimationDuration * 10000)) / 10000);
 
         $left = rand(1, 2) == 1;
         $y = rand((int)$this->console->minY() - $aboveEdge, (int)$this->console->maxY() + $belowEdge) / 1.5;
@@ -99,10 +99,10 @@ final class BlowWind implements IWind
         }
 
         $radius = $this->console->width() + $maxAfterEdge * 2.0 + 24.0;
-        $this->addBlowSource($x, $y, $strength, $radius, $radius * $coreRadiusRatio, $animationLength);
+        $this->addBlowSource($x, $y, $strength, $radius, $radius * $coreRadiusRatio, $animationDuration);
     }
 
-    private function addBlowSource(float $x, float $y, float $strength, float $radius, float $coreRadius, int $animationLength): void
+    private function addBlowSource(float $x, float $y, float $strength, float $radius, float $coreRadius, int $animationDuration): void
     {
         $this->blowSources[] = [
             self::X => $x,
@@ -111,7 +111,7 @@ final class BlowWind implements IWind
             self::RADIUS => $radius,
             self::RADIUS_SQUARE => $radius * $radius,
             self::CORE_RADIUS => $coreRadius,
-            self::ANIMATION_LENGTH => $animationLength,
+            self::ANIMATION_LENGTH => $animationDuration,
             self::TIME => $this->time,
         ];
     }

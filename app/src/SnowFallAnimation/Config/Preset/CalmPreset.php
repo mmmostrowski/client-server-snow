@@ -28,14 +28,14 @@ final class CalmPreset extends DefaultConfig
         return (int)(parent::windBlowsFrequency() / 2);
     }
 
-    public function windBlowsMaxAnimationLength(): int
+    public function windBlowsMaxanimationDuration(): int
     {
-        return (int)(parent::windBlowsMaxAnimationLength() / 6);
+        return (int)(parent::windBlowsMaxanimationDuration() / 6);
     }
 
-    public function windBlowsMinAnimationLength(): int
+    public function windBlowsMinanimationDuration(): int
     {
-        return (int)(parent::windBlowsMinAnimationLength() / 6);
+        return (int)(parent::windBlowsMinanimationDuration() / 6);
     }
 
     public function windFieldStrengthMax(): int

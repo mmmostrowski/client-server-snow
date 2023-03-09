@@ -8,6 +8,7 @@ use TechBit\Snow\Server\MockConsole;
 use TechBit\Snow\Server\StreamFramePainter;
 use TechBit\Snow\SnowFallAnimation\AnimationFactory;
 use TechBit\Snow\SnowFallAnimation\Config\StartupConfig;
+use TechBit\Snow\SnowFallAnimation\Config\StartupConfigFactory;
 use Throwable;
 
 final class Bootstrap
@@ -21,7 +22,7 @@ final class Bootstrap
     public static function createApp(AppArguments $appArguments): IApp
     {
         if ($appArguments->isServer()) {
-            $startupConfig = new StartupConfig();
+            $startupConfig = (new StartupConfigFactory())->create($appArguments);
             return new App(new AnimationFactory(
                 console: new MockConsole(
                     $appArguments->serverCanvasWidth(), 

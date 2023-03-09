@@ -33,14 +33,14 @@ final class WindyPreset extends DefaultConfig
         return 3;
     }
 
-    public function windBlowsMinAnimationLength(): int
+    public function windBlowsMinanimationDuration(): int
     {
-        return (int)(parent::windBlowsMinAnimationLength() / 2);
+        return (int)(parent::windBlowsMinanimationDuration() / 2);
     }
 
-    public function windBlowsMaxAnimationLength(): int
+    public function windBlowsMaxanimationDuration(): int
     {
-        return parent::windBlowsMaxAnimationLength() * 2;
+        return parent::windBlowsMaxanimationDuration() * 2;
     }
 
     public function windBlowsFrequency(): int

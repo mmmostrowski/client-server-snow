@@ -9,6 +9,9 @@ final class AppArgumentsFactory
     {
         array_shift($argv);
 
+        $targetFps = 33;
+        $animationDurationSec = 60 * 10; # 10 minutes
+
         $serverSessionId = null;
         $serverCanvasWidth = 0;
         $serverCanvasHeight = 0;
@@ -17,12 +20,19 @@ final class AppArgumentsFactory
             $serverSessionId = $this->read($argv);
             $serverCanvasWidth = (int)$this->read($argv);
             $serverCanvasHeight = (int)$this->read($argv);
+            $targetFps = (int)$this->read($argv);
+            $animationDurationSec = (int)$this->read($argv);
+
+            if (!$serverSessionId || $targetFps <= 0 || $animationDurationSec <= 0 || $serverCanvasWidth <= 0 || $serverCanvasHeight <= 0) {
+                throw new \InvalidArgumentException("Invalid parameters. Expected: snow server [sessionid] [width] [height] [fps] [duration]");
+            }
         }
         $customScene = $this->isResource($argv) ? $this->readResource($argv) : null;
         $presetName = $this->read($argv);
 
         return new AppArguments($projectRootDir, $isDeveloperMode, 
             [], $presetName, $customScene, 
+            $targetFps, $animationDurationSec,
             $serverSessionId, $serverCanvasWidth, $serverCanvasHeight);
     }
 

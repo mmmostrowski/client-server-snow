@@ -192,14 +192,14 @@ final class ConfigPresetSlider implements Config, IAnimationAliveObject
 		return $this->interpolateInt(fn(Config $config) => $config->windBlowsMaxStrength());
 	}
 	
-	public function windBlowsMinAnimationLength(): int 
+	public function windBlowsMinanimationDuration(): int 
 	{
-		return $this->interpolateInt(fn(Config $config) => $config->windBlowsMinAnimationLength());
+		return $this->interpolateInt(fn(Config $config) => $config->windBlowsMinanimationDuration());
 	}
 	
-	public function windBlowsMaxAnimationLength(): int 
+	public function windBlowsMaxanimationDuration(): int 
 	{
-		return $this->interpolateInt(fn(Config $config) => $config->windBlowsMaxAnimationLength());
+		return $this->interpolateInt(fn(Config $config) => $config->windBlowsMaxanimationDuration());
 	}
 
 	public function hasWind(): bool 

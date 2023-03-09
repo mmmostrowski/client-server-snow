@@ -3,8 +3,15 @@
 namespace TechBit\Snow\SnowFallAnimation\Config;
 
 
-class StartupConfig
+final class StartupConfig
 {
+
+    public function __construct(
+        protected readonly int $targetFps,
+        protected readonly int $animationDurationSec,
+    ) {
+
+    }
     
     public function minRequiredConsoleWidth(): int
     {
@@ -18,12 +25,12 @@ class StartupConfig
 
     public function targetFps(): int
     {
-        return 33;
+        return $this->targetFps;
     }
 
-    public function animationLengthInFrames(): int
+    public function animationDurationInFrames(): int
     {
-        return $this->targetFps() * 60 * 10; # 10 min
+        return $this->animationDurationSec * $this->targetFps;
     }
 
     public function showScene(): bool

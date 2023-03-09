@@ -121,12 +121,12 @@ class DefaultConfig implements Config
         return 3;
     }
 
-    public function windBlowsMinAnimationLength(): int
+    public function windBlowsMinanimationDuration(): int
     {
         return 60;
     }
 
-    public function windBlowsMaxAnimationLength(): int
+    public function windBlowsMaxanimationDuration(): int
     {
         return 200;
     }

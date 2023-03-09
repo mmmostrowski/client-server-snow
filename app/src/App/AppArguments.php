@@ -16,6 +16,8 @@ final class AppArguments
         private readonly array $windForces,
         private readonly string $presetName,
         private readonly ?string $customScene,
+        private readonly int $targetFps,
+        private readonly int $animationDurationSec,
         private readonly ?string $serverSessionId,
         private readonly int $serverCanvasWidth,
         private readonly int $serverCanvasHeight,
@@ -26,6 +28,16 @@ final class AppArguments
     public function projectRootDir(): string
     {
         return realpath($this->projectRootDir);
+    }
+
+    public function targetFps(): int
+    {
+        return $this->targetFps;
+    }
+
+    public function animationDurationSec(): int
+    {
+        return $this->animationDurationSec;
     }
 
     public function isDeveloperMode(): bool
