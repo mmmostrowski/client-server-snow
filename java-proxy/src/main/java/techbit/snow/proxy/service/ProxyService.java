@@ -1,12 +1,10 @@
 package techbit.snow.proxy.service;
 
 import com.google.common.collect.Maps;
-import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import techbit.snow.proxy.model.NamedPipe;
 import techbit.snow.proxy.model.SnowStream;
 import techbit.snow.proxy.model.SnowStreamFactory;
 

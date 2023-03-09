@@ -1,9 +1,11 @@
 package techbit.snow.proxy.model;
 
-import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class NamedPipe {

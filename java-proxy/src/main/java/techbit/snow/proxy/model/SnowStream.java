@@ -1,19 +1,15 @@
 package techbit.snow.proxy.model;
 
-import com.google.common.io.Files;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import techbit.snow.proxy.SnowProxyApplication;
 import techbit.snow.proxy.model.serializable.SnowAnimationMetadata;
 import techbit.snow.proxy.model.serializable.SnowDataFrame;
-import techbit.snow.proxy.service.ProxyService;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,43 +23,31 @@ public class SnowStream {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
+    private final PhpSnowApp phpSnow;
+
+    private final NamedPipe pipe;
+
     private SnowAnimationMetadata metadata;
 
     private boolean running = false;
-
-    private PhpSnowApp phpSnow;
-
-    private Process process;
-
-    private NamedPipe pipe;
 
 
     public SnowStream(String sessionId) {
         this.sessionId = sessionId;
         this.pipe = new NamedPipe(sessionId);
+        this.phpSnow = new PhpSnowApp(sessionId);
     }
 
     public void startPhpApp() throws IOException {
         stopPhpApp();
 
-        Path phpSnowPath = Path.of(Files.simplifyPath(System.getProperty("user.dir") + "/../run"));
-
-        ProcessBuilder builder = new ProcessBuilder();
-        builder.command(phpSnowPath.toString(), "server", sessionId, "180", "70", "massiveSnow");
-        builder.environment().put("SCRIPT_OWNER_PID", SnowProxyApplication.pid());
-
-        logger.debug(() -> String.format("startPhpApp( %s ) | Starting process %s", sessionId, builder.command()));
-        process = builder.start();
+        phpSnow.start();
     }
 
     public void stopPhpApp() {
-        if (process != null) {
-            logger.debug(() -> String.format("startPhpApp( %s ) | Killing process", sessionId));
-            process.destroyForcibly();
-        }
+        phpSnow.stop();
         pipe.destroy();
         running = false;
-        process = null;
         metadata = null;
     }
 
@@ -126,6 +110,6 @@ public class SnowStream {
     }
 
     private boolean isActive() {
-        return running && process.isAlive();
+        return running && phpSnow.isAlive();
     }
 }
