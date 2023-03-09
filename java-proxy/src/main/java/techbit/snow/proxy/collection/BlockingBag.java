@@ -22,7 +22,7 @@ public class BlockingBag<K, V> {
     public V take(K key) throws InterruptedException {
         Object lock = lockFor(key);
         synchronized (lock) {
-            while (!map.containsKey(key)) {
+            if (!map.containsKey(key)) {
                 lock.wait();
             }
         }
@@ -31,13 +31,25 @@ public class BlockingBag<K, V> {
 
     public void remove(K key) {
         map.remove(key);
-        synchronized (lockFor(key)) {
+        Object lock = lockFor(key);
+        synchronized (lock) {
+            lock.notifyAll();
             locks.remove(key);
         }
+    }
+
+    public void removeAll() {
+        map.clear();
+        for (K key : locks.keySet()) {
+            Object lock = lockFor(key);
+            synchronized (lock) {
+                lock.notifyAll();
+            }
+        }
+        locks.clear();
     }
 
     private Object lockFor(K key) {
         return locks.computeIfAbsent(key, k -> new Object());
     }
-
 }

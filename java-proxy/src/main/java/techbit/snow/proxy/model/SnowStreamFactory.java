@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 public class SnowStreamFactory {
 
     public SnowStream create(String sessionId) {
-        return SnowStream.of(sessionId);
+        return new SnowStream(sessionId);
     }
 
 }

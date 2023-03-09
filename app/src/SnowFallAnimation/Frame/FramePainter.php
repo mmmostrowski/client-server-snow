@@ -67,4 +67,9 @@ final class FramePainter implements IFramePainter, IAnimationObject
         $this->console->printAt($x, $y, $char);
     }
 
+	public function stopAnimation(): void 
+    {
+        $this->console->switchToColor(ConsoleColor::BLACK);
+        $this->console->clear();
+	}
 }

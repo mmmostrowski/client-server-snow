@@ -6,9 +6,9 @@ namespace TechBit\Snow\Console;
 class Console implements IConsole
 {
 
-    private float $cols = 0.0;
+    protected float $cols = 0.0;
 
-    private float $rows = 0.0;
+    protected float $rows = 0.0;
 
     private int $refreshingCounter = 0;
 

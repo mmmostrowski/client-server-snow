@@ -25,4 +25,8 @@ public class FramesBag {
     public void removeFrame(int frameNum) {
         bag.remove(frameNum);
     }
+
+    public void removeAllFrames() {
+        bag.removeAll();
+    }
 }

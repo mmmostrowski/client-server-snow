@@ -1,24 +1,81 @@
 #!/usr/bin/env bash
+set -eu
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+function init() {
+    export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+    export SCRIPT_PID="${BASHPID}"
+    export SCRIPT_OWNER_PID="${SCRIPT_OWNER_PID:-}"
+    export PHP_SNOW_APP_MODE="${PHP_SNOW_APP_MODE:-production}"
+}
 
-(
+function main() {
+    init;
+
+    if [[ "${1:-}" == "devbox" ]] || [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
+        export PHP_SNOW_APP_MODE=develop
+    fi
+
+    if [[ "${1:-}" == "--docker-killer" ]]; then
+        watchForDockerKill "${2}" "${3:-}"
+        return 0
+    fi
+
+    removeDockerContainerInBackground
+
+    runPhpSnow "${@}"
+}
+
+function runPhpSnow() (
     cd "${SCRIPT_DIR}"
-    mkdir -p ".pipes";
+    mkdir -p ".pipes/";
 
     docker run -t"$( [ -t 0 ] && echo 'i' )" --rm \
+        --name "php-snow-${SCRIPT_PID}" \
         --volume "${SCRIPT_DIR}/app/:/app/" \
         --volume "${SCRIPT_DIR}/java-proxy/:/java-proxy/" \
         --volume "${SCRIPT_DIR}/.pipes/:/app/.pipes/" \
-        --env PHP_SNOW_APP_MODE=develop \
+        --add-host=host.docker.internal:host-gateway \
+        --env PHP_SNOW_APP_MODE \
         $(
-            docker build --quiet \
-              --file "docker/Dockerfile" \
-              --build-arg="UID=$(id -u)" \
-              --build-arg="GID=$(id -g)" \
-              .
+            if [[ "${PHP_SNOW_APP_MODE}" == "develop" ]]; then
+                dockerBuild
+            fi
+            dockerBuild --quiet
         ) \
         "${@}" \
     ;
 )
 
+function dockerBuild() {
+    docker build \
+        --file "docker/Dockerfile" \
+        --build-arg="UID=$(id -u)" \
+        --build-arg="GID=$(id -g)" \
+        --build-arg="PHP_SNOW_APP_MODE" \
+        . \
+        "${@}" \
+    ;
+}
+
+function removeDockerContainerInBackground() {
+    setsid "${BASH_SOURCE[0]}" --docker-killer "${SCRIPT_PID}" "${SCRIPT_OWNER_PID}" &> /dev/null &
+}
+
+function watchForDockerKill() {
+    local listenForPid="${1}"
+    local listenForAnotherPid="${2:-}"
+
+    (
+        while true; do
+            sleep 1
+            if ! ps -p ${listenForPid} \
+                || ( [[ -n "${listenForAnotherPid}" ]] && ! ps -p ${listenForAnotherPid} ); then
+                break;
+            fi
+        done
+
+        docker rm -f "php-snow-${listenForPid}"
+    ) &> /dev/null;
+}
+
+main "${@}"

@@ -60,7 +60,6 @@ final class Snow implements IAnimationVisibleObject, IAnimationConfigurableObjec
             if ($this->basis->isHitAt($newParticle[SnowParticles::X], $newParticle[SnowParticles::Y])) {
                 continue;
             }
-
             $this->particles->addNew($newParticle);
         }
     }

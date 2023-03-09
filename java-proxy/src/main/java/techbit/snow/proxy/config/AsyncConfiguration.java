@@ -24,10 +24,11 @@ public class AsyncConfiguration implements AsyncConfigurer {
     @Override
     @Bean(name = "streamExecutor")
     public AsyncTaskExecutor getAsyncExecutor() {
-//        executor.setCorePoolSize(5);
-//        executor.setMaxPoolSize(5);
-//        executor.setQueueCapacity(25);
-        return new ThreadPoolTaskExecutor();
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(25);
+        return executor;
     }
 
     @Bean
@@ -35,8 +36,7 @@ public class AsyncConfiguration implements AsyncConfigurer {
         return new WebMvcConfigurer() {
             @Override
             public void configureAsyncSupport(@NotNull AsyncSupportConfigurer config) {
-                config.setDefaultTimeout(timeout.get(SECONDS) * 1000).setTaskExecutor(taskExecutor);
-                WebMvcConfigurer.super.configureAsyncSupport(config);
+                config.setDefaultTimeout(timeout.toMillis()).setTaskExecutor(taskExecutor);
             }
         };
     }

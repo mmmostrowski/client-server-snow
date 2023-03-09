@@ -21,4 +21,6 @@ interface IFramePainter
 
     public function eraseParticle(int $idx): void;
 
+    public function stopAnimation(): void;    
+
 }

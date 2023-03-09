@@ -23,7 +23,10 @@ final class Bootstrap
         if ($appArguments->isServer()) {
             $startupConfig = new StartupConfig();
             return new App(new AnimationFactory(
-                console: new MockConsole(),
+                console: new MockConsole(
+                    $appArguments->serverCanvasWidth(), 
+                    $appArguments->serverCanvasHeight(),
+                ),
                 startupConfig : $startupConfig,
                 renderer : new StreamFramePainter(
                     $appArguments->serverSessionId(),

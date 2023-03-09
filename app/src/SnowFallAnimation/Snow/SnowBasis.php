@@ -195,7 +195,7 @@ final class SnowBasis implements IAnimationAliveObject, IAnimationVisibleObject,
                 $this->drawPoint($pX, $pY);
                 $this->renderer->renderBackgroundPixel($pX, $pY, $c, $color);
             }
-            echo PHP_EOL;
+            // echo PHP_EOL;
         }
     }
 

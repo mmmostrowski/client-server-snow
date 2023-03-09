@@ -61,7 +61,7 @@ final class SnowFallAnimation implements IAnimation
             $object->renderFirstFrame();
         }
 
-        $maxFrames = $this->context->config()->animationLengthInFrames();
+        $maxFrames = $this->context->config()->animationLengthInFrames() + 1;
         while (--$maxFrames) {
             $this->painter->startFrame();
 
@@ -79,6 +79,8 @@ final class SnowFallAnimation implements IAnimation
 
             $this->painter->endFrame();
         }
+
+        $this->painter->stopAnimation();
 
         echo "\n";
         echo "                            \n";

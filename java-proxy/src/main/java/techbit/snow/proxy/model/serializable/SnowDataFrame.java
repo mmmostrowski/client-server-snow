@@ -5,13 +5,15 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class SnowDataFrame {
+    public static SnowDataFrame empty = new SnowDataFrame(0, 0, new float[0], new float[0],new byte[0]);
+
+    public static SnowDataFrame last = new SnowDataFrame(-1, 0, new float[0], new float[0],new byte[0]);
+
     public final int frameNum;
     public final int chunkSize;
     public final float[] x;
     public final float[] y;
     public final byte[] flakeShapes;
-
-    public static SnowDataFrame empty = new SnowDataFrame(0, 0, new float[0], new float[0],new byte[0]);
 
     public SnowDataFrame(int frameNum, int chunkSize, float[] x, float[] y, byte[] flakeShapes) {
         this.frameNum = frameNum;
@@ -44,5 +46,9 @@ public class SnowDataFrame {
                 ", y=" + Arrays.toString(y) +
                 ", flakeShapes=" + Arrays.toString(flakeShapes) +
                 '}';
+    }
+
+    public boolean isLast() {
+        return frameNum < 0;
     }
 }

@@ -2,7 +2,6 @@
 
 namespace TechBit\Snow\Server;
 
-use TechBit\Snow\Console\IConsole;
 use TechBit\Snow\SnowFallAnimation\AnimationContext;
 use TechBit\Snow\SnowFallAnimation\Config\StartupConfig;
 use TechBit\Snow\SnowFallAnimation\Frame\IFramePainter;
@@ -38,45 +37,33 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
         $pipeFile = $this->pipesDir . "/" . $this->sessionId;        
 
         if (file_exists($pipeFile) && !unlink($pipeFile)) {
-            throw new \Exception("Cannot delete a named pipe file: {$pipeFile}");
+            throw new \Exception("Cannot delete: {$pipeFile}");
         }
 
         if (!posix_mkfifo($pipeFile, 0777)) {
             throw new \Exception("Cannot create a named pipe: {$pipeFile}");
         }
-        
-        $this->pipe = fopen($pipeFile, "w+");
+
+        $this->pipe = fopen($pipeFile, "w");
+
+        stream_set_blocking($this->pipe, true); 
+
+        fwrite($this->pipe, "hello-php-snow");
     }
 
     public function startAnimation(): void
     {
-        fwrite($this->pipe, pack('NNN', 
+        $this->fwriteData('NNN', 
             $this->canvasWidth,
             $this->canvasHeight,
             $this->startupConfig->targetFps(),
-        ));
+        );
     }
 
 	public function startFrame(): void 
     {
         $this->particlesBuffer = [];
 	}
-
-    public function endFrame(): void
-    {        
-        fwrite($this->pipe, pack('NN', 
-            ++$this->frameCounter, 
-            count($this->particlesBuffer),
-        ));
-
-        foreach($this->particlesBuffer as $particle) {
-            fwrite($this->pipe, pack('GGC', 
-                $particle[0],
-                $particle[1],
-                $particle[2],
-            ));
-        }
-    }
 
     public function renderParticle(int $idx): void
     {
@@ -106,4 +93,32 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
 	public function eraseParticle(int $idx): void 
     {
 	}
+
+    public function endFrame(): void
+    {        
+        $this->fwriteData('NN', 
+            ++$this->frameCounter, 
+            count($this->particlesBuffer),
+        );
+
+        foreach($this->particlesBuffer as $particle) {
+            $this->fwriteData('GGC', 
+                $particle[0],
+                $particle[1],
+                $particle[2],
+            );
+        }
+    }
+
+	public function stopAnimation(): void 
+    {
+        $this->fwriteData('NN', 0xffffffff, 0);
+        // sleep(3); # give client time to consume and shutdown gracefuly 
+    }
+
+    private function fwriteData(string $code, mixed... $args) 
+    {
+        fwrite($this->pipe, pack($code, ...$args));
+    }
+
 }

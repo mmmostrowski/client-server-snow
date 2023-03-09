@@ -6,6 +6,11 @@ function main() {
 
     if [[ "${1:-}" == "devbox" ]] || [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
         echo "To run app please execute: php snow.php [ args ... ]"
+        echo ''
+        echo "To enable XDebug please run: echo 'xdebug.mode=debug' >> /usr/local/etc/php/conf.d/my-xdebug.ini"
+        echo ''
+        echo ''
+        export PHP_SNOW_APP_MODE=develop
         bash -l
         return 0
     fi
@@ -16,8 +21,10 @@ function main() {
         terminalCleanupOnExit true
     fi
 
+    
     if ! "php" "snow.php" "${@}"; then
         terminalCleanupOnExit false
+        return 1
     fi
 }
 
@@ -51,9 +58,9 @@ function terminalCleanupOnExit() {
     local trapEnabled="${1:-true}"
 
     if $trapEnabled; then
-        trap "reset; clear"  EXIT
+        echo trap "reset; clear"  EXIT
     else
-        trap ""  EXIT
+        echo trap ""  EXIT
     fi
 }
 
