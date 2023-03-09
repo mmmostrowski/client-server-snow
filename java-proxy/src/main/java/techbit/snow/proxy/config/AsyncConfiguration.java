@@ -13,8 +13,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.time.Duration;
 
-import static java.time.temporal.ChronoUnit.SECONDS;
-
 @Configuration
 @EnableAsync
 public class AsyncConfiguration implements AsyncConfigurer {

@@ -1,6 +1,7 @@
 package techbit.snow.proxy.model;
 
 import com.google.common.io.MoreFiles;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,12 +28,19 @@ public class NamedPipe {
 
     public FileInputStream inputStream() throws InterruptedException {
         try {
-            while(!pipeFile.exists()) {
-                Thread.sleep(150);
-            }
+            waitUntilPipeExists();
             return new FileInputStream(pipeFile);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void waitUntilPipeExists() throws InterruptedException {
+        for (int i = 100; i >= 0 && !pipeFile.exists(); --i) {
+            if (i == 0) {
+                throw new IllegalStateException("Cannot find file file: " + pipeFile.toString());
+            }
+            Thread.sleep(150);
         }
     }
 

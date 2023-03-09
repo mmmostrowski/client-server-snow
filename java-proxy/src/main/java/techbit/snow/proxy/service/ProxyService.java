@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import techbit.snow.proxy.model.SnowStream;
-import techbit.snow.proxy.model.SnowStreamFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,13 +19,10 @@ public class ProxyService {
     @Autowired
     private SessionService session;
 
-    @Autowired
-    private SnowStreamFactory snowStreamFactory;
-
     private final Map<String, SnowStream> streams = Maps.newHashMap();
 
-    public void stream(String sessionId, OutputStream out) throws IOException, InterruptedException {
-        snowStream(sessionId).streamTo(out);
+    public void stream(String sessionId, OutputStream out, Map<String, String> confMap) throws IOException, InterruptedException {
+        snowStream(sessionId, confMap).streamTo(out);
     }
 
     public void stopStream(String sessionId) {
@@ -39,13 +35,15 @@ public class ProxyService {
         removeStream(sessionId);
     }
 
-    private synchronized SnowStream snowStream(String sessionId) throws IOException, InterruptedException {
+    private synchronized SnowStream snowStream(String sessionId, Map<String, String> confMap) throws IOException, InterruptedException {
         if (session.exists(sessionId)) {
             logger.debug(() -> String.format("snowStream( %s ) | Returning existing stream", sessionId));
-            return streams.get(sessionId);
+            SnowStream stream = streams.get(sessionId);
+            stream.ensureConfigCompatible(confMap);
+            return stream;
         }
-        logger.debug(() -> String.format("snowStream( %s ) | Creating new stream", sessionId));
-        SnowStream snow = snowStreamFactory.create(sessionId);
+        logger.debug(() -> String.format("snowStream( %s ) | Creating new stream | %s", sessionId, confMap.toString()));
+        SnowStream snow = new SnowStream(sessionId, confMap);
         snow.startPhpApp();
         snow.startConsumingSnowData();
         streams.put(sessionId, snow);
@@ -62,4 +60,13 @@ public class ProxyService {
         streams.remove(sessionId);
         session.delete(sessionId);
     }
+
+    public boolean hasStream(String sessionId) {
+        return session.exists(sessionId);
+    }
+
+    public boolean isRunning(String sessionId) {
+        return session.exists(sessionId) && streams.get(sessionId).isActive();
+    }
+
 }

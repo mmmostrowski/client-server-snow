@@ -2,6 +2,7 @@ package techbit.snow.proxy.model;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import techbit.snow.proxy.config.PhpSnowConfig;
 import techbit.snow.proxy.model.serializable.SnowAnimationMetadata;
 import techbit.snow.proxy.model.serializable.SnowDataFrame;
 
@@ -10,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -26,22 +28,28 @@ public class SnowStream {
     private final PhpSnowApp phpSnow;
 
     private final NamedPipe pipe;
+    private final PhpSnowConfig phpSnowConfig;
 
     private SnowAnimationMetadata metadata;
 
-    private boolean running = false;
+        private boolean running = false;
 
 
-    public SnowStream(String sessionId) {
+    public SnowStream(String sessionId, Map<String, String> config) {
         this.sessionId = sessionId;
         this.pipe = new NamedPipe(sessionId);
-        this.phpSnow = new PhpSnowApp(sessionId);
+        this.phpSnowConfig = new PhpSnowConfig(config);
+        this.phpSnow = new PhpSnowApp(sessionId, phpSnowConfig);
     }
 
     public void startPhpApp() throws IOException {
         stopPhpApp();
 
         phpSnow.start();
+    }
+
+    public boolean isActive() {
+        return running && phpSnow.isAlive();
     }
 
     public void stopPhpApp() {
@@ -75,6 +83,7 @@ public class SnowStream {
                     }
                 }
                 buffer.destroy();
+                running = false;
             }
             logger.trace(() -> String.format("consumeSnowFromPipeThread( %s ) | Stop pipe", sessionId));
         } catch (IOException | InterruptedException e) {
@@ -109,7 +118,9 @@ public class SnowStream {
         }
     }
 
-    private boolean isActive() {
-        return running && phpSnow.isAlive();
+    public void ensureConfigCompatible(Map<String, String> confMap) {
+        if (!phpSnowConfig.isCompatibleWith(confMap)) {
+            throw new IllegalArgumentException("You cannot change config when animation is running.");
+        }
     }
 }
