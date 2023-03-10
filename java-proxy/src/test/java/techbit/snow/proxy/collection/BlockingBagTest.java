@@ -5,6 +5,7 @@ import edu.umd.cs.mtc.TestFramework;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import techbit.snow.proxy.service.stream.BlockingBag;
 
 class BlockingBagTest {
 

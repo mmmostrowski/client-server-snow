@@ -1,17 +1,22 @@
-package techbit.snow.proxy.model;
+package techbit.snow.proxy.service.phpsnow;
 
 import com.google.common.io.Files;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 import techbit.snow.proxy.SnowProxyApplication;
-import techbit.snow.proxy.config.PhpSnowConfig;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
+
+@Service
+@Scope(SCOPE_PROTOTYPE)
 public class PhpSnowApp {
 
-    private final Logger logger = LogManager.getLogger(PhpSnowApp.class);
+    private final Logger log = LogManager.getLogger(PhpSnowApp.class);
 
     private final String sessionId;
 
@@ -41,13 +46,13 @@ public class PhpSnowApp {
             config.presetName()
         );
 
-        logger.debug(() -> String.format("start( %s ) | Starting process %s", sessionId, builder.command()));
+        log.debug("start( {} ) | Starting process {}", sessionId, builder.command());
         process = builder.start();
     }
 
     public void stop() {
         if (process != null) {
-            logger.debug(() -> String.format("stop( %s ) | Killing process", sessionId));
+            log.debug("stop( {} ) | Killing process", sessionId);
             process.destroyForcibly();
         }
         process = null;

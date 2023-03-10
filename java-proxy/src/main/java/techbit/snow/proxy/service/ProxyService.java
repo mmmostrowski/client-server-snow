@@ -1,28 +1,26 @@
 package techbit.snow.proxy.service;
 
 import com.google.common.collect.Maps;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.BeanFactory;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
-import techbit.snow.proxy.model.SnowStream;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import techbit.snow.proxy.service.stream.SnowStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 
-@Component
+@Service
+@Log4j2
 public class ProxyService {
-
-    private final Logger logger = LogManager.getLogger(ProxyService.class);
 
     @Autowired
     private SessionService session;
 
     @Autowired
+    @Qualifier("snowStream.create")
     private ObjectProvider<SnowStream> snowFactory;
 
     private final Map<String, SnowStream> streams = Maps.newHashMap();
@@ -31,24 +29,24 @@ public class ProxyService {
         snowStream(sessionId, confMap).streamTo(out);
     }
 
-    public void stopStream(String sessionId) {
+    public void stopStream(String sessionId) throws IOException {
         if (!session.exists(sessionId)) {
-            logger.debug(() -> String.format("stopStream( %s ) | Nothing to stop!", sessionId));
+            log.debug("stopStream( {} ) | Nothing to stop!", sessionId);
             return;
         }
-        logger.debug(() -> String.format("stopStream( %s ) | Stopping PhpSnow App", sessionId));
+        log.debug("stopStream( {} ) | Stopping PhpSnow App", sessionId);
         streams.get(sessionId).stopPhpApp();
         removeStream(sessionId);
     }
 
     private synchronized SnowStream snowStream(String sessionId, Map<String, String> confMap) throws IOException, InterruptedException {
         if (session.exists(sessionId)) {
-            logger.debug(() -> String.format("snowStream( %s ) | Returning existing stream", sessionId));
+            log.debug("snowStream( {} ) | Returning existing stream", sessionId);
             SnowStream stream = streams.get(sessionId);
             stream.ensureConfigCompatible(confMap);
             return stream;
         }
-        logger.debug(() -> String.format("snowStream( %s ) | Creating new stream | %s", sessionId, confMap.toString()));
+        log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, confMap);
         SnowStream snow = snowFactory.getObject(sessionId, confMap);
         snow.startPhpApp();
         snow.startConsumingSnowData();
@@ -62,7 +60,7 @@ public class ProxyService {
             return;
         }
 
-        logger.debug(() -> String.format("stopStream( %s ) | Removing stream", sessionId));
+        log.debug("stopStream( {} ) | Removing stream", sessionId);
         streams.remove(sessionId);
         session.delete(sessionId);
     }

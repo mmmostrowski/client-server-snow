@@ -1,9 +1,16 @@
-package techbit.snow.proxy.collection;
+package techbit.snow.proxy.service.stream;
 
 import com.google.common.collect.Maps;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class BlockingBag<K, V> {
 
     private final Map<K, V> map = Maps.newConcurrentMap();

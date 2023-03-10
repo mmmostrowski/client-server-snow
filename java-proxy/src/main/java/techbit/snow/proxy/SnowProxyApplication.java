@@ -4,7 +4,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
-import techbit.snow.proxy.model.NamedPipe;
+import techbit.snow.proxy.service.stream.NamedPipe;
 
 import java.io.IOException;
 

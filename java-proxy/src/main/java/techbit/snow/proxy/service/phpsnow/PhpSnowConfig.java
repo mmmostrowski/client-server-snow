@@ -1,4 +1,8 @@
-package techbit.snow.proxy.config;
+package techbit.snow.proxy.service.phpsnow;
+
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.HashSet;
@@ -7,7 +11,10 @@ import java.util.Objects;
 import java.util.Set;
 
 import static java.lang.Integer.parseInt;
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class PhpSnowConfig {
 
     private String presetName = "massiveSnow";
@@ -15,7 +22,6 @@ public class PhpSnowConfig {
     private int height = 40;
     private Duration animationDuration = Duration.ofMinutes(5);
     private int fps = 33;
-
 
 
     public PhpSnowConfig(Map<String, String> config) {

@@ -1,7 +1,8 @@
-package techbit.snow.proxy.model;
+package techbit.snow.proxy.service.stream;
 
 import com.google.common.io.MoreFiles;
-import org.jetbrains.annotations.NotNull;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,6 +10,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
+
+@Service
+@Scope(SCOPE_PROTOTYPE)
 public class NamedPipe {
 
     private final File pipeFile;
@@ -43,8 +48,10 @@ public class NamedPipe {
         }
     }
 
-    public void destroy() {
-        pipeFile.delete();
+    public void destroy() throws IOException {
+        if (pipeFile.exists() && !pipeFile.delete()) {
+            throw new IOException("Cannot delete pipe file: " + pipeFile);
+        }
     }
 
 }

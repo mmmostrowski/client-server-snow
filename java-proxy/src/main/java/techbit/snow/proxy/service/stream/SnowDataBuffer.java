@@ -1,8 +1,13 @@
-package techbit.snow.proxy.model;
+package techbit.snow.proxy.service.stream;
 
-import techbit.snow.proxy.collection.BlockingBag;
-import techbit.snow.proxy.model.serializable.SnowDataFrame;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+import techbit.snow.proxy.dto.SnowDataFrame;
 
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
+
+@Service
+@Scope(SCOPE_PROTOTYPE)
 public class SnowDataBuffer {
 
     public static SnowDataBuffer ofSize(int maxNumOfFrames) {

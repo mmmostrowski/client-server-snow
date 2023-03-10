@@ -1,6 +1,7 @@
 package techbit.snow.proxy.controller;
 
 import com.google.common.base.Strings;
+import lombok.extern.log4j.Log4j2;
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,14 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import techbit.snow.proxy.service.ProxyService;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
+@Log4j2
 public class ProxyController {
-    private final Logger logger = LogManager.getLogger(ProxyController.class);
 
     @Autowired
     private ProxyService streaming;
@@ -39,17 +41,17 @@ public class ProxyController {
             final @PathVariable String sessionId,
             final @PathVariable String configuration
     ) {
-        logger.debug(() ->  String.format("streamToClient( %s, %s )", sessionId, configuration));
+        log.debug("streamToClient( {}, {} )", sessionId, configuration);
 
         return CompletableFuture.supplyAsync(() -> out -> {
             try {
-                logger.debug(() -> String.format("streamToClient( %s ) | Async Start", sessionId));
+                log.debug("streamToClient( {} ) | Async Start", sessionId);
 
                 streaming.stream(sessionId, out, toConfMap(configuration));
 
-                logger.debug(() -> String.format("streamToClient( %s ) | Async Finished", sessionId));
+                log.debug("streamToClient( {} ) | Async Finished", sessionId);
             } catch (ClientAbortException e) {
-                logger.debug(() -> String.format("streamToClient( %s ) | Client aborted", sessionId));
+                log.debug("streamToClient( {} ) | Client aborted", sessionId);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -57,8 +59,8 @@ public class ProxyController {
     }
 
     @GetMapping(value = "/stop/{sessionId}")
-    public Map<String, Object> stopStreaming(final @PathVariable String sessionId) {
-        logger.debug(() ->  String.format("stopStreaming( %s )", sessionId));
+    public Map<String, Object> stopStreaming(final @PathVariable String sessionId) throws IOException {
+        log.debug("stopStreaming( {} )", sessionId);
 
         streaming.stopStream(sessionId);
 
@@ -70,7 +72,7 @@ public class ProxyController {
 
     @GetMapping(value = "/details/{sessionId}")
     public Map<String, Object> streamDetails(final @PathVariable String sessionId) {
-        logger.debug(() ->  String.format("streamDetails( %s )", sessionId));
+        log.debug("streamDetails( {} )", sessionId);
 
         return Map.of(
             "sessionId", sessionId,
@@ -86,12 +88,12 @@ public class ProxyController {
 
         Map<String, String> confMap = new HashMap<>();
         String[] elements = configuration.substring(1).split("/");
-        String key = null;
 
         if (elements.length % 2 != 0) {
             throw new IllegalArgumentException("Please provide request in form: http://domain.com/sessionId/key1/val1/key2/val2/...");
         }
 
+        String key = null;
         for (int i = 0; i < elements.length; ++i) {
             if (i % 2 == 0) {
                 key = elements[i];

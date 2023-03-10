@@ -1,13 +1,14 @@
-package techbit.snow.proxy.model;
+package techbit.snow.proxy.service.stream;
 
+import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
-import techbit.snow.proxy.config.PhpSnowConfig;
-import techbit.snow.proxy.model.serializable.SnowAnimationMetadata;
-import techbit.snow.proxy.model.serializable.SnowDataFrame;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
+import techbit.snow.proxy.dto.SnowAnimationMetadata;
+import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -18,9 +19,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class SnowStream {
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
-    private final Logger logger = LogManager.getLogger(SnowStream.class);
+@Service
+@Scope(SCOPE_PROTOTYPE)
+@Log4j2
+public class SnowStream {
 
     private final String sessionId;
 
@@ -58,7 +62,7 @@ public class SnowStream {
         return running && phpSnow.isAlive();
     }
 
-    public void stopPhpApp() {
+    public void stopPhpApp() throws IOException {
         phpSnow.stop();
         pipe.destroy();
         running = false;
@@ -66,10 +70,10 @@ public class SnowStream {
     }
 
     public void startConsumingSnowData() throws InterruptedException, IOException {
-        logger.debug(() -> String.format("startConsumingSnowData( %s ) | Opening pipe stream", sessionId));
+        log.debug("startConsumingSnowData( {} ) | Opening pipe stream", sessionId);
         final FileInputStream stream = pipe.inputStream();
 
-        logger.debug(() -> String.format("startConsumingSnowData( %s ) | Reading metadata", sessionId));
+        log.debug("startConsumingSnowData( {} ) | Reading metadata", sessionId);
         metadata = new SnowAnimationMetadata(new DataInputStream(stream));
 
         executor.submit(() -> consumeSnowFromPipeThread(stream));
@@ -77,12 +81,12 @@ public class SnowStream {
     }
 
     private void consumeSnowFromPipeThread(FileInputStream stream) {
-        logger.debug(() -> String.format("consumeSnowFromPipeThread( %s ) | Start pipe", sessionId));
+        log.debug("consumeSnowFromPipeThread( {} ) | Start pipe", sessionId);
         try (stream) {
             try (DataInputStream dataStream = new DataInputStream(stream)) {
                 while (isActive()) {
                     SnowDataFrame frame = new SnowDataFrame(dataStream);
-                    logger.trace(() -> String.format("consumeSnowFromPipeThread( %s ) | Frame %d", sessionId, frame.frameNum));
+                    log.trace("consumeSnowFromPipeThread( {} ) | Frame {}", sessionId, frame.frameNum);
                     buffer.push(frame);
                     if (frame.isLast()) {
                         break;
@@ -91,7 +95,7 @@ public class SnowStream {
                 buffer.destroy();
                 running = false;
             }
-            logger.trace(() -> String.format("consumeSnowFromPipeThread( %s ) | Stop pipe", sessionId));
+            log.trace("consumeSnowFromPipeThread( {} ) | Stop pipe", sessionId);
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -102,16 +106,16 @@ public class SnowStream {
             throw new IllegalStateException("You must startPhpApp() first!");
         }
 
-        logger.debug(() -> String.format("streamTo( %s ) | metadata", sessionId));
+        log.debug("streamTo( {} ) | metadata", sessionId);
 
         out.write(metadata.toString().getBytes(StandardCharsets.UTF_8));
         out.write("\n\n".getBytes(StandardCharsets.UTF_8));
 
-        logger.debug(() -> String.format("streamTo( %s ) | Reading first frame", sessionId));
+        log.debug("streamTo( {} ) | Reading first frame", sessionId);
         SnowDataFrame currentFrame = buffer.firstFrame();
         while(isActive() || currentFrame.isLast()) {
             SnowDataFrame finalCurrentFrame = currentFrame;
-            logger.trace(() -> String.format("streamTo( %s ) | Frame %d", sessionId, finalCurrentFrame.frameNum));
+            log.trace("streamTo( {} ) | Frame {}", sessionId, finalCurrentFrame.frameNum);
 
             out.write(currentFrame.toString().getBytes(StandardCharsets.UTF_8));
             out.write("\n\n".getBytes(StandardCharsets.UTF_8));

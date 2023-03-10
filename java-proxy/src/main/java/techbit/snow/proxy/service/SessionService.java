@@ -1,12 +1,12 @@
 package techbit.snow.proxy.service;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-@Component
+@Service
 public class SessionService {
 
     private final Set<String> sessions = new HashSet<>();

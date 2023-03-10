@@ -1,4 +1,4 @@
-package techbit.snow.proxy.model.serializable;
+package techbit.snow.proxy.dto;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

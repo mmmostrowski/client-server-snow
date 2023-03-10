@@ -18,12 +18,14 @@ import java.util.Map;
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ErrorHandler implements ErrorController {
+
     @RequestMapping("/error")
     public Map<String, Object> error(@NotNull HttpServletRequest request)
     {
-        String exceptionDetails = "";
-        Exception exception = (Exception) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
         String message = "Server error";
+        String exceptionDetails = "";
+
+        Exception exception = (Exception) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
         if (exception != null) {
             message = exception.getMessage();
             StringWriter sw = new StringWriter();
