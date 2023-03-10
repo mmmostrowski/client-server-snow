@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -25,14 +26,14 @@ public class BlockingBag<K, V> {
         }
     }
 
-    public V take(K key) throws InterruptedException {
+    public Optional<V> take(K key) throws InterruptedException {
         Object lock = lockFor(key);
         synchronized (lock) {
             if (!map.containsKey(key)) {
                 lock.wait();
             }
         }
-        return map.get(key);
+        return Optional.ofNullable(map.get(key));
     }
 
     public void remove(K key) {

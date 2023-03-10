@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SnowDataFrameTest {
 
     @Test
-    void whenBinaryDataGiven_entityShouldBeCreated() throws IOException {
+    void givenValidBinaryData_whenDeserialized_thenCreatesValidFrame() throws IOException {
         byte[] binary = new byte[]{
                 0x0, 0x0, 0x0, 0x7F,
                 0x0, 0x0, 0x0, 0x2,
@@ -43,7 +43,7 @@ class SnowDataFrameTest {
     }
 
 //    @Test
-//    void whenEntityGiven_itShouldBeSerializable() throws IOException {
+//    void givenFrame_whenSerialized_thenProducesValidBinaryData() throws IOException {
 //        SnowAnimationMetadata metadata = new SnowAnimationMetadata(127, 65536, 16777216);
 //        ByteArrayOutputStream output = new ByteArrayOutputStream();
 //

@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SessionServiceTest {
 
     @Test
-    void whenSessionCreated_sessionExists() {
+    void whenSessionCreated_thenSessionExists() {
         SessionService sessions = new SessionService();
 
         sessions.create("xyz");
@@ -16,14 +16,14 @@ class SessionServiceTest {
     }
 
     @Test
-    void whenSessionNotCreated_sessionNotExists() {
+    void whenSessionNotCreated_thenSessionNotExists() {
         SessionService sessions = new SessionService();
 
         assertFalse(sessions.exists("xyz"));
     }
 
     @Test
-    void whenOtherSessionCreated_ourSessionNotExists() {
+    void whenOtherSessionCreated_thenOurSessionNotExists() {
         SessionService sessions = new SessionService();
 
         sessions.create("other");
@@ -32,7 +32,7 @@ class SessionServiceTest {
     }
 
     @Test
-    void whenSessionDeleted_sessionNotExists() {
+    void whenSessionDeleted_thenSessionNotExists() {
         SessionService sessions = new SessionService();
 
         sessions.create("xyz");
@@ -42,7 +42,7 @@ class SessionServiceTest {
     }
 
     @Test
-    void whenNonExistentSessionDeleted_exceptionIsThrown() {
+    void whenNonExistentSessionDeleted_thenExceptionIsThrown() {
         SessionService sessions = new SessionService();
 
         assertThrows(Exception.class,
@@ -50,7 +50,7 @@ class SessionServiceTest {
     }
 
     @Test
-    void whenCreateSameSessionTwice_exceptionIsThrown() {
+    void whenCreatingSameSessionTwice_thenExceptionIsThrown() {
         SessionService sessions = new SessionService();
 
         sessions.create("xyz");
@@ -60,7 +60,7 @@ class SessionServiceTest {
     }
 
     @Test
-    void whenMultipleSessionsCreated_theyAreNotInterfering() {
+    void whenMultipleSessionsCreated_thenBothExists() {
         SessionService sessions = new SessionService();
 
         sessions.create("abc");
@@ -71,14 +71,14 @@ class SessionServiceTest {
     }
 
     @Test
-    void whenEmptySessionName_exceptionIsThrown() {
+    void whenEmptySessionName_thenExceptionIsThrown() {
         SessionService sessions = new SessionService();
 
         assertThrows(Exception.class, () -> sessions.create(""));
     }
 
     @Test
-    void whenInvalidSessionName_exceptionIsThrown() {
+    void whenInvalidSessionName_thenExceptionIsThrown() {
         SessionService sessions = new SessionService();
 
         assertThrows(Exception.class, () -> sessions.create("!"));

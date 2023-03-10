@@ -1,12 +1,13 @@
 package techbit.snow.proxy.service.stream;
 
 import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
-@Service
+@Component
 @Scope(SCOPE_PROTOTYPE)
 public class SnowDataBuffer {
 
@@ -61,11 +62,7 @@ public class SnowDataBuffer {
         if (destroyed) {
             return SnowDataFrame.last;
         }
-        SnowDataFrame frame = frames.take(tailFrameNum);
-        if (frame == null) {
-            return SnowDataFrame.last;
-        }
-        return frame;
+        return frames.take(tailFrameNum).orElse(SnowDataFrame.last);
     }
 
     public SnowDataFrame nextFrame(SnowDataFrame frame) throws InterruptedException {
@@ -73,11 +70,7 @@ public class SnowDataBuffer {
         if (destroyed) {
             return SnowDataFrame.last;
         }
-        SnowDataFrame nextFrame = frames.take(Math.max(frame.getFrameNum(), tailFrameNum) + 1);
-        if (nextFrame == null) {
-            return SnowDataFrame.last;
-        }
-        return nextFrame;
+        return frames.take(Math.max(frame.getFrameNum(), tailFrameNum) + 1).orElse(SnowDataFrame.last);
     }
 
     private void waitUntilFrameAvailable() throws InterruptedException {
