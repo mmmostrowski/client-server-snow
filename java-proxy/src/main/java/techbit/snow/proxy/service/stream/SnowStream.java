@@ -1,14 +1,15 @@
 package techbit.snow.proxy.service.stream;
 
 import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -42,13 +43,15 @@ public class SnowStream {
 
     private boolean running = false;
 
+    @Autowired
+    @Qualifier("phpsnowConfig.create")
+    private ObjectProvider<PhpSnowConfig> configProvider;
 
-    public SnowStream(String sessionId, Map<String, String> config, int bufferSizeInFrames) {
+    public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig, int bufferSizeInFrames) {
         this.sessionId = sessionId;
+        this.phpSnowConfig = phpSnowConfig;
         this.pipe = new NamedPipe(sessionId);
-        this.phpSnowConfig = new PhpSnowConfig(config);
         this.phpSnow = new PhpSnowApp(sessionId, phpSnowConfig);
-
         this.buffer = SnowDataBuffer.ofSize(bufferSizeInFrames);
     }
 
@@ -86,7 +89,7 @@ public class SnowStream {
             try (DataInputStream dataStream = new DataInputStream(stream)) {
                 while (isActive()) {
                     SnowDataFrame frame = new SnowDataFrame(dataStream);
-                    log.trace("consumeSnowFromPipeThread( {} ) | Frame {}", sessionId, frame.frameNum);
+                    log.trace("consumeSnowFromPipeThread( {} ) | Frame {}", sessionId, frame.getFrameNum());
                     buffer.push(frame);
                     if (frame.isLast()) {
                         break;
@@ -115,7 +118,7 @@ public class SnowStream {
         SnowDataFrame currentFrame = buffer.firstFrame();
         while(isActive() || currentFrame.isLast()) {
             SnowDataFrame finalCurrentFrame = currentFrame;
-            log.trace("streamTo( {} ) | Frame {}", sessionId, finalCurrentFrame.frameNum);
+            log.trace("streamTo( {} ) | Frame {}", sessionId, finalCurrentFrame.getFrameNum());
 
             out.write(currentFrame.toString().getBytes(StandardCharsets.UTF_8));
             out.write("\n\n".getBytes(StandardCharsets.UTF_8));
@@ -129,7 +132,10 @@ public class SnowStream {
     }
 
     public void ensureConfigCompatible(Map<String, String> confMap) {
-        if (!phpSnowConfig.isCompatibleWith(confMap)) {
+        if (confMap == null || confMap.isEmpty()) {
+            return;
+        }
+        if (!configProvider.getObject(confMap).equals(phpSnowConfig)) {
             throw new IllegalArgumentException("You cannot change config when animation is running.");
         }
     }

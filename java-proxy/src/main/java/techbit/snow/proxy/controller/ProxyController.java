@@ -3,8 +3,6 @@ package techbit.snow.proxy.controller;
 import com.google.common.base.Strings;
 import lombok.extern.log4j.Log4j2;
 import org.apache.catalina.connector.ClientAbortException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,16 +24,16 @@ public class ProxyController {
     @Autowired
     private ProxyService streaming;
 
-    @GetMapping(value = "/")
+    @GetMapping("/")
     public void index() {
         throw new IllegalArgumentException("Invalid url! Missing session id, e.x: http://domain.com/<session-id>");
     }
 
-    @GetMapping(value = "/favicon.ico")
+    @GetMapping("/favicon.ico")
     public void favicon() {
     }
 
-    @GetMapping(value = "/{sessionId}/{*configuration}")
+    @GetMapping("/{sessionId}/{*configuration}")
     @Async("streamExecutor")
     public CompletableFuture<StreamingResponseBody> streamToClient(
             final @PathVariable String sessionId,
@@ -58,7 +56,7 @@ public class ProxyController {
         });
     }
 
-    @GetMapping(value = "/stop/{sessionId}")
+    @GetMapping({"/stop/{sessionId}", "/stop/{sessionId}/"})
     public Map<String, Object> stopStreaming(final @PathVariable String sessionId) throws IOException {
         log.debug("stopStreaming( {} )", sessionId);
 
@@ -70,7 +68,7 @@ public class ProxyController {
         );
     }
 
-    @GetMapping(value = "/details/{sessionId}")
+    @GetMapping({"/details/{sessionId}", "/details/{sessionId}/"})
     public Map<String, Object> streamDetails(final @PathVariable String sessionId) {
         log.debug("streamDetails( {} )", sessionId);
 

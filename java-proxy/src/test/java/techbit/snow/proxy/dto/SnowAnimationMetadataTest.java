@@ -20,9 +20,9 @@ class SnowAnimationMetadataTest {
         SnowAnimationMetadata metadata = new SnowAnimationMetadata(
                 new DataInputStream(new ByteArrayInputStream(binary)));
 
-        assertEquals(127, metadata.width);
-        assertEquals(65536, metadata.height);
-        assertEquals(16777216, metadata.fps);
+        assertEquals(127, metadata.getWidth());
+        assertEquals(65536, metadata.getHeight());
+        assertEquals(16777216, metadata.getFps());
     }
 
     @Test

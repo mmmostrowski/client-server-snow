@@ -2,6 +2,7 @@ package techbit.snow.proxy;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
 import techbit.snow.proxy.service.stream.NamedPipe;

@@ -2,6 +2,7 @@ package techbit.snow.proxy.controller;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.core.Ordered;
@@ -17,6 +18,7 @@ import java.util.Map;
 @RestController
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@Log4j2
 public class ErrorHandler implements ErrorController {
 
     @RequestMapping("/error")
@@ -33,6 +35,8 @@ public class ErrorHandler implements ErrorController {
             exception.printStackTrace(pw);
             exceptionDetails = exception.toString() + "\n\n" + sw;
         }
+
+        log.error(message, exception);
 
         return Map.of(
                 "status", false,

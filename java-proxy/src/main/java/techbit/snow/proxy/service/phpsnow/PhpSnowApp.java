@@ -1,8 +1,8 @@
 package techbit.snow.proxy.service.phpsnow;
 
 import com.google.common.io.Files;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import techbit.snow.proxy.SnowProxyApplication;
@@ -14,21 +14,15 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 
 @Service
 @Scope(SCOPE_PROTOTYPE)
+@RequiredArgsConstructor
+@Log4j2
 public class PhpSnowApp {
-
-    private final Logger log = LogManager.getLogger(PhpSnowApp.class);
 
     private final String sessionId;
 
     private final PhpSnowConfig config;
 
     private Process process;
-
-
-    public PhpSnowApp(String sessionId, PhpSnowConfig config) {
-        this.sessionId = sessionId;
-        this.config = config;
-    }
 
     public void start() throws IOException {
         stop();
@@ -39,11 +33,11 @@ public class PhpSnowApp {
         builder.environment().put("SCRIPT_OWNER_PID", SnowProxyApplication.pid());
         builder.command(phpSnowPath.toString(),
             "server", sessionId,
-            Integer.toString(config.width()),
-            Integer.toString(config.height()),
-            Integer.toString(config.fps()),
-            Integer.toString(config.animationDurationSec()),
-            config.presetName()
+            Integer.toString(config.getWidth()),
+            Integer.toString(config.getHeight()),
+            Integer.toString(config.getFps()),
+            Long.toString(config.getAnimationDuration().getSeconds()),
+            config.getPresetName()
         );
 
         log.debug("start( {} ) | Starting process {}", sessionId, builder.command());

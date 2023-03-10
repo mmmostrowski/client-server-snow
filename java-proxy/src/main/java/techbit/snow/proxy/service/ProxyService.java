@@ -1,6 +1,7 @@
 package techbit.snow.proxy.service;
 
 import com.google.common.collect.Maps;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,16 +15,18 @@ import java.util.Map;
 
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class ProxyService {
 
-    @Autowired
-    private SessionService session;
+    private final Map<String, SnowStream> streams = Maps.newHashMap();
 
     @Autowired
     @Qualifier("snowStream.create")
-    private ObjectProvider<SnowStream> snowFactory;
+    private final ObjectProvider<SnowStream> snowFactory;
 
-    private final Map<String, SnowStream> streams = Maps.newHashMap();
+    @Autowired
+    private final SessionService session;
+
 
     public void stream(String sessionId, OutputStream out, Map<String, String> confMap) throws IOException, InterruptedException {
         snowStream(sessionId, confMap).streamTo(out);

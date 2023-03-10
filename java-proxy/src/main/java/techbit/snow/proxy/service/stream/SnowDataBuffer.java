@@ -14,11 +14,11 @@ public class SnowDataBuffer {
         return new SnowDataBuffer(maxNumOfFrames);
     }
 
-    private final BlockingBag<Integer, SnowDataFrame> frames;
-
-    private boolean destroyed = false;
+    private final BlockingBag<Integer, SnowDataFrame> frames =  new BlockingBag<>();
 
     private final int maxNumOfFrames;
+
+    private boolean destroyed = false;
 
     private int numOfFrames = 0;
 
@@ -27,7 +27,6 @@ public class SnowDataBuffer {
     volatile private int tailFrameNum = 0;
 
     private SnowDataBuffer(int maxNumOfFrames) {
-        this.frames = new BlockingBag<>();
         this.maxNumOfFrames = maxNumOfFrames;
         if (maxNumOfFrames < 1) {
             throw new IllegalArgumentException("Buffer must have a positive size!");
@@ -41,20 +40,20 @@ public class SnowDataBuffer {
         synchronized(this) {
             if (numOfFrames == 0) {
                 numOfFrames = 1;
-                tailFrameNum = frame.frameNum;
+                tailFrameNum = frame.getFrameNum();
             } else if (numOfFrames < maxNumOfFrames) {
                 ++numOfFrames;
             } else {
                 frames.remove(tailFrameNum++);
             }
-            if (!frame.isLast() && ++headFrameNum != frame.frameNum) {
+            if (!frame.isLast() && ++headFrameNum != frame.getFrameNum()) {
                 throw new IllegalStateException("Expected sequenced frames");
             }
             if (numOfFrames == 1) {
                 notifyAll();
             }
         }
-        frames.put(frame.frameNum, frame);
+        frames.put(frame.getFrameNum(), frame);
     }
 
     public SnowDataFrame firstFrame() throws InterruptedException {
@@ -74,7 +73,7 @@ public class SnowDataBuffer {
         if (destroyed) {
             return SnowDataFrame.last;
         }
-        SnowDataFrame nextFrame = frames.take(Math.max(frame.frameNum, tailFrameNum) + 1);
+        SnowDataFrame nextFrame = frames.take(Math.max(frame.getFrameNum(), tailFrameNum) + 1);
         if (nextFrame == null) {
             return SnowDataFrame.last;
         }

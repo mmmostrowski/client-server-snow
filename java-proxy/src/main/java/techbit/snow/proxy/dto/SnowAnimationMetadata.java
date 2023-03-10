@@ -1,22 +1,23 @@
 package techbit.snow.proxy.dto;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import lombok.Value;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public final class SnowAnimationMetadata {
+@Value
+@RequiredArgsConstructor
+public class SnowAnimationMetadata {
 
-    public final int width;
+    int width;
 
-    public final int height;
+    int height;
 
-    public final int fps;
-
-    public SnowAnimationMetadata(int width, int height, int fps) {
-        this.width = width;
-        this.height = height;
-        this.fps = fps;
-    }
+    int fps;
 
     public SnowAnimationMetadata(DataInputStream inputStream) throws IOException {
         readHelloMarker(inputStream);
@@ -40,12 +41,4 @@ public final class SnowAnimationMetadata {
         outputStream.writeInt(fps);
     }
 
-    @Override
-    public String toString() {
-        return "SnowAnimationMetadata{" +
-                "width=" + width +
-                ", height=" + height +
-                ", fps=" + fps +
-                '}';
-    }
 }
