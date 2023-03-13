@@ -23,22 +23,22 @@ class SnowDataFrameTest {
                 0x4,
         };
 
-        SnowDataFrame frame = new SnowDataFrame(
+        SnowDataFrame frame = SnowDataFrame.from(
                 new DataInputStream(new ByteArrayInputStream(binary)));
 
-        assertEquals(127, frame.getFrameNum());
-        assertEquals(2, frame.getChunkSize());
+        assertEquals(127, frame.frameNum());
+        assertEquals(2, frame.chunkSize());
 
-        assertEquals(2, frame.getX().length);
-        assertEquals(2, frame.getY().length);
-        assertEquals(2, frame.getFlakeShapes().length);
+        assertEquals(2, frame.x().length);
+        assertEquals(2, frame.y().length);
+        assertEquals(2, frame.flakeShapes().length);
 
-        assertEquals(0.0f, frame.getX()[0]);
-        assertEquals(2.5f, frame.getY()[0]);
-        assertEquals(3, frame.getFlakeShapes()[0]);
-        assertEquals(2.75f, frame.getX()[1]);
-        assertEquals(0.0f, frame.getY()[1]);
-        assertEquals(4, frame.getFlakeShapes()[1]);
+        assertEquals(0.0f, frame.x(0));
+        assertEquals(2.5f, frame.y(0));
+        assertEquals(3, frame.flakeShape(0));
+        assertEquals(2.75f, frame.x(1));
+        assertEquals(0.0f, frame.y(1));
+        assertEquals(4, frame.flakeShape(1));
 
     }
 

@@ -47,12 +47,13 @@ public class SnowStream {
     @Qualifier("phpsnowConfig.create")
     private ObjectProvider<PhpSnowConfig> configProvider;
 
-    public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig, int bufferSizeInFrames) {
+    public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
+                      NamedPipe pipe, PhpSnowApp phpSnow, SnowDataBuffer buffer) {
         this.sessionId = sessionId;
         this.phpSnowConfig = phpSnowConfig;
-        this.pipe = new NamedPipe(sessionId);
-        this.phpSnow = new PhpSnowApp(sessionId, phpSnowConfig);
-        this.buffer = SnowDataBuffer.ofSize(bufferSizeInFrames);
+        this.pipe = pipe;
+        this.phpSnow = phpSnow;
+        this.buffer = buffer;
     }
 
     public void startPhpApp() throws IOException {
@@ -77,7 +78,7 @@ public class SnowStream {
         final FileInputStream stream = pipe.inputStream();
 
         log.debug("startConsumingSnowData( {} ) | Reading metadata", sessionId);
-        metadata = new SnowAnimationMetadata(new DataInputStream(stream));
+        metadata = SnowAnimationMetadata.from(new DataInputStream(stream));
 
         executor.submit(() -> consumeSnowFromPipeThread(stream));
         running = true;
@@ -88,13 +89,14 @@ public class SnowStream {
         try (stream) {
             try (DataInputStream dataStream = new DataInputStream(stream)) {
                 while (isActive()) {
-                    SnowDataFrame frame = new SnowDataFrame(dataStream);
-                    log.trace("consumeSnowFromPipeThread( {} ) | Frame {}", sessionId, frame.getFrameNum());
+                    SnowDataFrame frame = SnowDataFrame.from(dataStream);
+                    log.trace("consumeSnowFromPipeThread( {} ) | Frame {}", sessionId, frame.frameNum());
                     buffer.push(frame);
-                    if (frame.isLast()) {
+                    if (frame == SnowDataFrame.last) {
                         break;
                     }
                 }
+                buffer.push(SnowDataFrame.last);
                 buffer.destroy();
                 running = false;
             }
@@ -109,33 +111,28 @@ public class SnowStream {
             throw new IllegalStateException("You must startPhpApp() first!");
         }
 
-        log.debug("streamTo( {} ) | metadata", sessionId);
+        log.debug("streamTo( {} ) | Reading metadata", sessionId);
 
         out.write(metadata.toString().getBytes(StandardCharsets.UTF_8));
         out.write("\n\n".getBytes(StandardCharsets.UTF_8));
 
         log.debug("streamTo( {} ) | Reading first frame", sessionId);
-        SnowDataFrame currentFrame = buffer.firstFrame();
-        while(isActive() || currentFrame.isLast()) {
-            SnowDataFrame finalCurrentFrame = currentFrame;
-            log.trace("streamTo( {} ) | Frame {}", sessionId, finalCurrentFrame.getFrameNum());
-
-            out.write(currentFrame.toString().getBytes(StandardCharsets.UTF_8));
-            out.write("\n\n".getBytes(StandardCharsets.UTF_8));
-
-            if (currentFrame.isLast()) {
-                break;
+        for (SnowDataFrame frame = buffer.firstFrame(); frame != SnowDataFrame.last; frame = buffer.nextFrame(frame)) {
+            if (frame == SnowDataFrame.empty) {
+                continue;
             }
+            log.trace("streamTo( {} ) | Frame {}", sessionId, frame.frameNum());
 
-            currentFrame = buffer.nextFrame(currentFrame);
+            out.write(frame.toString().getBytes(StandardCharsets.UTF_8));
+            out.write("\n\n".getBytes(StandardCharsets.UTF_8));
         }
     }
 
-    public void ensureConfigCompatible(Map<String, String> confMap) {
-        if (confMap == null || confMap.isEmpty()) {
+    public void ensureCompatibleWithConfig(Map<String, String> config) {
+        if (config == null || config.isEmpty()) {
             return;
         }
-        if (!configProvider.getObject(confMap).equals(phpSnowConfig)) {
+        if (!configProvider.getObject(config).equals(phpSnowConfig)) {
             throw new IllegalArgumentException("You cannot change config when animation is running.");
         }
     }

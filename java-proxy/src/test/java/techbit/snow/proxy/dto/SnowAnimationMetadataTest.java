@@ -17,12 +17,12 @@ class SnowAnimationMetadataTest {
                 0x1, 0x0, 0x0, 0x0,
         };
 
-        SnowAnimationMetadata metadata = new SnowAnimationMetadata(
+        SnowAnimationMetadata metadata = SnowAnimationMetadata.from(
                 new DataInputStream(new ByteArrayInputStream(binary)));
 
-        assertEquals(127, metadata.getWidth());
-        assertEquals(65536, metadata.getHeight());
-        assertEquals(16777216, metadata.getFps());
+        assertEquals(127, metadata.width());
+        assertEquals(65536, metadata.height());
+        assertEquals(16777216, metadata.fps());
     }
 
     @Test
@@ -37,6 +37,18 @@ class SnowAnimationMetadataTest {
                 0x0, 0x1, 0x0, 0x0,
                 0x1, 0x0, 0x0, 0x0,
         }, output.toByteArray());
+    }
+
+    @Test
+    void givenDataWithoutMarker_whenDeserialized_thenExceptionIsThrown() throws IOException {
+        byte[] binary = new byte[]{
+                0x0, 0x0, 0x0, 0x7F,
+                0x0, 0x1, 0x0, 0x0,
+                0x1, 0x0, 0x0, 0x0,
+        };
+
+        assertThrows(Exception.class, () -> SnowAnimationMetadata.from(
+                new DataInputStream(new ByteArrayInputStream(binary))));
     }
 
 }

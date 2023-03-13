@@ -1,6 +1,5 @@
 package techbit.snow.proxy.service.stream;
 
-import com.google.common.io.MoreFiles;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -18,16 +17,8 @@ public class NamedPipe {
 
     private final File pipeFile;
 
-    public NamedPipe(String sessionId) {
-        this.pipeFile = pipesDir().resolve(sessionId).toFile();
-    }
-
-    public static void destroyAll() throws IOException {
-        MoreFiles.deleteDirectoryContents(pipesDir());
-    }
-
-    private static Path pipesDir() {
-        return Path.of(System.getProperty("user.dir") + "/../.pipes/");
+    public NamedPipe(String sessionId, Path pipesDir) {
+        this.pipeFile = pipesDir.resolve(sessionId).toFile();
     }
 
     public FileInputStream inputStream() throws InterruptedException {

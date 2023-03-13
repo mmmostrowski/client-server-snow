@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import techbit.snow.proxy.SnowProxyApplication;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -22,6 +21,8 @@ public class PhpSnowApp {
 
     private final PhpSnowConfig config;
 
+    private final String applicationPid;
+
     private Process process;
 
     public void start() throws IOException {
@@ -30,7 +31,7 @@ public class PhpSnowApp {
         Path phpSnowPath = Path.of(Files.simplifyPath(System.getProperty("user.dir") + "/../run"));
 
         ProcessBuilder builder = new ProcessBuilder();
-        builder.environment().put("SCRIPT_OWNER_PID", SnowProxyApplication.pid());
+        builder.environment().put("SCRIPT_OWNER_PID", applicationPid);
         builder.command(phpSnowPath.toString(),
             "server", sessionId,
             Integer.toString(config.getWidth()),

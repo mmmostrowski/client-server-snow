@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 
 import java.util.Map;
@@ -16,17 +17,36 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @Component
 public class SnowStreamFactory {
 
-    @Value("${phpsnow.buffer-size-in-frames}")
-    private int bufferSizeInFrames;
+    private final int bufferSizeInFrames;
 
-    @Autowired
-    @Qualifier("phpsnowConfig.create")
-    private ObjectProvider<PhpSnowConfig> configProvider;
+    private final ObjectProvider<PhpSnowConfig> configProvider;
+
+    private String applicationPid;
+
+    private NamedPipes pipes;
+
+    public SnowStreamFactory(
+            @Value("${phpsnow.buffer-size-in-frames}") int bufferSizeInFrames,
+            @Autowired @Qualifier("phpsnowConfig.create") ObjectProvider<PhpSnowConfig> configProvider,
+            @Autowired @Qualifier("application.pid") String applicationPid,
+            @Autowired NamedPipes pipes
+    ) {
+        this.bufferSizeInFrames = bufferSizeInFrames;
+        this.configProvider = configProvider;
+        this.applicationPid = applicationPid;
+        this.pipes = pipes;
+    }
 
     @Bean("snowStream.create")
     @Scope(SCOPE_PROTOTYPE)
     public SnowStream create(String sessionId, Map<String, String> config) {
-        return new SnowStream(sessionId, configProvider.getObject(config), bufferSizeInFrames);
+        PhpSnowConfig phpSnowConfig = configProvider.getObject(config);
+        return new SnowStream(sessionId,
+                phpSnowConfig,
+                new NamedPipe(sessionId, pipes.pipesDir()),
+                new PhpSnowApp(sessionId, phpSnowConfig, applicationPid),
+                new SnowDataBuffer(bufferSizeInFrames)
+        );
     }
 
 }

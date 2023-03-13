@@ -46,7 +46,7 @@ public class ProxyService {
         if (session.exists(sessionId)) {
             log.debug("snowStream( {} ) | Returning existing stream", sessionId);
             SnowStream stream = streams.get(sessionId);
-            stream.ensureConfigCompatible(confMap);
+            stream.ensureCompatibleWithConfig(confMap);
             return stream;
         }
         log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, confMap);

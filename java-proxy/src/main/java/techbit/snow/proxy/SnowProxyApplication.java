@@ -1,29 +1,23 @@
 package techbit.snow.proxy;
 
-import jakarta.annotation.PostConstruct;
+import lombok.Generated;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
-import techbit.snow.proxy.service.stream.NamedPipe;
-
-import java.io.IOException;
 
 @EnableAsync
 @SpringBootApplication
+@Generated
 public class SnowProxyApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(SnowProxyApplication.class, args);
 	}
 
-	public static String pid() {
+	@Bean("application.pid")
+	public String pid() {
 		return System.getProperty("PID");
-	}
-
-	@PostConstruct
-	public void startup() throws IOException {
-		NamedPipe.destroyAll();
 	}
 
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
@@ -44,7 +45,9 @@ public class PhpSnowConfigFactory {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
 
-        Map<String, Object> result = mapper.convertValue(this, new TypeReference<>() {});
+        Map<String, Object> defaults = mapper.convertValue(this, new TypeReference<>() {});
+        Map<String, Object> result = Maps.newHashMap(defaults);
+
         result.putAll(config);
 
         return mapper.convertValue(result, PhpSnowConfig.class);
