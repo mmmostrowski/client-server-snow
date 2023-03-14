@@ -18,18 +18,22 @@ import java.time.Duration;
 @EnableAsync
 public class AsyncConfiguration implements AsyncConfigurer {
 
-    @Value("#{ ${phpsnow.threads.timeout} * 1000 }")
-    private final Duration timeout = Duration.ofHours(1);
+    private final Duration timeout;
+    private final int threadCorePoolSize;
+    private final int threadMaxPoolSize;
+    private final int threadQueueCapacity;
 
-    @Value("${phpsnow.threads.core-pool-size}")
-    private final int threadCorePoolSize = 5;
-
-    @Value("${phpsnow.threads.max-pool-size}")
-    private final int threadMaxPoolSize = 10;
-
-    @Value("${phpsnow.threads.queue-capacity}")
-    private final int threadQueueCapacity = 25;
-
+    public AsyncConfiguration(
+            @Value("#{ ${phpsnow.threads.timeout} * 1000 }") Duration timeout,
+            @Value("${phpsnow.threads.core-pool-size}") int threadCorePoolSize,
+            @Value("${phpsnow.threads.max-pool-size}") int threadMaxPoolSize,
+            @Value("${phpsnow.threads.queue-capacity}") int threadQueueCapacity
+    ) {
+        this.timeout = timeout;
+        this.threadCorePoolSize = threadCorePoolSize;
+        this.threadMaxPoolSize = threadMaxPoolSize;
+        this.threadQueueCapacity = threadQueueCapacity;
+    }
 
     @Override
     @Bean(name = "streamExecutor")
@@ -48,7 +52,8 @@ public class AsyncConfiguration implements AsyncConfigurer {
         return new WebMvcConfigurer() {
             @Override
             public void configureAsyncSupport(@NotNull AsyncSupportConfigurer config) {
-                config.setDefaultTimeout(timeout.toMillis()).setTaskExecutor(taskExecutor);
+                config.setDefaultTimeout(timeout.toMillis());
+                config.setTaskExecutor(taskExecutor);
             }
         };
     }

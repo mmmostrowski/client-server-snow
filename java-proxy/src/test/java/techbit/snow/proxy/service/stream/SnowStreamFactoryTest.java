@@ -30,7 +30,8 @@ class SnowStreamFactoryTest {
 
     @BeforeEach
     void setup() {
-        factory = new SnowStreamFactory(12, configProvider, "131", new NamedPipes());
+        factory = new SnowStreamFactory(
+                12, configProvider, "131", new NamedPipes());
         mockSnowConfig = new PhpSnowConfig(
                 "preset-name", 90, 30, Duration.ofMinutes(1), 22
         );

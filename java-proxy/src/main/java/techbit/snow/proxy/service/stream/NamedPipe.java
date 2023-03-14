@@ -1,13 +1,14 @@
 package techbit.snow.proxy.service.stream;
 
+import org.apache.commons.io.FileUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.time.Duration;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -21,22 +22,9 @@ public class NamedPipe {
         this.pipeFile = pipesDir.resolve(sessionId).toFile();
     }
 
-    public FileInputStream inputStream() throws InterruptedException {
-        try {
-            waitUntilPipeExists();
-            return new FileInputStream(pipeFile);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void waitUntilPipeExists() throws InterruptedException {
-        for (int i = 100; i >= 0 && !pipeFile.exists(); --i) {
-            if (i == 0) {
-                throw new IllegalStateException("Cannot find file file: " + pipeFile);
-            }
-            Thread.sleep(150);
-        }
+    public FileInputStream inputStream() throws IOException {
+        FileUtils.waitFor(pipeFile, (int) Duration.ofMinutes(30).getSeconds());
+        return new FileInputStream(pipeFile);
     }
 
     public void destroy() throws IOException {

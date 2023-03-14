@@ -75,7 +75,7 @@ public class SnowStream {
 
     public void startConsumingSnowData() throws InterruptedException, IOException {
         log.debug("startConsumingSnowData( {} ) | Opening pipe stream", sessionId);
-        final FileInputStream stream = pipe.inputStream();
+        FileInputStream stream = pipe.inputStream();
 
         log.debug("startConsumingSnowData( {} ) | Reading metadata", sessionId);
         metadata = SnowAnimationMetadata.from(new DataInputStream(stream));

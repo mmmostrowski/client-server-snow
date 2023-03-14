@@ -19,25 +19,33 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 public class PhpSnowConfigFactory {
 
     @JsonProperty
-    @Value("${phpsnow.default.preset-name}")
-    private final String presetName = "massiveSnow";
+    private final String presetName;
 
     @JsonProperty
-    @Value("${phpsnow.default.width}")
-    private final int width = 180;
+    private final int width;
 
     @JsonProperty
-    @Value("${phpsnow.default.height}")
-    private final int height = 30;
+    private final int height;
 
     @JsonProperty
-    @Value("#{ ${phpsnow.default.animation-duration} * 1000 }")
-    private final Duration animationDuration = Duration.ofMinutes(5);
+    private final Duration animationDuration;
 
     @JsonProperty
-    @Value("${phpsnow.default.fps}")
-    private final int fps = 33;
+    private final int fps;
 
+    public PhpSnowConfigFactory(
+            @Value("${phpsnow.default.preset-name}") String presetName,
+            @Value("${phpsnow.default.width}") int width,
+            @Value("${phpsnow.default.height}") int height,
+            @Value("#{ ${phpsnow.default.animation-duration} * 1000 }") Duration animationDuration,
+            @Value("${phpsnow.default.fps}") int fps
+    ) {
+        this.presetName = presetName;
+        this.width = width;
+        this.height = height;
+        this.animationDuration = animationDuration;
+        this.fps = fps;
+    }
 
     @Bean("phpsnowConfig.create")
     @Scope(SCOPE_PROTOTYPE)
@@ -49,6 +57,10 @@ public class PhpSnowConfigFactory {
         Map<String, Object> result = Maps.newHashMap(defaults);
 
         result.putAll(config);
+
+        if (config.containsKey("animationDuration")) {
+            result.put("animationDuration", "PT" + config.get("animationDuration") + "S");
+        }
 
         return mapper.convertValue(result, PhpSnowConfig.class);
     }

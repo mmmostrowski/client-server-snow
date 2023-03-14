@@ -28,11 +28,6 @@ class SnowDataBufferTest {
         buffer = new SnowDataBuffer(2, bag);
     }
 
-    @AfterEach
-    void tearDown() {
-//        buffer.destroy();
-    }
-
     @Test
     void givenNoFramesInBuffer_whenAskedForFrame_thenWaitUntilFrameIsAvailable() throws Throwable {
         TestFramework.runOnce(new MultithreadedTestCase() {

@@ -12,7 +12,8 @@ public class NamedPipes {
 
     @PostConstruct
     public void destroyAll() throws IOException {
-        MoreFiles.deleteDirectoryContents(pipesDir());
+        Path path = pipesDir();
+        MoreFiles.deleteDirectoryContents(path);
     }
 
     public Path pipesDir() {

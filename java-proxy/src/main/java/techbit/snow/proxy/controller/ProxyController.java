@@ -21,8 +21,13 @@ import java.util.concurrent.CompletableFuture;
 @Log4j2
 public class ProxyController {
 
-    @Autowired
-    private ProxyService streaming;
+        private final ProxyService streaming;
+
+    public ProxyController(
+            @Autowired ProxyService streaming
+    ) {
+        this.streaming = streaming;
+    }
 
     @GetMapping("/")
     public void index() {
@@ -95,6 +100,9 @@ public class ProxyController {
         for (int i = 0; i < elements.length; ++i) {
             if (i % 2 == 0) {
                 key = elements[i];
+                if (Strings.isNullOrEmpty(key)) {
+                    throw new IllegalArgumentException("Neither keys nor values can be empty! Please provide request in form: http://domain.com/sessionId/key1/val1/key2/val2/...");
+                }
             } else {
                 confMap.put(key, elements[i]);
             }

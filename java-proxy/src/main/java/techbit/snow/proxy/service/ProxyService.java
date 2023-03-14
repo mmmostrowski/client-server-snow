@@ -15,18 +15,21 @@ import java.util.Map;
 
 @Service
 @Log4j2
-@RequiredArgsConstructor
 public class ProxyService {
 
     private final Map<String, SnowStream> streams = Maps.newHashMap();
 
-    @Autowired
-    @Qualifier("snowStream.create")
     private final ObjectProvider<SnowStream> snowFactory;
 
-    @Autowired
     private final SessionService session;
 
+    public ProxyService(
+            @Autowired @Qualifier("snowStream.create") ObjectProvider<SnowStream> snowFactory,
+            @Autowired SessionService session
+    ) {
+        this.snowFactory = snowFactory;
+        this.session = session;
+    }
 
     public void stream(String sessionId, OutputStream out, Map<String, String> confMap) throws IOException, InterruptedException {
         snowStream(sessionId, confMap).streamTo(out);

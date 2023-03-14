@@ -23,6 +23,8 @@ public class PhpSnowApp {
 
     private final String applicationPid;
 
+    private final ProcessBuilder builder;
+
     private Process process;
 
     public void start() throws IOException {
@@ -30,7 +32,6 @@ public class PhpSnowApp {
 
         Path phpSnowPath = Path.of(Files.simplifyPath(System.getProperty("user.dir") + "/../run"));
 
-        ProcessBuilder builder = new ProcessBuilder();
         builder.environment().put("SCRIPT_OWNER_PID", applicationPid);
         builder.command(phpSnowPath.toString(),
             "server", sessionId,

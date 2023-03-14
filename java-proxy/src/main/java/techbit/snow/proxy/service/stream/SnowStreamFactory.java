@@ -21,9 +21,10 @@ public class SnowStreamFactory {
 
     private final ObjectProvider<PhpSnowConfig> configProvider;
 
-    private String applicationPid;
+    private final String applicationPid;
 
-    private NamedPipes pipes;
+    private final NamedPipes pipes;
+
 
     public SnowStreamFactory(
             @Value("${phpsnow.buffer-size-in-frames}") int bufferSizeInFrames,
@@ -44,7 +45,7 @@ public class SnowStreamFactory {
         return new SnowStream(sessionId,
                 phpSnowConfig,
                 new NamedPipe(sessionId, pipes.pipesDir()),
-                new PhpSnowApp(sessionId, phpSnowConfig, applicationPid),
+                new PhpSnowApp(sessionId, phpSnowConfig, applicationPid, new ProcessBuilder()),
                 new SnowDataBuffer(bufferSizeInFrames)
         );
     }
