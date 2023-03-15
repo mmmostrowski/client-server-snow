@@ -13,21 +13,6 @@ public record SnowDataFrame( int frameNum, int chunkSize, float[] x, float[] y, 
     public static final SnowDataFrame last = new SnowDataFrame(
             -1, 0, new float[0], new float[0],new byte[0]);
 
-    public static SnowDataFrame from(DataInputStream dataStream) throws IOException {
-        int frameNum = dataStream.readInt();
-        int chunkSize = dataStream.readInt();
-        float[] x = new float[chunkSize];
-        float[] y = new float[chunkSize];
-        byte[] flakeShapes = new byte[chunkSize];
-
-        for (int i = 0; i < chunkSize; ++i) {
-            x[i] = dataStream.readFloat();
-            y[i] = dataStream.readFloat();
-            flakeShapes[i] = dataStream.readByte();
-        }
-        return new SnowDataFrame(frameNum, chunkSize, x, y, flakeShapes);
-    }
-
     public boolean isValidDataFrame() {
         return frameNum > 0;
     }

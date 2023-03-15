@@ -62,7 +62,7 @@ public class ProxyController {
     }
 
     @GetMapping({"/stop/{sessionId}", "/stop/{sessionId}/"})
-    public Map<String, Object> stopStreaming(final @PathVariable String sessionId) throws IOException {
+    public Map<String, Object> stopStreaming(final @PathVariable String sessionId) throws IOException, InterruptedException {
         log.debug("stopStreaming( {} )", sessionId);
 
         streaming.stopStream(sessionId);

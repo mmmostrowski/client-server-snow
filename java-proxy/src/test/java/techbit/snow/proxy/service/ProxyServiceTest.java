@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.stream.SnowStream;
 
 import java.io.IOException;
@@ -31,13 +32,16 @@ class ProxyServiceTest {
     @Mock
     private SnowStream snowStream;
 
+    @Mock
+    private ObjectProvider<PhpSnowConfig> configProvider;
+
     private Map<String, String> confMap;
 
     private ProxyService proxyService;
 
     @BeforeEach
     void setup() {
-        proxyService = new ProxyService(snowFactory, session);
+        proxyService = new ProxyService(snowFactory, configProvider, session);
         confMap = new HashMap<>();
     }
 
@@ -123,7 +127,7 @@ class ProxyServiceTest {
 
         proxyService.stopStream("session-abc");
 
-        verify(snowStream).stopPhpApp();
+        verify(snowStream).stop();
     }
 
     @Test

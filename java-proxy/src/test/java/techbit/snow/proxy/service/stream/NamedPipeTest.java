@@ -55,7 +55,7 @@ class NamedPipeTest {
         TestFramework.runOnce(new MultithreadedTestCase() {
             void thread1() throws IOException {
                 Assertions.assertTrue(pipePath.toFile().delete());
-                try(FileInputStream input = namedPipe.inputStream()) {
+                try(InputStream input = namedPipe.inputStream()) {
                     assertTick(1);
                     Assertions.assertArrayEquals("new-content".getBytes(), input.readAllBytes());
                 }

@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ErrorHandlerTest {
@@ -29,7 +30,7 @@ class ErrorHandlerTest {
 
     @Test
     void whenErrorWithoutExceptionOccurs_thenNoErrorDetailsReturned() {
-        Mockito.when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(null);
+        when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(null);
 
         Map<String, Object> response = errorHandler.error(request);
 
@@ -45,14 +46,14 @@ class ErrorHandlerTest {
         try {
             throw new Exception("Stub");
         } catch(Exception e) {
-            Mockito.when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(e);
+            when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(e);
         }
 
         Map<String, Object> response = errorHandler.error(request);
 
         assertEquals("Stub", response.get("message"));
-        Assertions.assertTrue(((String)response.get("exceptionDetails")).contains("java.lang.Exception: Stub"));
-        Assertions.assertTrue(((String)response.get("exceptionDetails")).contains("at "));
+        assertTrue(((String)response.get("exceptionDetails")).contains("java.lang.Exception: Stub"));
+        assertTrue(((String)response.get("exceptionDetails")).contains("at "));
     }
 
 }

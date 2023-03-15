@@ -110,14 +110,14 @@ class ProxyControllerTest {
     }
 
     @Test
-    void whenStopStreaming_thenStopStream() throws IOException {
+    void whenStopStreaming_thenStopStream() throws IOException, InterruptedException {
         controller.stopStreaming("session-abc");
 
         verify(streaming).stopStream("session-abc");
     }
 
     @Test
-    void whenStopStreaming_thenRespondWithInfoMap() throws IOException {
+    void whenStopStreaming_thenRespondWithInfoMap() throws IOException, InterruptedException {
         Map<String, Object> response = controller.stopStreaming("session-abc");
 
         assertEquals(Map.of(

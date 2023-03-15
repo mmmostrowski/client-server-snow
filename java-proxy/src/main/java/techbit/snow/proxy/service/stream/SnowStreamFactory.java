@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
+import techbit.snow.proxy.service.stream.encoding.BinaryStreamDecoder;
+import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
 import java.util.Map;
 
@@ -46,7 +48,9 @@ public class SnowStreamFactory {
                 phpSnowConfig,
                 new NamedPipe(sessionId, pipes.pipesDir()),
                 new PhpSnowApp(sessionId, phpSnowConfig, applicationPid, new ProcessBuilder()),
-                new SnowDataBuffer(bufferSizeInFrames)
+                new SnowDataBuffer(bufferSizeInFrames),
+                new BinaryStreamDecoder(),
+                new PlainTextStreamEncoder()
         );
     }
 

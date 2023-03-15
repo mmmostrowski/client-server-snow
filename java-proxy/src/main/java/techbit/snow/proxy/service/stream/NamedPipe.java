@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.*;
 import java.time.Duration;
 
@@ -22,7 +23,7 @@ public class NamedPipe {
         this.pipeFile = pipesDir.resolve(sessionId).toFile();
     }
 
-    public FileInputStream inputStream() throws IOException {
+    public InputStream inputStream() throws IOException {
         FileUtils.waitFor(pipeFile, (int) Duration.ofMinutes(30).getSeconds());
         return new FileInputStream(pipeFile);
     }
