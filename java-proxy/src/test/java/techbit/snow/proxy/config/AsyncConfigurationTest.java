@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedConstruction;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -13,8 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.time.Duration;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AsyncConfigurationTest {
@@ -33,7 +31,7 @@ class AsyncConfigurationTest {
 
     @Test
     void whenProvidingAsyncExecutor_thenItIsProperlyConfigured() {
-        try(MockedConstruction<?> mocked = Mockito.mockConstruction(ThreadPoolTaskExecutor.class)) {
+        try(MockedConstruction<?> mocked = mockConstruction(ThreadPoolTaskExecutor.class)) {
             conf.getAsyncExecutor();
 
             ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) mocked.constructed().get(0);

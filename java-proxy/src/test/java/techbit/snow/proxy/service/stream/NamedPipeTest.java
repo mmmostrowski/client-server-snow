@@ -9,14 +9,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class NamedPipeTest {
@@ -70,7 +68,7 @@ class NamedPipeTest {
 
     @Test
     void givenPipeFile_whenCannotDeletePipeFile_thenThrowException() throws IOException {
-        Assertions.assertTrue(folder.getRoot().setWritable(false));
-        Assertions.assertThrows(Exception.class, () -> namedPipe.destroy());
+        assertTrue(folder.getRoot().setWritable(false));
+        assertThrows(Exception.class, () -> namedPipe.destroy());
     }
 }

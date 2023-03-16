@@ -5,11 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import techbit.snow.proxy.service.ProxyService;
-import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 
 import java.io.IOException;
@@ -18,13 +16,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProxyControllerTest {
@@ -50,7 +43,7 @@ class ProxyControllerTest {
 
     @Test
     void whenFaviconRequested_thenDoNothing() {
-        ProxyController controller = Mockito.mock(ProxyController.class);
+        ProxyController controller = mock(ProxyController.class);
         doCallRealMethod().when(controller).favicon();
 
         controller.favicon();
@@ -96,8 +89,8 @@ class ProxyControllerTest {
 
     @Test
     void whenStreamDetailsToClient_thenValidDetailsResponded() throws IOException, InterruptedException, ExecutionException {
-        Mockito.when(streaming.hasStream("session-abc")).thenReturn(true);
-        Mockito.when(streaming.isRunning("session-abc")).thenReturn(true);
+        when(streaming.hasStream("session-abc")).thenReturn(true);
+        when(streaming.isRunning("session-abc")).thenReturn(true);
 
         Map<String, Object> response = controller.streamDetails("session-abc");
 

@@ -1,6 +1,5 @@
 package techbit.snow.proxy.service.phpsnow;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +8,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
 class PhpSnowConfigFactoryTest {
@@ -25,46 +26,46 @@ class PhpSnowConfigFactoryTest {
     void givenEmptyConfigMap_whenCreate_thenReturnsConfigObjectWithDefaults() {
         PhpSnowConfig config = factory.create(Collections.emptyMap());
 
-        Assertions.assertEquals("somePreset", config.getPresetName());
-        Assertions.assertEquals(101, config.getWidth());
-        Assertions.assertEquals(53, config.getHeight());
-        Assertions.assertEquals(Duration.ofMinutes(3), config.getAnimationDuration());
-        Assertions.assertEquals(23, config.getFps());
+        assertEquals("somePreset", config.getPresetName());
+        assertEquals(101, config.getWidth());
+        assertEquals(53, config.getHeight());
+        assertEquals(Duration.ofMinutes(3), config.getAnimationDuration());
+        assertEquals(23, config.getFps());
     }
 
     @Test
     void givenPresetName_whenCreate_thenReturnsValidConfigObject() {
         PhpSnowConfig config = factory.create(Map.of("presetName", "redefinedPresetName"));
 
-        Assertions.assertEquals("redefinedPresetName", config.getPresetName());
+        assertEquals("redefinedPresetName", config.getPresetName());
     }
 
     @Test
     void givenFps_whenCreate_thenReturnsValidConfigObject() {
         PhpSnowConfig config = factory.create(Map.of("fps", "13"));
 
-        Assertions.assertEquals(13, config.getFps());
+        assertEquals(13, config.getFps());
     }
 
     @Test
     void givenWidth_whenCreate_thenReturnsValidConfigObject() {
         PhpSnowConfig config = factory.create(Map.of("width", "113"));
 
-        Assertions.assertEquals(113, config.getWidth());
+        assertEquals(113, config.getWidth());
     }
 
     @Test
     void givenHeight_whenCreate_thenReturnsValidConfigObject() {
         PhpSnowConfig config = factory.create(Map.of("height", "73"));
 
-        Assertions.assertEquals(73, config.getHeight());
+        assertEquals(73, config.getHeight());
     }
 
     @Test
     void givenAnimationDuration_whenCreate_thenReturnsValidConfigObject() {
         PhpSnowConfig config = factory.create(Map.of("animationDuration", "5940"));
 
-        Assertions.assertEquals(Duration.ofMinutes(99), config.getAnimationDuration());
+        assertEquals(Duration.ofMinutes(99), config.getAnimationDuration());
     }
 
     @Test
@@ -77,11 +78,11 @@ class PhpSnowConfigFactoryTest {
                 "animationDuration", "5940"
         ));
 
-        Assertions.assertEquals("redefinedPresetName", config.getPresetName());
-        Assertions.assertEquals(113, config.getWidth());
-        Assertions.assertEquals(73, config.getHeight());
-        Assertions.assertEquals(Duration.ofMinutes(99), config.getAnimationDuration());
-        Assertions.assertEquals(13, config.getFps());
+        assertEquals("redefinedPresetName", config.getPresetName());
+        assertEquals(113, config.getWidth());
+        assertEquals(73, config.getHeight());
+        assertEquals(Duration.ofMinutes(99), config.getAnimationDuration());
+        assertEquals(13, config.getFps());
     }
 
 }

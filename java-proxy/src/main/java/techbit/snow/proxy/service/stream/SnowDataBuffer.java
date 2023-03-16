@@ -89,6 +89,9 @@ public class SnowDataBuffer {
     public void destroy() {
         destroyed = true;
         frames.removeAll();
+        numOfFrames = 0;
+        headFrameNum = 0;
+        tailFrameNum = 0;
         synchronized (this) {
             notifyAll();
         }

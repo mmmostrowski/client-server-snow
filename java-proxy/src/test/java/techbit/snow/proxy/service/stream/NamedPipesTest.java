@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
@@ -15,6 +14,8 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NamedPipesTest {
@@ -33,8 +34,8 @@ class NamedPipesTest {
         folder.newFolder();
         folder.newFile();
 
-        Mockito.when(namedPipes.pipesDir()).thenReturn(folder.getRoot().toPath());
-        Mockito.doCallRealMethod().when(namedPipes).destroyAll();
+        when(namedPipes.pipesDir()).thenReturn(folder.getRoot().toPath());
+        doCallRealMethod().when(namedPipes).destroyAll();
 
         namedPipes.destroyAll();
 
@@ -45,7 +46,7 @@ class NamedPipesTest {
     
     @Test 
     void whenAskedForPipesDir_thenValidDirectoryPathProvided() throws IOException {
-        Mockito.doCallRealMethod().when(namedPipes).pipesDir();
+        doCallRealMethod().when(namedPipes).pipesDir();
 
         assertDoesNotThrow(() -> namedPipes.pipesDir().toRealPath());
     }

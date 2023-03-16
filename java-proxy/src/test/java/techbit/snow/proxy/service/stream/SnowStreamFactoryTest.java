@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -17,6 +16,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SnowStreamFactoryTest {
@@ -40,7 +40,7 @@ class SnowStreamFactoryTest {
     @Test
     void whenSnowStreamIsCreated_thenObjectIsCreatedProperly() {
         Map<String, String> configMap = Map.of();
-        Mockito.when(configProvider.getObject(configMap)).thenReturn(mockSnowConfig);
+        when(configProvider.getObject(configMap)).thenReturn(mockSnowConfig);
 
         SnowStream snowStream = factory.create("session-xyz", configMap);
 

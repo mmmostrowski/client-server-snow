@@ -47,11 +47,11 @@ public class SnowStream {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private final Semaphore consumerLock = new Semaphore(0);
+    private final Semaphore consumerGoingDownLock = new Semaphore(0);
 
     private SnowAnimationMetadata metadata;
 
-    private boolean running = false;
+    private volatile boolean running = false;
 
     private volatile ConsumerThreadException consumerException;
 
@@ -108,7 +108,7 @@ public class SnowStream {
         if (!running) {
             return;
         }
-        consumerLock.acquire();
+        consumerGoingDownLock.acquire();
     }
 
     public void stop() throws IOException, InterruptedException {
@@ -189,7 +189,7 @@ public class SnowStream {
 
     private void stopConsumerThread() throws InterruptedException {
         running = false;
-        if (!consumerLock.tryAcquire(2000, TimeUnit.MILLISECONDS)) {
+        if (!consumerGoingDownLock.tryAcquire(2000, TimeUnit.MILLISECONDS)) {
             executor.shutdownNow();
             disableConsumerThread();
             buffer.destroy();
@@ -198,6 +198,6 @@ public class SnowStream {
 
     private void disableConsumerThread() {
         running = false;
-        consumerLock.release();
+        consumerGoingDownLock.release(Integer.MAX_VALUE);
     }
 }

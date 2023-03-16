@@ -1,6 +1,5 @@
 package techbit.snow.proxy.service.stream.encoding;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
@@ -9,6 +8,8 @@ import techbit.snow.proxy.dto.SnowDataFrame;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlainTextStreamEncoderTest {
 
@@ -27,9 +28,9 @@ class PlainTextStreamEncoderTest {
         encoder.encodeMetadata(metadata, out);
         String result = out.toString();
 
-        Assertions.assertTrue(result.contains("99"));
-        Assertions.assertTrue(result.contains("101"));
-        Assertions.assertTrue(result.contains("15"));
+        assertTrue(result.contains("99"));
+        assertTrue(result.contains("101"));
+        assertTrue(result.contains("15"));
     }
 
     @Test
@@ -43,13 +44,13 @@ class PlainTextStreamEncoderTest {
         encoder.encodeFrame(frame, out);
         String result = out.toString();
 
-        Assertions.assertTrue(result.contains("78"));
-        Assertions.assertTrue(result.contains("2"));
-        Assertions.assertTrue(result.contains("103"));
-        Assertions.assertTrue(result.contains("22.5"));
-        Assertions.assertTrue(result.contains("0.5"));
-        Assertions.assertTrue(result.contains("1"));
-        Assertions.assertTrue(result.contains("0"));
-        Assertions.assertTrue(result.contains("8"));
+        assertTrue(result.contains("78"));
+        assertTrue(result.contains("2"));
+        assertTrue(result.contains("103"));
+        assertTrue(result.contains("22.5"));
+        assertTrue(result.contains("0.5"));
+        assertTrue(result.contains("1"));
+        assertTrue(result.contains("0"));
+        assertTrue(result.contains("8"));
     }
 }

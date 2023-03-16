@@ -1,16 +1,17 @@
 package techbit.snow.proxy.service.phpsnow;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.time.Duration;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -20,7 +21,7 @@ class PhpSnowAppTest {
 
     private final PhpSnowConfig config = new PhpSnowConfig(
             "customPreset", 135, 85, Duration.ofMinutes(1), 35);
-    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    @Mock(answer = RETURNS_DEEP_STUBS)
     private ProcessBuilder builder;
 
     private PhpSnowApp phpSnowApp;
@@ -52,7 +53,7 @@ class PhpSnowAppTest {
 
     @Test
     void whenDidNotStart_thenIsNotAlive() {
-        Assertions.assertFalse(phpSnowApp.isAlive());
+        assertFalse(phpSnowApp.isAlive());
     }
 
     @Test
@@ -61,7 +62,7 @@ class PhpSnowAppTest {
 
         phpSnowApp.start();
 
-        Assertions.assertTrue(phpSnowApp.isAlive());
+        assertTrue(phpSnowApp.isAlive());
     }
 
     @Test
@@ -71,7 +72,7 @@ class PhpSnowAppTest {
         phpSnowApp.start();
         phpSnowApp.stop();
 
-        Assertions.assertFalse(phpSnowApp.isAlive());
+        assertFalse(phpSnowApp.isAlive());
     }
 
     @Test

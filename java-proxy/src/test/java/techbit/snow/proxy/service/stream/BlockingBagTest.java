@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class BlockingBagTest {
 
     private BlockingBag<Integer, String> bag;
@@ -19,16 +21,16 @@ class BlockingBagTest {
     public void whenItemInBag_thenItCanBeTaken() throws InterruptedException {
         bag.put(12, "value");
 
-        Assertions.assertEquals("value", bag.take(12).orElseThrow());
+        assertEquals("value", bag.take(12).orElseThrow());
     }
 
     @Test
     public void whenItemInBag_thenItCanBeTakenMultipleTimes() throws InterruptedException {
         bag.put(12, "value");
 
-        Assertions.assertEquals("value", bag.take(12).orElseThrow());
-        Assertions.assertEquals("value", bag.take(12).orElseThrow());
-        Assertions.assertEquals("value", bag.take(12).orElseThrow());
+        assertEquals("value", bag.take(12).orElseThrow());
+        assertEquals("value", bag.take(12).orElseThrow());
+        assertEquals("value", bag.take(12).orElseThrow());
     }
 
     @Test
@@ -47,7 +49,7 @@ class BlockingBagTest {
         bag.put(3, "three");
         bag.put(3, "other");
 
-        Assertions.assertEquals("other", bag.take(3).orElseThrow());
+        assertEquals("other", bag.take(3).orElseThrow());
     }
 
     @Test
@@ -160,7 +162,7 @@ class BlockingBagTest {
         bag.put(3, "three");
         bag.remove(3);
         bag.put(3, "new");
-        Assertions.assertEquals(bag.take(3).orElseThrow(), "new");
+        assertEquals(bag.take(3).orElseThrow(), "new");
     }
 
     @Test
