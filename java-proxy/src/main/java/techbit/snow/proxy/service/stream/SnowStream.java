@@ -1,9 +1,9 @@
 package techbit.snow.proxy.service.stream;
 
+import lombok.experimental.StandardException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import techbit.snow.proxy.SnowProxyApplication;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
@@ -11,9 +11,14 @@ import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.stream.encoding.StreamDecoder;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -21,6 +26,10 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @Scope(SCOPE_PROTOTYPE)
 @Log4j2
 public class SnowStream {
+
+    @StandardException
+    public static class ConsumerThreadException extends Exception {
+    }
 
     private final String sessionId;
 
@@ -38,13 +47,15 @@ public class SnowStream {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private final Object consumerLock = new Object();
+    private final Semaphore consumerLock = new Semaphore(0);
 
     private SnowAnimationMetadata metadata;
 
     private boolean running = false;
 
-    private volatile IOException consumerException;
+    private volatile ConsumerThreadException consumerException;
+
+    private boolean destroyed = false;
 
 
     public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
@@ -65,12 +76,20 @@ public class SnowStream {
     }
 
     public void startPhpApp() throws IOException {
-        stop();
+        if (destroyed) {
+            throw new IllegalStateException("You cannot use snow stream twice!");
+        }
+
+        pipe.destroy();
 
         phpSnow.start();
     }
 
     public void startConsumingSnowData() throws IOException {
+        if (destroyed) {
+            throw new IllegalStateException("You cannot use snow stream twice!");
+        }
+
         if (!phpSnow.isAlive()) {
             throw new IllegalStateException("Please startPhpApp() first!");
         }
@@ -89,19 +108,17 @@ public class SnowStream {
         if (!running) {
             return;
         }
-        synchronized (consumerLock) {
-            consumerLock.wait();
-        }
+        consumerLock.acquire();
     }
 
-    public void stop() throws IOException {
+    public void stop() throws IOException, InterruptedException {
         if (running) {
             stopConsumerThread();
-            buffer.destroy();
         }
         phpSnow.stop();
         pipe.destroy();
         metadata = null;
+        destroyed = true;
     }
 
     private void consumeSnowFromPipeThread(InputStream stream) {
@@ -120,18 +137,21 @@ public class SnowStream {
                 buffer.push(SnowDataFrame.last);
             }
             log.trace("consumeSnowFromPipeThread( {} ) | Stop pipe", sessionId);
+        } catch (InterruptedException ignored) {
         } catch (Throwable e) {
             log.error("consumeSnowFromPipeThread( {} ) | ERROR", sessionId, e);
-            consumerException = new IOException(e);
-            buffer.destroy();
+            consumerException = new ConsumerThreadException(e);
         } finally {
             disableConsumerThread();
+            buffer.destroy();
         }
     }
 
-    public void streamTo(OutputStream out) throws IOException, InterruptedException {
+    public void streamTo(OutputStream out) throws IOException, InterruptedException, ConsumerThreadException {
+        throwConsumerExceptionIfAny();
+
         if (!isActive()) {
-            throw new IOException("Stream is not active!", consumerException);
+            throw new IOException("Stream is not active!");
         }
 
         log.debug("streamTo( {} ) | Metadata", sessionId);
@@ -148,13 +168,17 @@ public class SnowStream {
             encoder.encodeFrame(frame, out);
         }
 
-        if (consumerException != null) {
-            log.debug("streamTo( {} ) | Consumer Exception", sessionId);
-            throw new IOException("Stream is not active!", consumerException);
-        }
+        throwConsumerExceptionIfAny();
 
         log.debug("streamTo( {} ) | Last frame", sessionId);
         encoder.encodeFrame(SnowDataFrame.last, out);
+    }
+
+    private void throwConsumerExceptionIfAny() throws ConsumerThreadException {
+        if (consumerException != null) {
+            log.debug("streamTo( {} ) | Consumer Exception", sessionId);
+            throw consumerException;
+        }
     }
 
     public void ensureCompatibleWithConfig(PhpSnowConfig config) {
@@ -163,22 +187,17 @@ public class SnowStream {
         }
     }
 
-    private void stopConsumerThread() {
-        try{
-            running = false;
-            synchronized (consumerLock) {
-                consumerLock.wait(500);
-            }
-        } catch (InterruptedException e) {
+    private void stopConsumerThread() throws InterruptedException {
+        running = false;
+        if (!consumerLock.tryAcquire(2000, TimeUnit.MILLISECONDS)) {
             executor.shutdownNow();
             disableConsumerThread();
+            buffer.destroy();
         }
     }
 
     private void disableConsumerThread() {
         running = false;
-        synchronized (consumerLock) {
-            consumerLock.notifyAll();
-        }
+        consumerLock.release();
     }
 }

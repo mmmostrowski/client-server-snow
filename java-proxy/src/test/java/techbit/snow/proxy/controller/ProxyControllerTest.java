@@ -9,6 +9,8 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import techbit.snow.proxy.service.ProxyService;
+import techbit.snow.proxy.service.stream.SnowStream;
+import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -58,7 +60,7 @@ class ProxyControllerTest {
     }
 
     @Test
-    void givenNoCustomConfiguration_whenStreamToClient_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException {
+    void givenNoCustomConfiguration_whenStreamToClient_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         StreamingResponseBody responseBody = controller.streamToClient("session-abc", "").get();
 
         responseBody.writeTo(out);
@@ -67,7 +69,7 @@ class ProxyControllerTest {
     }
 
     @Test
-    void givenCustomConfiguration_whenStreamToClient_thenStreamWithProperConfigMap() throws IOException, InterruptedException, ExecutionException {
+    void givenCustomConfiguration_whenStreamToClient_thenStreamWithProperConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         StreamingResponseBody responseBody = controller.streamToClient("session-abc", "/key1/value1/key2/value2").get();
 
         responseBody.writeTo(out);
@@ -128,7 +130,7 @@ class ProxyControllerTest {
 
 
     @Test
-    void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ExecutionException {
+    void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         StreamingResponseBody responseBody = controller.streamToClient("session-abc", "").get();
 
         doThrow(ClientAbortException.class).when(streaming).stream("session-abc", out, Collections.emptyMap());
@@ -137,7 +139,7 @@ class ProxyControllerTest {
     }
 
     @Test
-    void whenThreadInterruptedDuringStreaming_thenErrorOccurs() throws IOException, InterruptedException, ExecutionException {
+    void whenThreadInterruptedDuringStreaming_thenErrorOccurs() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         StreamingResponseBody responseBody = controller.streamToClient("session-abc", "").get();
 
         doThrow(InterruptedException.class).when(streaming).stream("session-abc", out, Collections.emptyMap());

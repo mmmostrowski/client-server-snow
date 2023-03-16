@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.stream.SnowStream;
+import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,7 +35,7 @@ public class ProxyService {
         this.configProvider = configProvider;
     }
 
-    public void stream(String sessionId, OutputStream out, Map<String, String> confMap) throws IOException, InterruptedException {
+    public void stream(String sessionId, OutputStream out, Map<String, String> confMap) throws IOException, InterruptedException, ConsumerThreadException {
         snowStream(sessionId, confMap).streamTo(out);
     }
 

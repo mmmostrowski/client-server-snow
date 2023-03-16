@@ -12,6 +12,7 @@ import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
+import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 import techbit.snow.proxy.service.stream.encoding.StreamDecoder;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 
@@ -19,9 +20,9 @@ import java.io.*;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import static java.util.stream.Stream.concat;
+import static java.util.stream.Stream.of;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -39,19 +40,15 @@ class SnowStreamTest {
     private StreamDecoder decoder;
     @Mock
     private StreamEncoder encoder;
-
     private SnowStream snowStream;
-    private InputStream inputStream;
     private OutputStream outputStream;
     private List<SnowDataFrame> framesSequence;
-
-    private List<SnowDataFrame> framesSequenceWithLast;
 
     @BeforeEach
     void setup() throws IOException {
         PhpSnowConfig config = new PhpSnowConfig("testingPreset", 87, 76, Duration.ofMinutes(11), 21);
         snowStream = new SnowStream("session-xyz", config, pipe, phpSnow, buffer, decoder, encoder);
-        inputStream = new ByteArrayInputStream(new byte[] {
+        InputStream inputStream = new ByteArrayInputStream(new byte[]{
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
         });
         outputStream = new ByteArrayOutputStream();
@@ -61,12 +58,10 @@ class SnowStreamTest {
                 frame(3),
                 frame(4)
         );
-        framesSequenceWithLast = Stream.concat(framesSequence.stream(), Stream.of(SnowDataFrame.last))
-                        .collect(Collectors.toList());
-
         lenient().when(pipe.inputStream()).thenReturn(inputStream);
 
-        final Iterator<?> inputFrames = framesSequenceWithLast.iterator();
+        Iterator<SnowDataFrame> inputFrames = concat(framesSequence.stream(), of(SnowDataFrame.last))
+                .toList().iterator();
         lenient().when(decoder.decodeFrame(any())).then(i -> inputFrames.next());
     }
 
@@ -89,21 +84,32 @@ class SnowStreamTest {
     }
 
     @Test
-    void whenStartPhpApp_thenPhpAppIsStopped() throws IOException, InterruptedException {
-        snowStream.startPhpApp();
-
-        verify(phpSnow).stop();
+    void givenStoppedStream_whenStartPhpApp_thenThrowException() throws IOException, InterruptedException {
+        snowStream.stop();
+        assertThrows(Exception.class, () -> snowStream.startPhpApp());
     }
 
     @Test
-    void whenStartPhpApp_thenPipeIsDestroyed() throws IOException, InterruptedException {
+    void givenStoppedStream_whenStartConsumingSnowData_thenThrowException() throws IOException, InterruptedException {
+        snowStream.stop();
+        assertThrows(Exception.class, () -> snowStream.startConsumingSnowData());
+    }
+
+    @Test
+    void givenStoppedStream_whenStopAgain_thenNoExceptionIsThrown() throws IOException, InterruptedException {
+        snowStream.stop();
+        assertDoesNotThrow(() -> snowStream.stop());
+    }
+
+    @Test
+    void whenStartPhpApp_thenPipeIsDestroyed() throws IOException {
         snowStream.startPhpApp();
 
         verify(pipe).destroy();
     }
 
     @Test
-    void whenStartPhpApp_thenBufferIsNotDestroyed() throws IOException, InterruptedException {
+    void whenStartPhpApp_thenBufferIsNotDestroyed() throws IOException {
         snowStream.startPhpApp();
 
         verify(buffer, never()).destroy();
@@ -172,7 +178,7 @@ class SnowStreamTest {
     }
 
     @Test
-    void whenInputDataIsStreamed_thenMetadataIsStreamedToOutput() throws IOException, InterruptedException {
+    void whenInputDataIsStreamed_thenMetadataIsStreamedToOutput() throws IOException, InterruptedException, ConsumerThreadException {
         SnowAnimationMetadata metadata = mock(SnowAnimationMetadata.class);
         when(decoder.decodeMetadata(any())).thenReturn(metadata);
         when(decoder.decodeFrame(any())).thenReturn(SnowDataFrame.last);
@@ -219,7 +225,7 @@ class SnowStreamTest {
     }
 
     @Test
-    void whenAddingFramesToBuffer_thenFramesAreStreamedToOutput() throws IOException, InterruptedException {
+    void whenAddingFramesToBuffer_thenFramesAreStreamedToOutput() throws IOException, InterruptedException, ConsumerThreadException {
         when(phpSnow.isAlive()).thenReturn(true);
         when(buffer.firstFrame()).thenReturn(frame(1));
         when(buffer.nextFrame(frame(1))).thenReturn(frame(2));
@@ -240,7 +246,7 @@ class SnowStreamTest {
     }
 
     @Test
-    void whenEmptyFrameAddedToBuffer_thenEmptyFrameIsNotStreamedToOutput() throws IOException, InterruptedException {
+    void whenEmptyFrameAddedToBuffer_thenEmptyFrameIsNotStreamedToOutput() throws IOException, InterruptedException, ConsumerThreadException {
         when(phpSnow.isAlive()).thenReturn(true);
         when(buffer.firstFrame()).thenReturn(frame(1));
         when(buffer.nextFrame(frame(1))).thenReturn(frame(2));
@@ -288,13 +294,15 @@ class SnowStreamTest {
     @Test
     void whenConsumerThreadThrowingException_thenExceptionIsPassedToStreamingClients() throws IOException, InterruptedException {
         doNothing().when(buffer).push(any(SnowDataFrame.class));
-        doThrow(InterruptedException.class).when(buffer).push(frame(3));
+        RuntimeException customException = new RuntimeException() {};
+        doThrow(customException).when(buffer).push(frame(3));
 
         when(phpSnow.isAlive()).thenReturn(true);
 
         snowStream.startConsumingSnowData();
         snowStream.waitUntilConsumerThreadFinished();
-        assertThrows(IOException.class, () -> snowStream.streamTo(outputStream));
+        Throwable thrownException = assertThrows(ConsumerThreadException.class, () -> snowStream.streamTo(outputStream));
+        Assertions.assertSame(customException, thrownException.getCause());
 
         InOrder inOrder = inOrder(buffer);
         inOrder.verify(buffer).push(frame(1));

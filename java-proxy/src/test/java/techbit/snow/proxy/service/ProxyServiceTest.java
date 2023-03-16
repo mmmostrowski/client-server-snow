@@ -9,12 +9,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.stream.SnowStream;
+import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,7 +48,7 @@ class ProxyServiceTest {
     }
 
     @Test
-    void givenNewSessionId_whenStream_thenStreamToANewSnowStream() throws IOException, InterruptedException {
+    void givenNewSessionId_whenStream_thenStreamToANewSnowStream() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
 
         proxyService.stream("session-abc", out, confMap);
@@ -58,7 +60,7 @@ class ProxyServiceTest {
     }
 
     @Test
-    void givenSameSessionId_whenStream_thenStreamToSameSnowStream() throws IOException, InterruptedException {
+    void givenSameSessionId_whenStream_thenStreamToSameSnowStream() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
 
         proxyService.stream("session-abc", out, confMap);
@@ -85,7 +87,7 @@ class ProxyServiceTest {
     }
 
     @Test
-    void whenSessionExistsAndThereIsActiveStream_thenIsRunning() throws IOException, InterruptedException {
+    void whenSessionExistsAndThereIsActiveStream_thenIsRunning() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
         when(snowStream.isActive()).thenReturn(true);
 
@@ -109,7 +111,7 @@ class ProxyServiceTest {
     }
 
     @Test
-    void whenStopStream_thenSessionIsDeleted() throws IOException, InterruptedException {
+    void whenStopStream_thenSessionIsDeleted() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
         proxyService.stream("session-abc", out, confMap);
         when(session.exists("session-abc")).thenReturn(true);
@@ -120,7 +122,7 @@ class ProxyServiceTest {
     }
 
     @Test
-    void whenStopStream_thenStopPhpApp() throws IOException, InterruptedException {
+    void whenStopStream_thenStopPhpApp() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
         proxyService.stream("session-abc", out, confMap);
         when(session.exists("session-abc")).thenReturn(true);
@@ -132,7 +134,7 @@ class ProxyServiceTest {
 
     @Test
     void whenStopNonExistingStream_noErrorOccurs() throws IOException, InterruptedException {
-        Assertions.assertDoesNotThrow(() -> proxyService.stopStream("session-abc"));
+        assertDoesNotThrow(() -> proxyService.stopStream("session-abc"));
     }
 
 

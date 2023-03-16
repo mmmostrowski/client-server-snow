@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import techbit.snow.proxy.service.ProxyService;
+import techbit.snow.proxy.service.stream.SnowStream;
+import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -55,7 +57,7 @@ public class ProxyController {
                 log.debug("streamToClient( {} ) | Async Finished", sessionId);
             } catch (ClientAbortException e) {
                 log.debug("streamToClient( {} ) | Client aborted", sessionId);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | ConsumerThreadException e) {
                 throw new RuntimeException(e);
             }
         });
