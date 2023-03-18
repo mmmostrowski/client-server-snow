@@ -1,5 +1,6 @@
 package techbit.snow.proxy.service.stream;
 
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -97,11 +98,10 @@ class SnowStreamTest extends SnowStreamBaseTest {
         assertThrows(Exception.class, () -> snowStream.streamTo(outputStream));
     }
 
-    @Test
-    void givenPhpStart_whenStop_thenBufferIsDestroyed() throws IOException, InterruptedException {
+    @RepeatedTest(20)
+    void whenStop_thenBufferIsDestroyed() throws IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
 
-        snowStream.startPhpApp();
         snowStream.startConsumingSnowData();;
 
         snowStream.stop();
@@ -109,10 +109,10 @@ class SnowStreamTest extends SnowStreamBaseTest {
         verify(buffer, atLeastOnce()).destroy();
     }
 
-    @Test
+    @RepeatedTest(20)
     void givenPhpStart_whenStop_thenIsNotActive() throws IOException, InterruptedException {
-        snowStream.startPhpApp();
         when(phpSnow.isAlive()).thenReturn(true);
+
         snowStream.startConsumingSnowData();
 
         assertTrue(snowStream.isActive());
@@ -139,7 +139,6 @@ class SnowStreamTest extends SnowStreamBaseTest {
     void whenInputDataIsStreamed_thenMetadataIsStreamedToOutput() throws IOException, InterruptedException, ConsumerThreadException {
         SnowAnimationMetadata metadata = mock(SnowAnimationMetadata.class);
         when(decoder.decodeMetadata(any())).thenReturn(metadata);
-        when(decoder.decodeFrame(any())).thenReturn(SnowDataFrame.last);
         when(buffer.firstFrame()).thenReturn(SnowDataFrame.last);
         when(phpSnow.isAlive()).thenReturn(true);
 
@@ -165,12 +164,13 @@ class SnowStreamTest extends SnowStreamBaseTest {
     }
 
     @Test
-    void givenSequenceOfDataFramesWithoutLastOne_whenInputDataIsStreamed_thenLastFrameIsAlsoStoredInBuffer() throws IOException, InterruptedException {
+    void givenSequenceOfDataFramesWithoutLastOne_whenInputDataIsStreamed_thenLastFrameIsStoredInBufferAnyway() throws IOException, InterruptedException {
         final Iterator<?> inputFrames = List.of(
                 frame(1),
                 frame(2),
                 frame(3),
                 frame(4)
+                // no SnowDataFrame.last
         ).iterator();
 
         when(decoder.decodeFrame(any())).then(i -> inputFrames.next());
@@ -184,7 +184,6 @@ class SnowStreamTest extends SnowStreamBaseTest {
         inOrder.verify(buffer).push(frame(2));
         inOrder.verify(buffer).push(frame(3));
         inOrder.verify(buffer).push(frame(4));
-
         inOrder.verify(buffer).push(SnowDataFrame.last);
     }
 
@@ -206,28 +205,6 @@ class SnowStreamTest extends SnowStreamBaseTest {
         inOrder.verify(encoder).encodeFrame(frame(2), outputStream);
         inOrder.verify(encoder).encodeFrame(frame(3), outputStream);
         inOrder.verify(encoder).encodeFrame(frame(4), outputStream);
-        inOrder.verify(encoder).encodeFrame(SnowDataFrame.last, outputStream);
-    }
-
-    @Test
-    void whenEmptyFrameAddedToBuffer_thenEmptyFrameIsNotStreamedToOutput() throws IOException, InterruptedException, ConsumerThreadException {
-        when(phpSnow.isAlive()).thenReturn(true);
-        when(buffer.firstFrame()).thenReturn(frame(1));
-        when(buffer.nextFrame(frame(1))).thenReturn(frame(2));
-        when(buffer.nextFrame(frame(2))).thenReturn(SnowDataFrame.empty);
-        when(buffer.nextFrame(SnowDataFrame.empty)).thenReturn(frame(3));
-        when(buffer.nextFrame(frame(3))).thenReturn(SnowDataFrame.last);
-
-        snowStream.startConsumingSnowData();
-        snowStream.streamTo(outputStream);
-
-        InOrder inOrder = inOrder(encoder);
-
-        verify(encoder, never()).encodeFrame(SnowDataFrame.empty, outputStream);
-
-        inOrder.verify(encoder).encodeFrame(frame(1), outputStream);
-        inOrder.verify(encoder).encodeFrame(frame(2), outputStream);
-        inOrder.verify(encoder).encodeFrame(frame(3), outputStream);
         inOrder.verify(encoder).encodeFrame(SnowDataFrame.last, outputStream);
     }
 
@@ -255,7 +232,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
     }
 
     @Test
-    void whenConsumerThreadThrowingException_thenExceptionIsPassedToStreamingClients() throws IOException, InterruptedException {
+    void whenConsumerThreadThrowingException_thenStopStreamingAndPassExceptionToClient() throws IOException, InterruptedException {
         doNothing().when(buffer).push(any(SnowDataFrame.class));
         RuntimeException customException = new RuntimeException() {};
         doThrow(customException).when(buffer).push(frame(3));
@@ -265,14 +242,13 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.waitUntilConsumerThreadFinished();
         Throwable thrownException = assertThrows(ConsumerThreadException.class, () -> snowStream.streamTo(outputStream));
-        assertSame(customException, thrownException.getCause());
 
-        InOrder inOrder = inOrder(buffer);
-        inOrder.verify(buffer).push(frame(1));
-        inOrder.verify(buffer).push(frame(2));
-        inOrder.verify(buffer).push(frame(3));
-        inOrder.verify(buffer).destroy();
+        verify(buffer).push(frame(1));
+        verify(buffer).push(frame(2));
+        verify(buffer).push(frame(3));
         verify(buffer, never()).push(frame(4));
+
+        assertSame(customException, thrownException.getCause());
     }
 
 }

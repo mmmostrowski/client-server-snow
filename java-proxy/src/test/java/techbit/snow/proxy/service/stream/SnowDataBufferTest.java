@@ -13,8 +13,7 @@ import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +32,8 @@ class SnowDataBufferTest {
 
     @Test
     void givenNoFramesInBuffer_whenAskedForFrame_thenWaitUntilFrameIsAvailable() throws Throwable {
+        when(bag.take(1)).thenReturn(Optional.of(frame(1)));
+
         TestFramework.runOnce(new MultithreadedTestCase() {
             void thread1() throws InterruptedException {
                 buffer.firstFrame();
@@ -45,6 +46,55 @@ class SnowDataBufferTest {
             }
         });
     }
+
+    @Test
+    void whenHaveRegisteredClients_thenWaitUntilAllUnregistered() throws Throwable {
+        Object clientId1 = new Object();
+        Object clientId2 = new Object();
+        Object clientId3 = new Object();
+
+        buffer.registerClient(clientId1);
+        buffer.registerClient(clientId2);
+        buffer.registerClient(clientId3);
+
+        TestFramework.runOnce(new MultithreadedTestCase() {
+            void thread1() throws InterruptedException {
+                buffer.waitUntilAllClientsUnregister();
+                assertTick(1);
+            }
+
+            void thread2() throws InterruptedException {
+                waitForTick(1);
+                buffer.unregisterClient(clientId1);
+            }
+
+            void thread3() throws InterruptedException {
+                waitForTick(1);
+                buffer.unregisterClient(clientId2);
+            }
+
+            void thread4() throws InterruptedException {
+                waitForTick(1);
+                buffer.unregisterClient(clientId3);
+            }
+
+        });
+    }
+
+    @Test
+    void whenNoRegisteredClients_thenNoBlocking() {
+        assertDoesNotThrow(() -> buffer.waitUntilAllClientsUnregister());
+    }
+
+    @Test
+    void whenUnregisteringUnknownClient_thenThrowException() {
+        Object known = new Object();
+        buffer.registerClient(known);
+
+        Object unknown = new Object();
+        assertThrows(IllegalArgumentException.class, () -> buffer.unregisterClient(unknown));
+    }
+
 
     @Test
     void whenFrameAddedToBuffer_thenItIsStoredInBag() throws Throwable {
@@ -156,25 +206,25 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void whenEmptyFrameAdded_thenItIsAvailableInBuffer() throws InterruptedException {
+    void whenLastFrameAdded_thenItIsProvidedFromBuffer() throws InterruptedException {
         buffer.push(frame(1));
         buffer.push(frame(2));
-        buffer.push(SnowDataFrame.empty);
+        buffer.push(frame(3));
+        buffer.push(SnowDataFrame.last);
 
-        when(bag.take(3)).thenReturn(Optional.of(SnowDataFrame.empty));
+        when(bag.take(3)).thenReturn(Optional.of(frame(3)));
 
-        assertEquals(SnowDataFrame.empty, buffer.nextFrame(frame(2)));
+        assertEquals(frame(3), buffer.nextFrame(frame(1)));
+        assertEquals(frame(3), buffer.nextFrame(frame(2)));
+        assertEquals(SnowDataFrame.last, buffer.nextFrame(frame(3)));
     }
 
     @Test
-    void whenLastFrameAdded_thenItIsAvailableInBuffer() throws InterruptedException {
+    void givenLastFrameInBuffer_whenNewFrameAdded_thenThrowException() throws InterruptedException {
         buffer.push(frame(1));
         buffer.push(frame(2));
         buffer.push(SnowDataFrame.last);
-
-        when(bag.take(3)).thenReturn(Optional.of(SnowDataFrame.last));
-
-        assertEquals(SnowDataFrame.last, buffer.nextFrame(frame(2)));
+        assertThrows(IllegalArgumentException.class, () -> buffer.push(frame(3)));
     }
 
     @Test
@@ -198,7 +248,7 @@ class SnowDataBufferTest {
 
     @Test
     void whenNegativeSizeOfBuffer_thenExceptionIsThrown() {
-        assertThrows(Exception.class, () -> new SnowDataBuffer(-1));
+        assertThrows(Exception.class, () -> new SnowDataBuffer(-1, null));
     }
 
     private SnowDataFrame frame(int frameNum) {

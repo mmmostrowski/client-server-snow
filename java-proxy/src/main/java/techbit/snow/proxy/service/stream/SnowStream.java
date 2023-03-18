@@ -1,5 +1,6 @@
 package techbit.snow.proxy.service.stream;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.experimental.StandardException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Scope;
@@ -15,10 +16,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -45,7 +43,9 @@ public class SnowStream {
 
     private final StreamEncoder encoder;
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(
+            new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
+    );
 
     private final Semaphore consumerGoingDownLock = new Semaphore(0);
 
@@ -135,6 +135,7 @@ public class SnowStream {
                 }
                 log.trace("consumeSnowFromPipeThread( {} ) | Last Frame", sessionId);
                 buffer.push(SnowDataFrame.last);
+                buffer.waitUntilAllClientsUnregister();
             }
             log.trace("consumeSnowFromPipeThread( {} ) | Stop pipe", sessionId);
         } catch (InterruptedException ignored) {
@@ -154,24 +155,30 @@ public class SnowStream {
             throw new IOException("Stream is not active!");
         }
 
-        log.debug("streamTo( {} ) | Metadata", sessionId);
+        final Object clientIdentifier = Thread.currentThread();
 
-        encoder.encodeMetadata(metadata, out);
+        log.debug("streamTo( {} ) | Register To Buffer", sessionId);
+        buffer.registerClient(clientIdentifier);
 
-        log.debug("streamTo( {} ) | First frame", sessionId);
-        for (SnowDataFrame frame = buffer.firstFrame(); frame != SnowDataFrame.last; frame = buffer.nextFrame(frame)) {
-            if (frame == SnowDataFrame.empty) {
-                continue;
+        try {
+            log.debug("streamTo( {} ) | Metadata", sessionId);
+            encoder.encodeMetadata(metadata, out);
+
+            log.debug("streamTo( {} ) | Reading Frames", sessionId);
+            for (SnowDataFrame frame = buffer.firstFrame(); frame != SnowDataFrame.last; frame = buffer.nextFrame(frame)) {
+                log.trace("streamTo( {} ) | Frame {}", sessionId, frame.frameNum());
+
+                encoder.encodeFrame(frame, out);
             }
-            log.trace("streamTo( {} ) | Frame {}", sessionId, frame.frameNum());
 
-            encoder.encodeFrame(frame, out);
+            throwConsumerExceptionIfAny();
+
+            log.debug("streamTo( {} ) | Last frame", sessionId);
+            encoder.encodeFrame(SnowDataFrame.last, out);
+        } finally {
+            log.debug("streamTo( {} ) | Unregister From Buffer", sessionId);
+            buffer.unregisterClient(clientIdentifier);
         }
-
-        throwConsumerExceptionIfAny();
-
-        log.debug("streamTo( {} ) | Last frame", sessionId);
-        encoder.encodeFrame(SnowDataFrame.last, out);
     }
 
     private void throwConsumerExceptionIfAny() throws ConsumerThreadException {

@@ -11,6 +11,7 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 
 @Component
 @Scope(SCOPE_PROTOTYPE)
+@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 public class BlockingBag<K, V> {
 
     private final Map<K, V> map = Maps.newConcurrentMap();
@@ -18,42 +19,38 @@ public class BlockingBag<K, V> {
     private final Map<K, Object> locks = Maps.newConcurrentMap();
 
     public void put(K key, V value) {
-        map.put(key, value);
-
         Object lock = lockFor(key);
         synchronized (lock) {
+            map.put(key, value);
             lock.notifyAll();
         }
     }
 
     public Optional<V> take(K key) throws InterruptedException {
         Object lock = lockFor(key);
+        Optional<V> result;
         synchronized (lock) {
             if (!map.containsKey(key)) {
                 lock.wait();
             }
+            result = Optional.ofNullable(map.get(key));
         }
-        return Optional.ofNullable(map.get(key));
+        return result;
     }
 
     public void remove(K key) {
-        map.remove(key);
         Object lock = lockFor(key);
         synchronized (lock) {
+            map.remove(key);
             lock.notifyAll();
             locks.remove(key);
         }
     }
 
     public void removeAll() {
-        map.clear();
         for (K key : locks.keySet()) {
-            Object lock = lockFor(key);
-            synchronized (lock) {
-                lock.notifyAll();
-            }
+            remove(key);
         }
-        locks.clear();
     }
 
     private Object lockFor(K key) {

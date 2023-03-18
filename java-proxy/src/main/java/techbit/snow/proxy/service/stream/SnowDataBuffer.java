@@ -1,8 +1,13 @@
 package techbit.snow.proxy.service.stream;
 
+import com.google.common.collect.Sets;
+import lombok.SneakyThrows;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import techbit.snow.proxy.dto.SnowDataFrame;
+
+import java.util.Objects;
+import java.util.Set;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -11,20 +16,17 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 public class SnowDataBuffer {
 
     private final BlockingBag<Integer, SnowDataFrame> frames;
-
+    private final Set<Object> clients = Sets.newHashSet();
+    private final Object noMoreClientsLock = new Object();
+    private final Object framesLock = new Object();
+    private final Object removeFramesLock = new Object();
     private final int maxNumOfFrames;
-
+    private volatile int lastValidFrameNum = Integer.MAX_VALUE;
     private volatile boolean destroyed = false;
+    private volatile int numOfFrames = 0;
+    private volatile int tailFrameNum = 0;
+    private volatile int headFrameNum = 0;
 
-    private int numOfFrames = 0;
-
-    private int headFrameNum = 0;
-
-    volatile private int tailFrameNum = 0;
-
-    public SnowDataBuffer(int maxNumOfFrames) {
-        this(maxNumOfFrames, new BlockingBag<>());
-    }
 
     public SnowDataBuffer(int maxNumOfFrames, BlockingBag<Integer, SnowDataFrame> frames) {
         this.frames = frames;
@@ -38,62 +40,113 @@ public class SnowDataBuffer {
         if (destroyed) {
             throw new IllegalStateException("You cannot push to snow buffer because it has been destroyed!");
         }
-        synchronized(this) {
-            if (numOfFrames == 0) {
-                numOfFrames = 1;
-                tailFrameNum = frame.frameNum();
-            } else if (numOfFrames < maxNumOfFrames) {
+
+        if (lastValidFrameNum != Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("You cannot push more frames to snow buffer after last frame is pushed.");
+        }
+
+        if (frame == SnowDataFrame.last) {
+            lastValidFrameNum = headFrameNum;
+        } else if (frame.frameNum() != headFrameNum + 1) {
+            throw new IllegalStateException("Expected sequenced frames");
+        }
+
+        if (numOfFrames == 0) {
+            numOfFrames = 1;
+            tailFrameNum = 1;
+
+            synchronized(framesLock) {
+                frames.put(++headFrameNum, frame);
+                framesLock.notifyAll();
+            }
+        } else if (numOfFrames < maxNumOfFrames) {
+            synchronized(framesLock) {
                 ++numOfFrames;
-            } else {
-                frames.remove(tailFrameNum++);
+                frames.put(++headFrameNum, frame);
             }
-            if (frame.isValidDataFrame() && ++headFrameNum != frame.frameNum()) {
-                throw new IllegalStateException("Expected sequenced frames");
-            }
-            if (numOfFrames == 1) {
-                notifyAll();
+        } else {
+            synchronized(framesLock) {
+                frames.put(++headFrameNum, frame);
+                synchronized (removeFramesLock) {
+                    frames.remove(tailFrameNum++);
+                }
             }
         }
-        frames.put(frame.frameNum(), frame);
     }
 
     public SnowDataFrame firstFrame() throws InterruptedException {
-        waitForContent();
-        if (destroyed) {
-            return SnowDataFrame.last;
-        }
-        return frames.take(tailFrameNum)
-                .orElse(SnowDataFrame.empty);
+        return nextFrameAfter(0);
     }
 
     public SnowDataFrame nextFrame(SnowDataFrame frame) throws InterruptedException {
-        waitForContent();
-        if (destroyed) {
+        return nextFrameAfter(frame.frameNum());
+    }
+
+    private SnowDataFrame nextFrameAfter(int frameNum) throws InterruptedException {
+        if (destroyed || frameNum >= lastValidFrameNum) {
             return SnowDataFrame.last;
         }
-        return frames.take(Math.max(frame.frameNum() + 1, tailFrameNum))
-                .orElse(SnowDataFrame.empty);
+        waitForContent();
+
+        synchronized(framesLock) {
+            if (frameNum + 1 < tailFrameNum) {
+                return frames.take(tailFrameNum).orElseThrow();
+            }
+        }
+
+        SnowDataFrame result;
+        synchronized (removeFramesLock) {
+            result = frameNum + 1 < tailFrameNum
+                ? frames.take(tailFrameNum).orElseThrow()
+                : frames.take(frameNum + 1).orElseThrow();
+        }
+        return result;
     }
 
     private void waitForContent() throws InterruptedException {
-        if (destroyed) {
-            return;
-        }
-        synchronized(this) {
-            if (numOfFrames < 1) {
-                wait();
+        if (numOfFrames == 0) {
+            synchronized (framesLock) {
+                framesLock.wait();
             }
         }
     }
 
     public void destroy() {
         destroyed = true;
-        frames.removeAll();
         numOfFrames = 0;
-        headFrameNum = 0;
         tailFrameNum = 0;
-        synchronized (this) {
-            notifyAll();
+
+        synchronized (framesLock) {
+            frames.removeAll();
+            headFrameNum = 0;
+            framesLock.notifyAll();
+        }
+    }
+
+    public void registerClient(Object client) {
+        synchronized (noMoreClientsLock) {
+            clients.add(client);
+        }
+    }
+
+    public void unregisterClient(Object client) {
+        synchronized (noMoreClientsLock) {
+            if (!clients.remove(client)) {
+                throw new IllegalArgumentException("Cannot unregister unknown client! Got: " + client);
+            }
+            if (clients.isEmpty()) {
+                noMoreClientsLock.notifyAll();
+            }
+        }
+    }
+
+    public void waitUntilAllClientsUnregister() throws InterruptedException {
+        synchronized (noMoreClientsLock) {
+            if (clients.isEmpty()) {
+                return;
+            }
+
+            noMoreClientsLock.wait();
         }
     }
 }

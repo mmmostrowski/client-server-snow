@@ -48,7 +48,7 @@ public class SnowStreamFactory {
                 phpSnowConfig,
                 new NamedPipe(sessionId, pipes.pipesDir()),
                 new PhpSnowApp(sessionId, phpSnowConfig, applicationPid, new ProcessBuilder()),
-                new SnowDataBuffer(bufferSizeInFrames),
+                new SnowDataBuffer(bufferSizeInFrames, new BlockingBag<>()),
                 new BinaryStreamDecoder(),
                 new PlainTextStreamEncoder()
         );
