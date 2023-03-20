@@ -1,10 +1,12 @@
 package techbit.snow.proxy.service.stream;
 
 import com.google.common.collect.Maps;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
@@ -26,14 +28,15 @@ public class BlockingBag<K, V> {
         }
     }
 
-    public Optional<V> take(K key) throws InterruptedException {
+    public @NotNull V take(K key) throws InterruptedException {
         Object lock = lockFor(key);
-        Optional<V> result;
+        V result;
         synchronized (lock) {
             if (!map.containsKey(key)) {
                 lock.wait();
             }
-            result = Optional.ofNullable(map.get(key));
+            result = map.get(key);
+            Objects.requireNonNull(result);
         }
         return result;
     }

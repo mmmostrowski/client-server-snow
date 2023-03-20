@@ -21,16 +21,16 @@ class BlockingBagTest {
     public void whenItemInBag_thenItCanBeTaken() throws InterruptedException {
         bag.put(12, "value");
 
-        assertEquals("value", bag.take(12).orElseThrow());
+        assertEquals("value", bag.take(12));
     }
 
     @Test
     public void whenItemInBag_thenItCanBeTakenMultipleTimes() throws InterruptedException {
         bag.put(12, "value");
 
-        assertEquals("value", bag.take(12).orElseThrow());
-        assertEquals("value", bag.take(12).orElseThrow());
-        assertEquals("value", bag.take(12).orElseThrow());
+        assertEquals("value", bag.take(12));
+        assertEquals("value", bag.take(12));
+        assertEquals("value", bag.take(12));
     }
 
     @Test
@@ -49,14 +49,14 @@ class BlockingBagTest {
         bag.put(3, "three");
         bag.put(3, "other");
 
-        assertEquals("other", bag.take(3).orElseThrow());
+        assertEquals("other", bag.take(3));
     }
 
     @Test
     void whenNoItemInBag_thenBlocksUntilIsAvailable() throws Throwable {
         TestFramework.runOnce(new MultithreadedTestCase() {
             public void thread1() throws InterruptedException {
-                String element = bag.take(1).orElseThrow();
+                String element = bag.take(1);
                 assertTick(1);
                 Assertions.assertEquals("one", element);
             }
@@ -85,9 +85,9 @@ class BlockingBagTest {
             }
 
             public void thread2() throws InterruptedException {
-                String element1 = bag.take(3).orElseThrow();
-                String element2 = bag.take(5).orElseThrow();
-                String element3 = bag.take(1).orElseThrow();
+                String element1 = bag.take(3);
+                String element2 = bag.take(5);
+                String element3 = bag.take(1);
                 assertTick(5);
 
                 Assertions.assertEquals("three", element1);
@@ -101,18 +101,18 @@ class BlockingBagTest {
     void whenTwoItemsInBag_thenTwoThreadsCanAccessThem() throws Throwable {
         TestFramework.runOnce(new MultithreadedTestCase() {
             public void thread1() throws InterruptedException {
-                String element1 = bag.take(1).orElseThrow();
+                String element1 = bag.take(1);
                 assertTick(1);
-                String element2 = bag.take(2).orElseThrow();
+                String element2 = bag.take(2);
                 assertTick(2);
                 Assertions.assertEquals("one", element1);
                 Assertions.assertEquals("two", element2);
             }
 
             public void thread2() throws InterruptedException {
-                String element1 = bag.take(2).orElseThrow();
+                String element1 = bag.take(2);
                 assertTick(2);
-                String element2 = bag.take(1).orElseThrow();
+                String element2 = bag.take(1);
                 assertTick(2);
                 Assertions.assertEquals("two", element1);
                 Assertions.assertEquals("one", element2);
@@ -131,13 +131,13 @@ class BlockingBagTest {
     void whenTwoItemsInBag_thenTwoThreadsCanAskForSameElement() throws Throwable {
         TestFramework.runOnce(new MultithreadedTestCase() {
             public void thread1() throws InterruptedException {
-                String element = bag.take(1).orElseThrow();
+                String element = bag.take(1);
                 assertTick(1);
                 Assertions.assertEquals("one", element);
             }
 
             public void thread2() throws InterruptedException {
-                String element = bag.take(1).orElseThrow();
+                String element = bag.take(1);
                 assertTick(1);
                 Assertions.assertEquals("one", element);
             }
@@ -162,7 +162,7 @@ class BlockingBagTest {
         bag.put(3, "three");
         bag.remove(3);
         bag.put(3, "new");
-        assertEquals(bag.take(3).orElseThrow(), "new");
+        assertEquals(bag.take(3), "new");
     }
 
     @Test
@@ -188,7 +188,7 @@ class BlockingBagTest {
             public void thread1() throws InterruptedException {
                 bag.put(3, "three");
                 bag.remove(3);
-                String element = bag.take(3).orElseThrow();
+                String element = bag.take(3);
 
                 Assertions.assertEquals("other", element);
             }
@@ -203,8 +203,8 @@ class BlockingBagTest {
     @Test
     public void whenListeningForRemovalItem_thenProvideEmpty() throws Throwable {
         TestFramework.runOnce(new MultithreadedTestCase() {
-            public void thread1() throws InterruptedException {
-                Assertions.assertTrue(bag.take(3).isEmpty());
+            public void thread1() {
+                Assertions.assertThrows(NullPointerException.class, () -> bag.take(3));
             }
 
             public void thread2() {
@@ -215,23 +215,23 @@ class BlockingBagTest {
     }
 
     @Test
-    public void whenRemovingAllItems_thenProvideEmpty() throws Throwable {
+    public void whenRemovingAllItems_thenThrowError() throws Throwable {
         TestFramework.runOnce(new MultithreadedTestCase() {
-            public void thread1() throws InterruptedException {
+            public void thread1() {
                 waitForTick(1);
                 bag.removeAll();
             }
 
-            public void thread2() throws InterruptedException {
-                Assertions.assertTrue(bag.take(1).isEmpty());
+            public void thread2() {
+                Assertions.assertThrows(NullPointerException.class, () -> bag.take(1));
             }
 
-            public void thread3() throws InterruptedException {
-                Assertions.assertTrue(bag.take(2).isEmpty());
+            public void thread3() {
+                Assertions.assertThrows(NullPointerException.class, () -> bag.take(2));
             }
 
-            public void thread4() throws InterruptedException {
-                Assertions.assertTrue(bag.take(3).isEmpty());
+            public void thread4() {
+                Assertions.assertThrows(NullPointerException.class, () -> bag.take(3));
             }
         });
     }
@@ -244,9 +244,9 @@ class BlockingBagTest {
                 bag.put(2, "two");
                 bag.put(3, "three");
                 bag.removeAll();
-                String element1 = bag.take(1).orElseThrow();
-                String element2 = bag.take(2).orElseThrow();
-                String element3 = bag.take(3).orElseThrow();
+                String element1 = bag.take(1);
+                String element2 = bag.take(2);
+                String element3 = bag.take(3);
 
                 Assertions.assertEquals("other1", element1);
                 Assertions.assertEquals("other2", element2);

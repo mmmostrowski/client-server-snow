@@ -32,7 +32,7 @@ class SnowDataBufferTest {
 
     @Test
     void givenNoFramesInBuffer_whenAskedForFrame_thenWaitUntilFrameIsAvailable() throws Throwable {
-        when(bag.take(1)).thenReturn(Optional.of(frame(1)));
+        when(bag.take(1)).thenReturn(frame(1));
 
         TestFramework.runOnce(new MultithreadedTestCase() {
             void thread1() throws InterruptedException {
@@ -147,7 +147,7 @@ class SnowDataBufferTest {
     void whenFrameAdded_thenItCanBeTakenMultipleTimes() throws InterruptedException {
         buffer.push(frame(1));
 
-        when(bag.take(1)).thenReturn(Optional.of(frame(1)));
+        when(bag.take(1)).thenReturn(frame(1));
 
         assertEquals(1, buffer.firstFrame().frameNum());
         assertEquals(1, buffer.firstFrame().frameNum());
@@ -155,9 +155,9 @@ class SnowDataBufferTest {
 
     @Test
     void whenAddingFrames_thenFirstFrameIsDrifting() throws InterruptedException {
-        when(bag.take(1)).thenReturn(Optional.of(frame(1)));
-        when(bag.take(2)).thenReturn(Optional.of(frame(2)));
-        when(bag.take(3)).thenReturn(Optional.of(frame(3)));
+        when(bag.take(1)).thenReturn(frame(1));
+        when(bag.take(2)).thenReturn(frame(2));
+        when(bag.take(3)).thenReturn(frame(3));
 
         buffer.push(frame(1));
         assertEquals(1, buffer.firstFrame().frameNum());
@@ -174,7 +174,7 @@ class SnowDataBufferTest {
 
     @Test
     void whenFrameGiven_thenNextCanBeTaken() throws InterruptedException {
-        when(bag.take(2)).thenReturn(Optional.of(frame(2)));
+        when(bag.take(2)).thenReturn(frame(2));
 
         buffer.push(frame(1));
         buffer.push(frame(2));
@@ -185,7 +185,7 @@ class SnowDataBufferTest {
 
     @Test
     void whenDeadFrameGiven_thenSkipToNextAlive() throws InterruptedException {
-        when(bag.take(3)).thenReturn(Optional.of(frame(3)));
+        when(bag.take(3)).thenReturn(frame(3));
 
         buffer.push(frame(1));
         buffer.push(frame(2));
@@ -212,7 +212,7 @@ class SnowDataBufferTest {
         buffer.push(frame(3));
         buffer.push(SnowDataFrame.last);
 
-        when(bag.take(3)).thenReturn(Optional.of(frame(3)));
+        when(bag.take(3)).thenReturn(frame(3));
 
         assertEquals(frame(3), buffer.nextFrame(frame(1)));
         assertEquals(frame(3), buffer.nextFrame(frame(2)));

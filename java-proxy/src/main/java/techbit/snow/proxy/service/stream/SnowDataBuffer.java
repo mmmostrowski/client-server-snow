@@ -90,15 +90,15 @@ public class SnowDataBuffer {
 
         synchronized(framesLock) {
             if (frameNum + 1 < tailFrameNum) {
-                return frames.take(tailFrameNum).orElseThrow();
+                return frames.take(tailFrameNum);
             }
         }
 
         SnowDataFrame result;
         synchronized (removeFramesLock) {
             result = frameNum + 1 < tailFrameNum
-                ? frames.take(tailFrameNum).orElseThrow()
-                : frames.take(frameNum + 1).orElseThrow();
+                ? frames.take(tailFrameNum)
+                : frames.take(frameNum + 1);
         }
         return result;
     }
