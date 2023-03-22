@@ -1,7 +1,7 @@
 package techbit.snow.proxy.service.stream;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import jakarta.validation.Valid;
+import jakarta.annotation.Nullable;
 import lombok.experimental.StandardException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Scope;
@@ -24,45 +24,32 @@ import java.util.concurrent.TimeUnit;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
+@Log4j2
 @Service
 @Scope(SCOPE_PROTOTYPE)
-@Log4j2
 public class SnowStream {
 
     @StandardException
-    public static class ConsumerThreadException extends Exception {
-    }
+    public static class ConsumerThreadException extends Exception { }
 
     private final String sessionId;
-
-    private final SnowDataBuffer buffer;
-
     private final PhpSnowApp phpSnow;
-
-    private final NamedPipe pipe;
-
     private final PhpSnowConfig phpSnowConfig;
-
+    private final SnowDataBuffer buffer;
+    private final NamedPipe pipe;
     private final StreamDecoder decoder;
-
     private final StreamEncoder encoder;
-
-    private SnowAnimationMetadata metadata;
-
-    private volatile boolean running = false;
-
-    private volatile boolean destroyed = false;
-
-    private volatile ConsumerThreadException consumerException;
-
     private final Semaphore consumerGoingDownLock = new Semaphore(0);
-
+    private volatile boolean running = false;
+    private volatile boolean destroyed = false;
+    private volatile ConsumerThreadException consumerException;
+    private @Nullable SnowAnimationMetadata metadata;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(
             new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
     );
 
 
-    public SnowStream(String sessionId, @Valid PhpSnowConfig phpSnowConfig,
+    public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
                       NamedPipe pipe, PhpSnowApp phpSnow, SnowDataBuffer buffer,
                       StreamDecoder decoder, StreamEncoder encoder
     ) {
@@ -128,17 +115,17 @@ public class SnowStream {
     private void consumeSnowFromPipeThread(InputStream stream) {
         try (stream) {
             log.debug("consumeSnowFromPipeThread( {} ) | Start pipe", sessionId);
-            try (DataInputStream dataStream = new DataInputStream(stream)) {
+            try (final DataInputStream dataStream = new DataInputStream(stream)) {
                 while (isActive()) {
-                    SnowDataFrame frame = decoder.decodeFrame(dataStream);
-                    if (frame == SnowDataFrame.last) {
+                    final SnowDataFrame frame = decoder.decodeFrame(dataStream);
+                    if (frame == SnowDataFrame.LAST) {
                         break;
                     }
                     log.trace("consumeSnowFromPipeThread( {} ) | Frame {}", sessionId, frame.frameNum());
                     buffer.push(frame);
                 }
                 log.trace("consumeSnowFromPipeThread( {} ) | Last Frame", sessionId);
-                buffer.push(SnowDataFrame.last);
+                buffer.push(SnowDataFrame.LAST);
                 buffer.waitUntilAllClientsUnregister();
             }
             log.trace("consumeSnowFromPipeThread( {} ) | Stop pipe", sessionId);
@@ -169,7 +156,7 @@ public class SnowStream {
             encoder.encodeMetadata(metadata, out);
 
             log.debug("streamTo( {} ) | Reading Frames", sessionId);
-            for (SnowDataFrame frame = buffer.firstFrame(); frame != SnowDataFrame.last; frame = buffer.nextFrame(frame)) {
+            for (SnowDataFrame frame = buffer.firstFrame(); frame != SnowDataFrame.LAST; frame = buffer.nextFrame(frame)) {
                 log.trace("streamTo( {} ) | Frame {}", sessionId, frame.frameNum());
 
                 encoder.encodeFrame(frame, out);
@@ -178,7 +165,7 @@ public class SnowStream {
             throwConsumerExceptionIfAny();
 
             log.debug("streamTo( {} ) | Last frame", sessionId);
-            encoder.encodeFrame(SnowDataFrame.last, out);
+            encoder.encodeFrame(SnowDataFrame.LAST, out);
         } finally {
             log.debug("streamTo( {} ) | Unregister From Buffer", sessionId);
             buffer.unregisterClient(clientIdentifier);

@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 public record SnowDataFrame( int frameNum, int chunkSize, float[] x, float[] y, byte[] flakeShapes ) {
 
-    public static final SnowDataFrame last = new SnowDataFrame(
+    public static final SnowDataFrame LAST = new SnowDataFrame(
             -1, 0, null, null, null);
 
     public float x(int idx) {

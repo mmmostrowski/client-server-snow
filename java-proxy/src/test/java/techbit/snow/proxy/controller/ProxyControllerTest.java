@@ -55,20 +55,14 @@ class ProxyControllerTest {
 
     @Test
     void givenNoCustomConfiguration_whenStreamToClient_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
-        StreamingResponseBody responseBody = controller.streamToClient(
-                "session-abc", "").get();
-
-        responseBody.writeTo(out);
+        controller.streamToClient("session-abc", "").get().writeTo(out);
 
         verify(streaming).stream("session-abc", out, Collections.emptyMap());
     }
 
     @Test
     void givenCustomConfiguration_whenStreamToClient_thenStreamWithProperConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
-        StreamingResponseBody responseBody = controller.streamToClient(
-                "session-abc", "/key1/value1/key2/value2").get();
-
-        responseBody.writeTo(out);
+        controller.streamToClient("session-abc", "/key1/value1/key2/value2").get().writeTo(out);
 
         verify(streaming).stream("session-abc", out, Map.of(
                 "key1", "value1",
@@ -125,20 +119,16 @@ class ProxyControllerTest {
 
     @Test
     void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
-        StreamingResponseBody responseBody = controller.streamToClient("session-abc", "").get();
-
         doThrow(ClientAbortException.class).when(streaming).stream("session-abc", out, Collections.emptyMap());
 
-        assertDoesNotThrow(() -> responseBody.writeTo(out));
+        assertDoesNotThrow(() -> controller.streamToClient("session-abc", "").get().writeTo(out));
     }
 
     @Test
     void whenThreadInterruptedDuringStreaming_thenErrorOccurs() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
-        StreamingResponseBody responseBody = controller.streamToClient("session-abc", "").get();
-
         doThrow(InterruptedException.class).when(streaming).stream("session-abc", out, Collections.emptyMap());
 
-        assertThrows(IOException.class, () -> responseBody.writeTo(out));
+        assertThrows(IOException.class, () -> controller.streamToClient("session-abc", "").get().writeTo(out));
     }
 
 }

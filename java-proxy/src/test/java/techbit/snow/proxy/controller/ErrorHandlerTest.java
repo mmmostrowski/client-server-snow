@@ -20,7 +20,7 @@ class ErrorHandlerTest {
     private HttpServletRequest request;
 
     @Test
-    void givenDeveloperMode_whenErrorWithoutExceptionOccurs_thenNoErrorDetailsReturned() {
+    void givenDeveloperMode_whenErrorWithNoExceptionOccurs_thenNoErrorDetailsReturned() {
         when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(null);
 
         Map<String, Object> response = new ErrorHandler(true).error(request);
@@ -33,7 +33,7 @@ class ErrorHandlerTest {
     }
 
     @Test
-    void givenDeveloperMode_whenErrorWithExceptionOccurs_thenErrorStacktraceIsReturned() {
+    void givenDeveloperMode_whenErrorWithExceptionOccurs_thenStacktraceDetailsAreReturned() {
         when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(new Exception("Stub"));
 
         Map<String, Object> response = new ErrorHandler(true).error(request);

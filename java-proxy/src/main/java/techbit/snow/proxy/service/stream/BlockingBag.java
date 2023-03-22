@@ -1,7 +1,7 @@
 package techbit.snow.proxy.service.stream;
 
 import com.google.common.collect.Maps;
-import org.jetbrains.annotations.NotNull;
+import jakarta.annotation.Nonnull;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +19,7 @@ public class BlockingBag<K, V> {
     private final Map<K, Object> locks = Maps.newConcurrentMap();
 
 
-    public void put(K key, V value) {
+    public void put(@Nonnull K key, @Nonnull V value) {
         final Object lock = lockFor(key);
         synchronized (lock) {
             map.put(key, value);
@@ -27,7 +27,7 @@ public class BlockingBag<K, V> {
         }
     }
 
-    public @NotNull V take(K key) throws InterruptedException {
+    public @Nonnull V take(@Nonnull K key) throws InterruptedException {
         final Object lock = lockFor(key);
         final V result;
         synchronized (lock) {
@@ -40,7 +40,7 @@ public class BlockingBag<K, V> {
         return result;
     }
 
-    public void remove(K key) {
+    public void remove(@Nonnull K key) {
         final Object lock = lockFor(key);
         synchronized (lock) {
             map.remove(key);
@@ -55,7 +55,7 @@ public class BlockingBag<K, V> {
         }
     }
 
-    private Object lockFor(K key) {
+    private Object lockFor(@Nonnull K key) {
         return locks.computeIfAbsent(key, k -> new Object());
     }
 }

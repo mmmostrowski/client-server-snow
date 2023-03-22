@@ -3,6 +3,7 @@ package techbit.snow.proxy.service.stream;
 import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
 import org.apache.commons.io.FileUtils;
+import org.junit.Rule;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 @ExtendWith(MockitoExtension.class)
 class NamedPipeTest {
 
+    @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
     private NamedPipe namedPipe;
@@ -34,8 +36,8 @@ class NamedPipeTest {
     void setup() throws IOException {
         folder.create();
         pipePath = folder.newFile("session-xyz").toPath();
-
         Files.writeString(pipePath, "fake-content");
+
         namedPipe = new NamedPipe("session-xyz", folder.getRoot().toPath());
     }
 
@@ -56,6 +58,7 @@ class NamedPipeTest {
     @Test
     void givenPipeFile_whenCannotDeletePipeFile_thenThrowException() {
         assertTrue(folder.getRoot().setWritable(false));
+
         assertThrows(Exception.class, namedPipe::destroy);
     }
 
@@ -64,21 +67,21 @@ class NamedPipeTest {
         Assertions.assertTrue(pipePath.toFile().delete());
         TestFramework.runOnce(new MultithreadedTestCase() {
             void thread1() throws IOException {
+                waitForTick(1);
+                Files.writeString(pipePath, "new-content");
+            }
+
+            void thread2() throws IOException {
                 try(InputStream input = namedPipe.inputStream()) {
                     assertTick(1);
                     Assertions.assertArrayEquals("new-content".getBytes(), input.readAllBytes());
                 }
             }
-
-            void thread2() throws IOException {
-                waitForTick(1);
-                Files.writeString(pipePath, "new-content");
-            }
         });
     }
 
     @Test
-    void givenNoPipeFile_whenWaitingForItTooLong_thenThrowException() throws IOException {
+    void givenNoPipeFile_whenWaitingForItTooLong_thenThrowException() {
         Assertions.assertTrue(pipePath.toFile().delete());
 
         try(MockedStatic<FileUtils> fileUtils = Mockito.mockStatic(FileUtils.class)) {

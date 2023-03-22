@@ -24,13 +24,14 @@ class BinaryStreamDecoderTest {
         decoder = new BinaryStreamDecoder();
     }
 
+
     @Test
     void givenValidBinaryData_whenDecodingMetadata_thenCreatesValidEntity() throws IOException {
         byte[] binary = new byte[]{
                 'h', 'e', 'l', 'l', 'o', '-', 'p', 'h', 'p', '-', 's', 'n', 'o', 'w',
-                0x0, 0x0, 0x0, 0x7F,
-                0x0, 0x1, 0x0, 0x0,
-                0x1, 0x0, 0x0, 0x0,
+                0x0, 0x0, 0x0, 0x7F, // width
+                0x0, 0x1, 0x0, 0x0,  // height
+                0x1, 0x0, 0x0, 0x0,  // fps
         };
 
         SnowAnimationMetadata metadata = decoder.decodeMetadata(
@@ -44,12 +45,12 @@ class BinaryStreamDecoderTest {
     @Test
     void givenDataWithoutMarker_whenDecodingMetadata_thenExceptionIsThrown() {
         byte[] binary = new byte[]{
-                0x0, 0x0, 0x0, 0x7F,
-                0x0, 0x1, 0x0, 0x0,
-                0x1, 0x0, 0x0, 0x0,
+                0x0, 0x0, 0x0, 0x7F, // width
+                0x0, 0x1, 0x0, 0x0,  // height
+                0x1, 0x0, 0x0, 0x0,  // fps
         };
 
-        assertThrows(Exception.class, () -> decoder.decodeMetadata(
+        assertThrows(IllegalStateException.class, () -> decoder.decodeMetadata(
                 new DataInputStream(new ByteArrayInputStream(binary))));
     }
 
@@ -84,7 +85,6 @@ class BinaryStreamDecoderTest {
         assertEquals(2.75f, frame.x(1));
         assertEquals(0.0f, frame.y(1));
         assertEquals(4, frame.flakeShape(1));
-
     }
 
 }

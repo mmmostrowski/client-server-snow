@@ -213,7 +213,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
                 inOrder.verify(encoder).encodeFrame(frame(2), outputStream);
                 inOrder.verify(encoder).encodeFrame(frame(3), outputStream);
                 inOrder.verify(encoder).encodeFrame(frame(4), outputStream);
-                inOrder.verify(encoder).encodeFrame(SnowDataFrame.last, outputStream);
+                inOrder.verify(encoder).encodeFrame(SnowDataFrame.LAST, outputStream);
             }
         });
     }
@@ -226,7 +226,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
             int num = frameNum.incrementAndGet();
-            return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.last;
+            return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
 
         });
 
@@ -241,7 +241,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         when(decoder.decodeFrame(any())).then(i -> {
             Thread.sleep(ThreadLocalRandom.current().nextInt(0, 1));
             int num = frameNum.incrementAndGet();
-            return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.last;
+            return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
         });
 
         testUsingFiveStreamingThreads();
@@ -254,7 +254,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
             int num = frameNum.incrementAndGet();
-            return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.last;
+            return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
         });
 
         doAnswer(i -> {
@@ -273,7 +273,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         when(decoder.decodeFrame(any())).then(i -> {
             Thread.sleep(ThreadLocalRandom.current().nextInt(0, 2));
             int num = frameNum.incrementAndGet();
-            return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.last;
+            return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
         });
 
         doAnswer(i -> {

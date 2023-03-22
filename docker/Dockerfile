@@ -20,11 +20,11 @@ RUN addgroup -S devbox -g ${GID} \
 RUN if [[ ${PHP_SNOW_APP_MODE} == develop ]]; then \
         apk update \
         && apk add busybox-extras \
-        && apk --no-cache add pcre-dev ${PHPIZE_DEPS} \
+        && apk --no-cache add pcre-dev \
         && apk add --update linux-headers \
         && pecl install xdebug-3.2.0 \
         && docker-php-ext-enable xdebug \
-        && apk del pcre-dev ${PHPIZE_DEPS} \
+        && apk del pcre-dev \
         && ( \
             echo '[xdebug]' \
             && echo 'xdebug.mode=off' \

@@ -1,7 +1,7 @@
 package techbit.snow.proxy.service.stream;
 
-import com.google.common.io.MoreFiles;
 import jakarta.annotation.PostConstruct;
+import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -12,8 +12,7 @@ public class NamedPipes {
 
     @PostConstruct
     public void destroyAll() throws IOException {
-        Path path = pipesDir();
-        MoreFiles.deleteDirectoryContents(path);
+        FileUtils.cleanDirectory(pipesDir().toFile());
     }
 
     public Path pipesDir() {
