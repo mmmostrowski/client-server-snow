@@ -38,7 +38,7 @@ public class AsyncConfiguration implements AsyncConfigurer {
     @Override
     @Bean(name = "streamExecutor")
     public AsyncTaskExecutor getAsyncExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setMaxPoolSize(threadMaxPoolSize);
         executor.setCorePoolSize(threadCorePoolSize);
         executor.setQueueCapacity(threadQueueCapacity);

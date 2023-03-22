@@ -16,14 +16,14 @@ public class SnowDataBuffer {
     private final BlockingBag<Integer, SnowDataFrame> frames;
     private final Set<Object> clients = Sets.newHashSet();
     private final Object noMoreClientsLock = new Object();
-    private final Object framesLock = new Object();
     private final Object removeFramesLock = new Object();
-    private final int maxNumOfFrames;
+    private final Object framesLock = new Object();
     private volatile int lastValidFrameNum = Integer.MAX_VALUE;
     private volatile boolean destroyed = false;
     private volatile int numOfFrames = 0;
-    private volatile int tailFrameNum = 0;
     private volatile int headFrameNum = 0;
+    private volatile int tailFrameNum = 0;
+    private final int maxNumOfFrames;
 
 
     public SnowDataBuffer(int maxNumOfFrames, BlockingBag<Integer, SnowDataFrame> frames) {
@@ -43,7 +43,7 @@ public class SnowDataBuffer {
             throw new IllegalArgumentException("You cannot push more frames to snow buffer after last frame is pushed.");
         }
 
-        if (frame == SnowDataFrame.last) {
+        if (frame == SnowDataFrame.LAST) {
             lastValidFrameNum = headFrameNum;
         } else if (frame.frameNum() != headFrameNum + 1) {
             throw new IllegalStateException("Expected sequenced frames");
@@ -82,7 +82,7 @@ public class SnowDataBuffer {
 
     private SnowDataFrame nextFrameAfter(int frameNum) throws InterruptedException {
         if (destroyed || frameNum >= lastValidFrameNum) {
-            return SnowDataFrame.last;
+            return SnowDataFrame.LAST;
         }
         waitForContent();
 

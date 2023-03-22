@@ -25,9 +25,9 @@ public class ErrorHandler implements ErrorController {
     private final boolean canShowStacktrace;
 
     public ErrorHandler(
-            @Autowired @Qualifier("is.developer.mode") boolean canShowStacktrace
+            @Autowired @Qualifier("is.developer.mode") boolean isDeveloperMode
     ) {
-        this.canShowStacktrace = canShowStacktrace;
+        this.canShowStacktrace = isDeveloperMode;
     }
 
     @RequestMapping("/error")

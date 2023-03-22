@@ -10,8 +10,8 @@ import java.util.regex.Pattern;
 public class SessionService {
 
     private final Set<String> sessions = new HashSet<>();
-
     private final Pattern sessionIdValidator = Pattern.compile("^[a-z0-9-]+$");
+
 
     public void create(String sessionId) {
         validate(sessionId);
@@ -34,7 +34,8 @@ public class SessionService {
 
     private void validate(String sessionId) {
         if (!sessionIdValidator.matcher(sessionId).matches()) {
-            throw new IllegalArgumentException("Invalid session id: " + sessionId + ". Allowed only lowercase alphanumeric characters and dashes!");
+            throw new IllegalArgumentException("Invalid session id: " + sessionId
+                    + ". Allowed only lowercase alphanumeric characters and dashes!");
         }
     }
 }

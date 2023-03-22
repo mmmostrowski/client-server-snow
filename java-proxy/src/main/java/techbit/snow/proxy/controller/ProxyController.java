@@ -1,10 +1,8 @@
 package techbit.snow.proxy.controller;
 
-import com.google.common.base.Strings;
 import lombok.extern.log4j.Log4j2;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -87,29 +85,28 @@ public class ProxyController {
         );
     }
 
-    private Map<String, String> toConfMap(@Nullable String configuration) {
-        if (Strings.isNullOrEmpty(configuration) || configuration.equals("/")) {
+    private Map<String, String> toConfMap(String configuration) {
+        if (configuration.isBlank() || configuration.equals("/")) {
             return Collections.emptyMap();
         }
 
-        String[] elements = configuration.substring(1).split("/");
+        final String[] elements = configuration.substring(1).split("/");
         if (elements.length % 2 != 0) {
             throw new IllegalArgumentException("Please provide request in form: " +
                     "http://domain.com/sessionId/key1/val1/key2/val2/...");
         }
 
-        Map<String, String> confMap = new HashMap<>();
-        String key = null;
-        for (int i = 0; i < elements.length; ++i) {
-            if (i % 2 == 0) {
-                key = elements[i];
-                if (Strings.isNullOrEmpty(key)) {
-                    throw new IllegalArgumentException("Neither keys nor values can be empty! " +
-                            "Please provide request in form: http://domain.com/sessionId/key1/val1/key2/val2/...");
-                }
-            } else {
-                confMap.put(key, elements[i]);
+        final Map<String, String> confMap = new HashMap<>();
+        for (int i = 0; i < elements.length; i+=2) {
+            final String key = elements[i];
+            final String value = elements[i + 1];
+
+            if (key.isBlank() || value.isBlank()) {
+                throw new IllegalArgumentException("Neither keys nor values can be empty! " +
+                        "Please provide request in form: http://domain.com/sessionId/key1/val1/key2/val2/...");
             }
+
+            confMap.put(key, value);
         }
         return confMap;
     }

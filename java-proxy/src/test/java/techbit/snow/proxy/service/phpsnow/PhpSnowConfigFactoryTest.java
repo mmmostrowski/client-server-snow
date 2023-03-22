@@ -40,10 +40,10 @@ class PhpSnowConfigFactoryTest {
     void givenEmptyConfigMap_whenCreate_thenReturnsConfigObjectWithDefaults() {
         PhpSnowConfig config = factory.create(Collections.emptyMap());
 
+        assertEquals(Duration.ofMinutes(3), config.getAnimationDuration());
         assertEquals("somePreset", config.getPresetName());
         assertEquals(101, config.getWidth());
         assertEquals(53, config.getHeight());
-        assertEquals(Duration.ofMinutes(3), config.getAnimationDuration());
         assertEquals(23, config.getFps());
     }
 
@@ -77,9 +77,9 @@ class PhpSnowConfigFactoryTest {
 
     @Test
     void givenAnimationDuration_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.create(Map.of("animationDuration", "5940"));
+        PhpSnowConfig config = factory.create(Map.of("animationDuration", "30"));
 
-        assertEquals(Duration.ofMinutes(99), config.getAnimationDuration());
+        assertEquals(Duration.ofSeconds(30), config.getAnimationDuration());
     }
 
     @Test

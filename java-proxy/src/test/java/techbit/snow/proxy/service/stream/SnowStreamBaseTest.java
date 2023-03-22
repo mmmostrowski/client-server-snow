@@ -49,7 +49,7 @@ abstract public class SnowStreamBaseTest {
                 frame(2),
                 frame(3),
                 frame(4),
-                SnowDataFrame.last
+                SnowDataFrame.LAST
         ).iterator();
 
         lenient().when(decoder.decodeFrame(any())).then(i -> inputFrames.next());

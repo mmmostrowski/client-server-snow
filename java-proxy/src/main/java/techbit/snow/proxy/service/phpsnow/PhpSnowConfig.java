@@ -1,5 +1,6 @@
 package techbit.snow.proxy.service.phpsnow;
 
+import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
@@ -9,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 import org.springframework.context.annotation.Scope;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import techbit.snow.proxy.validation.MinDuration;
 
@@ -26,8 +26,9 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @RequiredArgsConstructor
 public class PhpSnowConfig {
 
+    @Nonnull
     @Size(min=1, message = "Invalid preset name!")
-    @NonNull String presetName;
+    String presetName;
 
     @Min(value = 1, message = "Invalid animation canvas width. Please provide a positive number!")
     int width;
@@ -35,8 +36,9 @@ public class PhpSnowConfig {
     @Min(value = 1, message = "Invalid animation canvas height. Please provide a positive number!")
     int height;
 
+    @Nonnull
     @MinDuration(value = 1, message = "Invalid animation duration. Please provide a positive number!")
-    @NonNull Duration animationDuration;
+    Duration animationDuration;
 
     @Min(value = 1, message = "Invalid animation FPS. Please provide a number in between 1 and 60")
     @Max(value = 60, message = "Invalid animation FPS. Please provide a number in between 1 and 60")

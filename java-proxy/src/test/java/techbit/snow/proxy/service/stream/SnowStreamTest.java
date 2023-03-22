@@ -139,7 +139,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
     void whenInputDataIsStreamed_thenMetadataIsStreamedToOutput() throws IOException, InterruptedException, ConsumerThreadException {
         SnowAnimationMetadata metadata = mock(SnowAnimationMetadata.class);
         when(decoder.decodeMetadata(any())).thenReturn(metadata);
-        when(buffer.firstFrame()).thenReturn(SnowDataFrame.last);
+        when(buffer.firstFrame()).thenReturn(SnowDataFrame.LAST);
         when(phpSnow.isAlive()).thenReturn(true);
 
         snowStream.startConsumingSnowData();
@@ -160,7 +160,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         inOrder.verify(buffer).push(frame(2));
         inOrder.verify(buffer).push(frame(3));
         inOrder.verify(buffer).push(frame(4));
-        inOrder.verify(buffer).push(SnowDataFrame.last);
+        inOrder.verify(buffer).push(SnowDataFrame.LAST);
     }
 
     @Test
@@ -184,7 +184,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         inOrder.verify(buffer).push(frame(2));
         inOrder.verify(buffer).push(frame(3));
         inOrder.verify(buffer).push(frame(4));
-        inOrder.verify(buffer).push(SnowDataFrame.last);
+        inOrder.verify(buffer).push(SnowDataFrame.LAST);
     }
 
     @Test
@@ -194,7 +194,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         when(buffer.nextFrame(frame(1))).thenReturn(frame(2));
         when(buffer.nextFrame(frame(2))).thenReturn(frame(3));
         when(buffer.nextFrame(frame(3))).thenReturn(frame(4));
-        when(buffer.nextFrame(frame(4))).thenReturn(SnowDataFrame.last);
+        when(buffer.nextFrame(frame(4))).thenReturn(SnowDataFrame.LAST);
 
         snowStream.startConsumingSnowData();
         snowStream.streamTo(outputStream);
@@ -205,7 +205,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         inOrder.verify(encoder).encodeFrame(frame(2), outputStream);
         inOrder.verify(encoder).encodeFrame(frame(3), outputStream);
         inOrder.verify(encoder).encodeFrame(frame(4), outputStream);
-        inOrder.verify(encoder).encodeFrame(SnowDataFrame.last, outputStream);
+        inOrder.verify(encoder).encodeFrame(SnowDataFrame.LAST, outputStream);
     }
 
     @Test

@@ -11,8 +11,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,9 +19,9 @@ import static org.mockito.Mockito.when;
 class SnowDataBufferTest {
 
     @Mock
-    BlockingBag<Integer, SnowDataFrame> bag;
+    private BlockingBag<Integer, SnowDataFrame> bag;
 
-    SnowDataBuffer buffer;
+    private SnowDataBuffer buffer;
 
     @BeforeEach
     void setUp() {
@@ -210,20 +208,20 @@ class SnowDataBufferTest {
         buffer.push(frame(1));
         buffer.push(frame(2));
         buffer.push(frame(3));
-        buffer.push(SnowDataFrame.last);
+        buffer.push(SnowDataFrame.LAST);
 
         when(bag.take(3)).thenReturn(frame(3));
 
         assertEquals(frame(3), buffer.nextFrame(frame(1)));
         assertEquals(frame(3), buffer.nextFrame(frame(2)));
-        assertEquals(SnowDataFrame.last, buffer.nextFrame(frame(3)));
+        assertEquals(SnowDataFrame.LAST, buffer.nextFrame(frame(3)));
     }
 
     @Test
     void givenLastFrameInBuffer_whenNewFrameAdded_thenThrowException() throws InterruptedException {
         buffer.push(frame(1));
         buffer.push(frame(2));
-        buffer.push(SnowDataFrame.last);
+        buffer.push(SnowDataFrame.LAST);
         assertThrows(IllegalArgumentException.class, () -> buffer.push(frame(3)));
     }
 
@@ -233,9 +231,9 @@ class SnowDataBufferTest {
         buffer.push(frame(2));
         buffer.destroy();
 
-        assertEquals(SnowDataFrame.last, buffer.firstFrame());
-        assertEquals(SnowDataFrame.last, buffer.nextFrame(frame(1)));
-        assertEquals(SnowDataFrame.last, buffer.nextFrame(frame(2)));
+        assertEquals(SnowDataFrame.LAST, buffer.firstFrame());
+        assertEquals(SnowDataFrame.LAST, buffer.nextFrame(frame(1)));
+        assertEquals(SnowDataFrame.LAST, buffer.nextFrame(frame(2)));
     }
 
     @Test

@@ -48,7 +48,6 @@ class AsyncConfigurationTest {
         AsyncSupportConfigurer asyncSupportConfig = mock(AsyncSupportConfigurer.class);
 
         WebMvcConfigurer mvcConfig = conf.webMvcConfigurer(taskExecutor);
-
         mvcConfig.configureAsyncSupport(asyncSupportConfig);
 
         verify(asyncSupportConfig).setDefaultTimeout(Duration.ofHours(1).toMillis());
