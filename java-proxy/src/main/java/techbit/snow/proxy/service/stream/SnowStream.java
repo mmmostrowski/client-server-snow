@@ -1,6 +1,7 @@
 package techbit.snow.proxy.service.stream;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import jakarta.validation.Valid;
 import lombok.experimental.StandardException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Scope;
@@ -16,7 +17,10 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -43,22 +47,22 @@ public class SnowStream {
 
     private final StreamEncoder encoder;
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(
-            new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
-    );
-
-    private final Semaphore consumerGoingDownLock = new Semaphore(0);
-
     private SnowAnimationMetadata metadata;
 
     private volatile boolean running = false;
 
+    private volatile boolean destroyed = false;
+
     private volatile ConsumerThreadException consumerException;
 
-    private boolean destroyed = false;
+    private final Semaphore consumerGoingDownLock = new Semaphore(0);
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(
+            new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
+    );
 
 
-    public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
+    public SnowStream(String sessionId, @Valid PhpSnowConfig phpSnowConfig,
                       NamedPipe pipe, PhpSnowApp phpSnow, SnowDataBuffer buffer,
                       StreamDecoder decoder, StreamEncoder encoder
     ) {
@@ -143,8 +147,8 @@ public class SnowStream {
             log.error("consumeSnowFromPipeThread( {} ) | ERROR", sessionId, e);
             consumerException = new ConsumerThreadException(e);
         } finally {
-            disableConsumerThread();
             buffer.destroy();
+            disableConsumerThread();
         }
     }
 

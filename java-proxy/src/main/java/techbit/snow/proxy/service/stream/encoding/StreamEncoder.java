@@ -8,7 +8,6 @@ import java.io.OutputStream;
 
 public interface StreamEncoder {
 
-
     void encodeMetadata(SnowAnimationMetadata metadata, OutputStream out) throws IOException;
 
     void encodeFrame(SnowDataFrame frame, OutputStream out) throws IOException;

@@ -83,7 +83,7 @@ class SnowDataBufferTest {
 
     @Test
     void whenNoRegisteredClients_thenNoBlocking() {
-        assertDoesNotThrow(() -> buffer.waitUntilAllClientsUnregister());
+        assertDoesNotThrow(buffer::waitUntilAllClientsUnregister);
     }
 
     @Test

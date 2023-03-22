@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -17,11 +16,11 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 public class BlockingBag<K, V> {
 
     private final Map<K, V> map = Maps.newConcurrentMap();
-
     private final Map<K, Object> locks = Maps.newConcurrentMap();
 
+
     public void put(K key, V value) {
-        Object lock = lockFor(key);
+        final Object lock = lockFor(key);
         synchronized (lock) {
             map.put(key, value);
             lock.notifyAll();
@@ -29,8 +28,8 @@ public class BlockingBag<K, V> {
     }
 
     public @NotNull V take(K key) throws InterruptedException {
-        Object lock = lockFor(key);
-        V result;
+        final Object lock = lockFor(key);
+        final V result;
         synchronized (lock) {
             if (!map.containsKey(key)) {
                 lock.wait();
@@ -42,7 +41,7 @@ public class BlockingBag<K, V> {
     }
 
     public void remove(K key) {
-        Object lock = lockFor(key);
+        final Object lock = lockFor(key);
         synchronized (lock) {
             map.remove(key);
             lock.notifyAll();
@@ -51,7 +50,7 @@ public class BlockingBag<K, V> {
     }
 
     public void removeAll() {
-        for (K key : locks.keySet()) {
+        for (final K key : locks.keySet()) {
             remove(key);
         }
     }

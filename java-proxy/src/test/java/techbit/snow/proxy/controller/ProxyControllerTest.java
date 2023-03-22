@@ -36,9 +36,10 @@ class ProxyControllerTest {
         controller = new ProxyController(streaming);
     }
 
+
     @Test
     void whenIndexRequested_thenThrowException() {
-        assertThrows(Exception.class, () -> controller.index());
+        assertThrows(IllegalArgumentException.class, controller::index);
     }
 
     @Test
@@ -54,7 +55,8 @@ class ProxyControllerTest {
 
     @Test
     void givenNoCustomConfiguration_whenStreamToClient_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
-        StreamingResponseBody responseBody = controller.streamToClient("session-abc", "").get();
+        StreamingResponseBody responseBody = controller.streamToClient(
+                "session-abc", "").get();
 
         responseBody.writeTo(out);
 
@@ -63,7 +65,8 @@ class ProxyControllerTest {
 
     @Test
     void givenCustomConfiguration_whenStreamToClient_thenStreamWithProperConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
-        StreamingResponseBody responseBody = controller.streamToClient("session-abc", "/key1/value1/key2/value2").get();
+        StreamingResponseBody responseBody = controller.streamToClient(
+                "session-abc", "/key1/value1/key2/value2").get();
 
         responseBody.writeTo(out);
 
@@ -74,28 +77,27 @@ class ProxyControllerTest {
     }
 
     @Test
-    void givenCustomConfigurationWithMissingValue_whenStreamToClient_thenThrowException() throws IOException, InterruptedException, ExecutionException {
-        StreamingResponseBody responseBody = controller.streamToClient("session-abc", "/key1/value1/key2/").get();
+    void givenCustomConfigurationWithMissingValue_whenStreamToClient_thenThrowException() throws InterruptedException, ExecutionException {
+        StreamingResponseBody responseBody = controller.streamToClient(
+                "session-abc", "/key1/value1/key2/").get();
 
-        assertThrows(Exception.class, () -> responseBody.writeTo(out));
+        assertThrows(IllegalArgumentException.class, () -> responseBody.writeTo(out));
     }
 
     @Test
-    void givenCustomConfigurationWithEmptyKeyValues_whenStreamToClient_thenThrowException() throws IOException, InterruptedException, ExecutionException {
-        StreamingResponseBody responseBody = controller.streamToClient("session-abc", "/key1///value1/").get();
+    void givenCustomConfigurationWithEmptyKeyValues_whenStreamToClient_thenThrowException() throws InterruptedException, ExecutionException {
+        StreamingResponseBody responseBody = controller.streamToClient(
+                "session-abc", "/key1///value1/").get();
 
-        assertThrows(Exception.class, () -> responseBody.writeTo(out));
+        assertThrows(IllegalArgumentException.class, () -> responseBody.writeTo(out));
     }
 
     @Test
-    void whenStreamDetailsToClient_thenValidDetailsResponded() throws IOException, InterruptedException, ExecutionException {
+    void whenStreamDetails_thenValidDetailsResponded() {
         when(streaming.hasStream("session-abc")).thenReturn(true);
         when(streaming.isRunning("session-abc")).thenReturn(true);
 
         Map<String, Object> response = controller.streamDetails("session-abc");
-
-        verify(streaming).hasStream("session-abc");
-        verify(streaming).isRunning("session-abc");
 
         assertEquals(Map.of(
                 "sessionId", "session-abc",
@@ -105,14 +107,14 @@ class ProxyControllerTest {
     }
 
     @Test
-    void whenStopStreaming_thenStopStream() throws IOException, InterruptedException {
+    void whenStopStreamingRequested_thenStopStream() throws IOException, InterruptedException {
         controller.stopStreaming("session-abc");
 
         verify(streaming).stopStream("session-abc");
     }
 
     @Test
-    void whenStopStreaming_thenRespondWithInfoMap() throws IOException, InterruptedException {
+    void whenStopStreamingRequested_thenRespondWithInfoMap() throws IOException, InterruptedException {
         Map<String, Object> response = controller.stopStreaming("session-abc");
 
         assertEquals(Map.of(
@@ -120,7 +122,6 @@ class ProxyControllerTest {
                 "stopped", "ok"
         ), response);
     }
-
 
     @Test
     void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
@@ -137,7 +138,7 @@ class ProxyControllerTest {
 
         doThrow(InterruptedException.class).when(streaming).stream("session-abc", out, Collections.emptyMap());
 
-        assertThrows(RuntimeException.class, () -> responseBody.writeTo(out));
+        assertThrows(IOException.class, () -> responseBody.writeTo(out));
     }
 
 }

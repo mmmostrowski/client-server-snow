@@ -23,8 +23,8 @@ class AsyncConfigurationTest {
     void setup() {
         conf = new AsyncConfiguration(
                 Duration.ofHours(1),
-                19,
                 119,
+                19,
                 99
         );
     }
@@ -32,10 +32,10 @@ class AsyncConfigurationTest {
     @Test
     void whenProvidingAsyncExecutor_thenItIsProperlyConfigured() {
         try(MockedConstruction<?> mocked = mockConstruction(ThreadPoolTaskExecutor.class)) {
+
             conf.getAsyncExecutor();
 
             ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) mocked.constructed().get(0);
-
             verify(executor).setCorePoolSize(19);
             verify(executor).setMaxPoolSize(119);
             verify(executor).setQueueCapacity(99);

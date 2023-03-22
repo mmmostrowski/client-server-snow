@@ -20,11 +20,13 @@ public class NamedPipe {
     private final File pipeFile;
 
     public NamedPipe(String sessionId, Path pipesDir) {
-        this.pipeFile = pipesDir.resolve(sessionId).toFile();
+        pipeFile = pipesDir.resolve(sessionId).toFile();
     }
 
     public InputStream inputStream() throws IOException {
-        FileUtils.waitFor(pipeFile, (int) Duration.ofMinutes(30).getSeconds());
+        if (!FileUtils.waitFor(pipeFile, (int) Duration.ofMinutes(30).getSeconds())) {
+            throw new IllegalStateException("PhpSnow did not create a pipe file: " + pipeFile);
+        }
         return new FileInputStream(pipeFile);
     }
 

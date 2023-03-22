@@ -14,24 +14,24 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.time.Duration;
 
-@Configuration
 @EnableAsync
+@Configuration
 public class AsyncConfiguration implements AsyncConfigurer {
 
     private final Duration timeout;
-    private final int threadCorePoolSize;
     private final int threadMaxPoolSize;
+    private final int threadCorePoolSize;
     private final int threadQueueCapacity;
 
     public AsyncConfiguration(
             @Value("#{ ${phpsnow.threads.timeout} * 1000 }") Duration timeout,
-            @Value("${phpsnow.threads.core-pool-size}") int threadCorePoolSize,
             @Value("${phpsnow.threads.max-pool-size}") int threadMaxPoolSize,
+            @Value("${phpsnow.threads.core-pool-size}") int threadCorePoolSize,
             @Value("${phpsnow.threads.queue-capacity}") int threadQueueCapacity
     ) {
         this.timeout = timeout;
-        this.threadCorePoolSize = threadCorePoolSize;
         this.threadMaxPoolSize = threadMaxPoolSize;
+        this.threadCorePoolSize = threadCorePoolSize;
         this.threadQueueCapacity = threadQueueCapacity;
     }
 
@@ -39,8 +39,8 @@ public class AsyncConfiguration implements AsyncConfigurer {
     @Bean(name = "streamExecutor")
     public AsyncTaskExecutor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(threadCorePoolSize);
         executor.setMaxPoolSize(threadMaxPoolSize);
+        executor.setCorePoolSize(threadCorePoolSize);
         executor.setQueueCapacity(threadQueueCapacity);
         return executor;
     }

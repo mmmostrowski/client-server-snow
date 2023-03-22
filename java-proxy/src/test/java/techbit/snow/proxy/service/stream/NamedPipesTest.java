@@ -45,7 +45,7 @@ class NamedPipesTest {
     }
     
     @Test 
-    void whenAskedForPipesDir_thenValidDirectoryPathProvided() throws IOException {
+    void whenAskedForPipesDir_thenValidDirectoryPathProvided() {
         doCallRealMethod().when(namedPipes).pipesDir();
 
         assertDoesNotThrow(() -> namedPipes.pipesDir().toRealPath());

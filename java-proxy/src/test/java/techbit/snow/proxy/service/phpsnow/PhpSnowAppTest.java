@@ -21,8 +21,12 @@ class PhpSnowAppTest {
 
     private final PhpSnowConfig config = new PhpSnowConfig(
             "customPreset", 135, 85, Duration.ofMinutes(1), 35);
+
     @Mock(answer = RETURNS_DEEP_STUBS)
     private ProcessBuilder builder;
+
+    @Mock
+    private Process process;
 
     private PhpSnowApp phpSnowApp;
 
@@ -34,8 +38,6 @@ class PhpSnowAppTest {
     @Test
     void whenStart_thenValidProcessIsExecuted() throws IOException {
         phpSnowApp.start();
-
-        verify(builder.environment()).put("SCRIPT_OWNER_PID", "98765");
 
         verify(builder).command(
                 argThat(s -> s.endsWith("/run")),
@@ -49,6 +51,13 @@ class PhpSnowAppTest {
         );
 
         verify(builder).start();
+    }
+
+    @Test
+    void whenStart_thenOurPidIsProvidedInEnvironmentVariable() throws IOException {
+        phpSnowApp.start();
+
+        verify(builder.environment()).put("SCRIPT_OWNER_PID", "98765");
     }
 
     @Test
@@ -67,18 +76,17 @@ class PhpSnowAppTest {
 
     @Test
     void whenStop_thenIsNotAlive() throws IOException {
-        lenient().when(builder.start().isAlive()).thenReturn(true);
+        when(builder.start().isAlive()).thenReturn(true);
 
         phpSnowApp.start();
-        phpSnowApp.stop();
+        assertTrue(phpSnowApp.isAlive());
 
+        phpSnowApp.stop();
         assertFalse(phpSnowApp.isAlive());
     }
 
     @Test
     void whenStop_thenProcessIsDestroyed() throws IOException {
-        Process process = mock(Process.class);
-
         when(builder.start()).thenReturn(process);
 
         phpSnowApp.start();

@@ -10,24 +10,26 @@ import java.io.IOException;
 @Component
 public class BinaryStreamDecoder implements StreamDecoder {
 
+    public static final String GREETING_MARKER = "hello-php-snow";
+
     @Override
     public SnowAnimationMetadata decodeMetadata(DataInputStream dataStream) throws IOException {
         readHelloMarker(dataStream);
 
-        int width = dataStream.readInt();
-        int height = dataStream.readInt();
-        int fps = dataStream.readInt();
+        final int width = dataStream.readInt();
+        final int height = dataStream.readInt();
+        final int fps = dataStream.readInt();
 
         return new SnowAnimationMetadata(width, height, fps);
     }
 
     @Override
     public SnowDataFrame decodeFrame(DataInputStream dataStream) throws IOException {
-        int frameNum = dataStream.readInt();
-        int chunkSize = dataStream.readInt();
-        float[] x = new float[chunkSize];
-        float[] y = new float[chunkSize];
-        byte[] flakeShapes = new byte[chunkSize];
+        final int frameNum = dataStream.readInt();
+        final int chunkSize = dataStream.readInt();
+        final float[] x = new float[chunkSize];
+        final float[] y = new float[chunkSize];
+        final byte[] flakeShapes = new byte[chunkSize];
 
         for (int i = 0; i < chunkSize; ++i) {
             x[i] = dataStream.readFloat();
@@ -38,7 +40,7 @@ public class BinaryStreamDecoder implements StreamDecoder {
     }
 
     private void readHelloMarker(DataInputStream inputStream) throws IOException {
-        for (char c : "hello-php-snow".toCharArray()) {
+        for (char c : GREETING_MARKER.toCharArray()) {
             if (inputStream.readByte() != c) {
                 throw new IllegalStateException("Expected greeting in the stream!");
             }

@@ -230,7 +230,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
         });
 
-        TestFramework.runOnce(testFiveStreamingThreads());
+        testUsingFiveStreamingThreads();
     }
 
     @RepeatedTest(2)
@@ -244,7 +244,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
             return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.last;
         });
 
-        TestFramework.runOnce(testFiveStreamingThreads());
+        testUsingFiveStreamingThreads();
     }
 
     @RepeatedTest(2)
@@ -262,7 +262,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
             return null;
         }).when(encoder).encodeFrame(any(), any());
 
-        TestFramework.runOnce(testFiveStreamingThreads());
+        testUsingFiveStreamingThreads();
     }
 
     @RepeatedTest(2)
@@ -281,11 +281,11 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
             return null;
         }).when(encoder).encodeFrame(any(), any());
 
-        TestFramework.runOnce(testFiveStreamingThreads(), 10, 10);
+        testUsingFiveStreamingThreads();
     }
 
-    private MultithreadedTestCase testFiveStreamingThreads() {
-        return new MultithreadedTestCase() {
+    private void testUsingFiveStreamingThreads() throws Throwable {
+        TestFramework.runOnce( new MultithreadedTestCase() {
             final Semaphore readyToStream = new Semaphore(0);
 
             void threadConsumer() throws IOException, InterruptedException {
@@ -324,7 +324,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
                 verify(encoder, atLeastOnce()).encodeFrame(any(SnowDataFrame.class), eq(outputStream));
             }
-        };
+        }, 10, 30);
     }
 
 

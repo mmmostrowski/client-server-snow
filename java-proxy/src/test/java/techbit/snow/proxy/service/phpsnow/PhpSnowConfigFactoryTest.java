@@ -1,25 +1,39 @@
 package techbit.snow.proxy.service.phpsnow;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PhpSnowConfigFactoryTest {
+
+    @Mock
+    private Validator validator;
+
+    @Mock
+    private ConstraintViolation<PhpSnowConfig> issue;
 
     private PhpSnowConfigFactory factory;
 
     @BeforeEach
     void setup() {
         factory = new PhpSnowConfigFactory(
-                "somePreset", 101, 53, Duration.ofMinutes(3), 23);
+                "somePreset", 101, 53, Duration.ofMinutes(3), 23, validator);
     }
 
     @Test
@@ -69,7 +83,35 @@ class PhpSnowConfigFactoryTest {
     }
 
     @Test
-    void givenConfigMap_whenCreate_thenReturnsValidConfigObject() {
+    void givenInvalidFps_whenCreate_thenThrowException() {
+        when(validator.validate(Mockito.any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
+        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("fps", "0")));
+        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("fps", "-1")));
+    }
+
+    @Test
+    void givenInvalidWidth_whenCreate_thenThrowException() {
+        when(validator.validate(Mockito.any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
+        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("width", "0")));
+        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("width", "-1")));
+    }
+
+    @Test
+    void givenInvalidHeight_whenCreate_thenThrowException() {
+        when(validator.validate(Mockito.any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
+        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("height", "0")));
+        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("height", "-1")));
+    }
+
+    @Test
+    void givenInvalidAnimationDuration_whenCreate_thenThrowException() {
+        when(validator.validate(Mockito.any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
+        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("animationDuration", "0")));
+        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("animationDuration", "-1")));
+    }
+
+    @Test
+    void givenValidConfigMap_whenCreate_thenReturnsConfigObject() {
         PhpSnowConfig config = factory.create(Map.of(
             "presetName", "redefinedPresetName",
                 "fps", "13",

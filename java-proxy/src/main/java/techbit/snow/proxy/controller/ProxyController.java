@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import lombok.extern.log4j.Log4j2;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,11 +19,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-@RestController
 @Log4j2
+@RestController
 public class ProxyController {
 
-        private final ProxyService streaming;
+    private final ProxyService streaming;
 
     public ProxyController(
             @Autowired ProxyService streaming
@@ -39,11 +40,11 @@ public class ProxyController {
     public void favicon() {
     }
 
-    @GetMapping("/{sessionId}/{*configuration}")
     @Async("streamExecutor")
+    @GetMapping("/{sessionId}/{*configuration}")
     public CompletableFuture<StreamingResponseBody> streamToClient(
-            final @PathVariable String sessionId,
-            final @PathVariable String configuration
+            @PathVariable String sessionId,
+            @PathVariable String configuration
     ) {
         log.debug("streamToClient( {}, {} )", sessionId, configuration);
 
@@ -57,13 +58,14 @@ public class ProxyController {
             } catch (ClientAbortException e) {
                 log.debug("streamToClient( {} ) | Client aborted", sessionId);
             } catch (InterruptedException | ConsumerThreadException e) {
-                throw new RuntimeException(e);
+                log.error("streamToClient( {} ) | Error occurred", sessionId);
+                throw new IOException("Streaming interrupted ", e);
             }
         });
     }
 
     @GetMapping({"/stop/{sessionId}", "/stop/{sessionId}/"})
-    public Map<String, Object> stopStreaming(final @PathVariable String sessionId) throws IOException, InterruptedException {
+    public Map<String, Object> stopStreaming(@PathVariable String sessionId) throws IOException, InterruptedException {
         log.debug("stopStreaming( {} )", sessionId);
 
         streaming.stopStream(sessionId);
@@ -75,7 +77,7 @@ public class ProxyController {
     }
 
     @GetMapping({"/details/{sessionId}", "/details/{sessionId}/"})
-    public Map<String, Object> streamDetails(final @PathVariable String sessionId) {
+    public Map<String, Object> streamDetails(@PathVariable String sessionId) {
         log.debug("streamDetails( {} )", sessionId);
 
         return Map.of(
@@ -85,24 +87,25 @@ public class ProxyController {
         );
     }
 
-    private static Map<String, String> toConfMap(String configuration) {
+    private Map<String, String> toConfMap(@Nullable String configuration) {
         if (Strings.isNullOrEmpty(configuration) || configuration.equals("/")) {
             return Collections.emptyMap();
         }
 
-        Map<String, String> confMap = new HashMap<>();
         String[] elements = configuration.substring(1).split("/");
-
         if (elements.length % 2 != 0) {
-            throw new IllegalArgumentException("Please provide request in form: http://domain.com/sessionId/key1/val1/key2/val2/...");
+            throw new IllegalArgumentException("Please provide request in form: " +
+                    "http://domain.com/sessionId/key1/val1/key2/val2/...");
         }
 
+        Map<String, String> confMap = new HashMap<>();
         String key = null;
         for (int i = 0; i < elements.length; ++i) {
             if (i % 2 == 0) {
                 key = elements[i];
                 if (Strings.isNullOrEmpty(key)) {
-                    throw new IllegalArgumentException("Neither keys nor values can be empty! Please provide request in form: http://domain.com/sessionId/key1/val1/key2/val2/...");
+                    throw new IllegalArgumentException("Neither keys nor values can be empty! " +
+                            "Please provide request in form: http://domain.com/sessionId/key1/val1/key2/val2/...");
                 }
             } else {
                 confMap.put(key, elements[i]);

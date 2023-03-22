@@ -45,19 +45,19 @@ class SnowStreamTest extends SnowStreamBaseTest {
     @Test
     void givenStoppedStream_whenStartPhpApp_thenThrowException() throws IOException, InterruptedException {
         snowStream.stop();
-        assertThrows(Exception.class, () -> snowStream.startPhpApp());
+        assertThrows(Exception.class, snowStream::startPhpApp);
     }
 
     @Test
     void givenStoppedStream_whenStartConsumingSnowData_thenThrowException() throws IOException, InterruptedException {
         snowStream.stop();
-        assertThrows(Exception.class, () -> snowStream.startConsumingSnowData());
+        assertThrows(Exception.class, snowStream::startConsumingSnowData);
     }
 
     @Test
     void givenStoppedStream_whenStopAgain_thenNoExceptionIsThrown() throws IOException, InterruptedException {
         snowStream.stop();
-        assertDoesNotThrow(() -> snowStream.stop());
+        assertDoesNotThrow(snowStream::stop);
     }
 
     @Test
@@ -90,7 +90,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
 
     @Test
     void givenNoPhpStart_whenStartSnowDataConsumption_thenThrowException() {
-        assertThrows(Exception.class, () -> snowStream.startConsumingSnowData());
+        assertThrows(Exception.class, snowStream::startConsumingSnowData);
     }
 
     @Test
@@ -102,7 +102,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
     void whenStop_thenBufferIsDestroyed() throws IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
 
-        snowStream.startConsumingSnowData();;
+        snowStream.startConsumingSnowData();
 
         snowStream.stop();
 

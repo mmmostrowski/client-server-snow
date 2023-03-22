@@ -1,12 +1,10 @@
 package techbit.snow.proxy.service.stream;
 
 import com.google.common.collect.Sets;
-import lombok.SneakyThrows;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
-import java.util.Objects;
 import java.util.Set;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
@@ -104,8 +102,8 @@ public class SnowDataBuffer {
     }
 
     private void waitForContent() throws InterruptedException {
-        if (numOfFrames == 0) {
-            synchronized (framesLock) {
+        synchronized (framesLock) {
+            if (numOfFrames == 0) {
                 framesLock.wait();
             }
         }
@@ -113,10 +111,10 @@ public class SnowDataBuffer {
 
     public void destroy() {
         destroyed = true;
-        numOfFrames = 0;
-        tailFrameNum = 0;
-
         synchronized (framesLock) {
+            numOfFrames = 0;
+            tailFrameNum = 0;
+
             frames.removeAll();
             headFrameNum = 0;
             framesLock.notifyAll();
