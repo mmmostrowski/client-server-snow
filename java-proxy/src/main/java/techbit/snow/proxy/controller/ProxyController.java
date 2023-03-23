@@ -34,6 +34,7 @@ public class ProxyController {
         throw new IllegalArgumentException("Invalid url! Missing session id, e.x: http://domain.com/<session-id>");
     }
 
+    @SuppressWarnings("EmptyMethod")
     @GetMapping("/favicon.ico")
     public void favicon() {
     }

@@ -18,7 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,14 +28,14 @@ class SnowStreamTest extends SnowStreamBaseTest {
     }
 
     @Test
-    void whenStartPhpApp_thenPhpAppIsStarted() throws IOException, InterruptedException {
+    void whenStartPhpApp_thenPhpAppIsStarted() throws IOException {
         snowStream.startPhpApp();
 
         verify(phpSnow).start();
     }
 
     @Test
-    void whenStartPhpApp_thenItIsNotActive() throws IOException, InterruptedException {
+    void whenStartPhpApp_thenItIsNotActive() throws IOException {
         snowStream.startPhpApp();
 
         assertFalse(snowStream.isActive());

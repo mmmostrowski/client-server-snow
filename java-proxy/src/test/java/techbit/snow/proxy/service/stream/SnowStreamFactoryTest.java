@@ -57,9 +57,8 @@ class SnowStreamFactoryTest {
         assertTrue(privateFieldOf(pipe, "pipeFile", File.class).toString().contains("session-xyz"));
     }
 
-    @SuppressWarnings("unchecked")
     private <T> T privateFieldOf(Object object, String fieldName, Class<T> type) {
-        return (T) ReflectionTestUtils.getField(object, fieldName);
+        return type.cast(ReflectionTestUtils.getField(object, fieldName));
     }
 
 }

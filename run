@@ -11,7 +11,7 @@ function init() {
 function main() {
     init;
 
-    if [[ "${1:-}" == "devbox" ]] || [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
+    if [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
         export PHP_SNOW_APP_MODE=develop
     fi
 

@@ -18,7 +18,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -122,11 +121,10 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
     void givenSluggishConsumerThread_whenStop_thenIsForcedToShutdown() throws Throwable {
         verify(decoder, atMostOnce()).decodeFrame(any());
         when(decoder.decodeFrame(any())).then(f -> {
-            Object o = new Object();
-            synchronized (o) {
-                o.wait(); // forever
+            synchronized (this) {
+                wait(); // forever
             }
-            return frame(1);
+            throw new IllegalStateException("Unreachable");
         });
 
         TestFramework.runOnce(new MultithreadedTestCase() {

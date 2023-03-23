@@ -64,7 +64,7 @@ docker run -it --rm mmmostrowski/php-snow slideshow:calm,massiveSnow
 
 ### Run and Develop locally
 
-* On _Linux_ and _MacOs_:
+* On _Linux_ and _macOs_:
   ```shell
   ./run
   ``` 
@@ -74,7 +74,7 @@ docker run -it --rm mmmostrowski/php-snow slideshow:calm,massiveSnow
   ```
 * In a PHP terminal:
   ```shell
-  run devbox
+  run dev
   devbox# php snow.php
   ```
 * When no _Docker Engine_ available:

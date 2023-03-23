@@ -38,7 +38,7 @@ class SnowDataBufferTest {
                 assertTick(1);
             }
 
-            void thread2() throws InterruptedException {
+            void thread2() {
                 waitForTick(1);
                 buffer.push(frame(1));
             }
@@ -95,14 +95,14 @@ class SnowDataBufferTest {
 
 
     @Test
-    void whenFrameAddedToBuffer_thenItIsStoredInBag() throws Throwable {
+    void whenFrameAddedToBuffer_thenItIsStoredInBag() {
         buffer.push(frame(1));
 
         verify(bag).put(1, frame(1));
     }
 
     @Test
-    void whenTwoFramesAddedToBuffer_thenBothAreStoredInBag() throws Throwable {
+    void whenTwoFramesAddedToBuffer_thenBothAreStoredInBag() {
         buffer.push(frame(1));
         buffer.push(frame(2));
 
@@ -111,7 +111,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void whenThreeFramesAddedToBuffer_thenFirstOneIsRemoved() throws Throwable {
+    void whenThreeFramesAddedToBuffer_thenFirstOneIsRemoved() {
         buffer.push(frame(1));
         buffer.push(frame(2));
         buffer.push(frame(3));
@@ -125,7 +125,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void whenFourFramesAddedToBuffer_thenTwoFirstAreRemoved() throws Throwable {
+    void whenFourFramesAddedToBuffer_thenTwoFirstAreRemoved() {
         buffer.push(frame(1));
         buffer.push(frame(2));
         buffer.push(frame(3));
@@ -197,7 +197,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void whenFramesAddedInWrongOrder_thenExceptionIsThrown() throws InterruptedException {
+    void whenFramesAddedInWrongOrder_thenExceptionIsThrown() {
         buffer.push(frame(1));
 
         assertThrows(Exception.class, () -> buffer.push(frame(3)) );
@@ -218,7 +218,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void givenLastFrameInBuffer_whenNewFrameAdded_thenThrowException() throws InterruptedException {
+    void givenLastFrameInBuffer_whenNewFrameAdded_thenThrowException() {
         buffer.push(frame(1));
         buffer.push(frame(2));
         buffer.push(SnowDataFrame.LAST);
@@ -237,7 +237,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void givenDestroyedBuffer_whenAddingFrames_thenExceptionIsThrown() throws InterruptedException {
+    void givenDestroyedBuffer_whenAddingFrames_thenExceptionIsThrown() {
         buffer.push(frame(1));
         buffer.destroy();
 

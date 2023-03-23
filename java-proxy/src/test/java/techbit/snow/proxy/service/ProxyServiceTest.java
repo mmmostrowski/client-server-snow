@@ -133,7 +133,7 @@ class ProxyServiceTest {
     }
 
     @Test
-    void whenStopNonExistingStream_noErrorOccurs() throws IOException, InterruptedException {
+    void whenStopNonExistingStream_noErrorOccurs() {
         assertDoesNotThrow(() -> proxyService.stopStream("session-abc"));
     }
 

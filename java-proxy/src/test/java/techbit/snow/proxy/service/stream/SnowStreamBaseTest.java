@@ -31,7 +31,7 @@ abstract public class SnowStreamBaseTest {
     @Mock
     protected OutputStream outputStream;
     protected SnowStream snowStream;
-    protected SnowDataBuffer buffer;
+    protected final SnowDataBuffer buffer;
 
     public SnowStreamBaseTest(SnowDataBuffer buffer) {
         this.buffer = buffer;

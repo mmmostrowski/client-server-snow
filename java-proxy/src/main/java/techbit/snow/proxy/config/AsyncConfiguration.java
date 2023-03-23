@@ -23,6 +23,7 @@ public class AsyncConfiguration implements AsyncConfigurer {
     private final int threadCorePoolSize;
     private final int threadQueueCapacity;
 
+    @SuppressWarnings("unused")
     public AsyncConfiguration(
             @Value("#{ ${phpsnow.threads.timeout} * 1000 }") Duration timeout,
             @Value("${phpsnow.threads.max-pool-size}") int threadMaxPoolSize,

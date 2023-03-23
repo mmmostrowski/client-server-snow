@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 class NamedPipesTest {
 
     @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    public final TemporaryFolder folder = new TemporaryFolder();
 
     @Spy
     private NamedPipes namedPipes;

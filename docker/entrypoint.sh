@@ -4,7 +4,7 @@ set -eu
 function main() {
     installVendorFolderToHost
 
-    if [[ "${1:-}" == "devbox" ]] || [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
+    if [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
         echo "To run app please execute: php snow.php [ args ... ]"
         echo ''
         echo "To enable XDebug please run: echo 'xdebug.mode=debug' >> /usr/local/etc/php/conf.d/my-xdebug.ini"

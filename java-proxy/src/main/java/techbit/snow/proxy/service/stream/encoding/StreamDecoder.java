@@ -10,6 +10,6 @@ public interface StreamDecoder {
 
     SnowAnimationMetadata decodeMetadata(DataInputStream dataStream) throws IOException;
 
-    SnowDataFrame decodeFrame(DataInputStream dataStream) throws IOException;;
+    SnowDataFrame decodeFrame(DataInputStream dataStream) throws IOException;
 
 }

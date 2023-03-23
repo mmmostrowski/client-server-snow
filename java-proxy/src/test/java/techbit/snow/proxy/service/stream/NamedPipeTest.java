@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 class NamedPipeTest {
 
     @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    public final TemporaryFolder folder = new TemporaryFolder();
 
     private NamedPipe namedPipe;
 

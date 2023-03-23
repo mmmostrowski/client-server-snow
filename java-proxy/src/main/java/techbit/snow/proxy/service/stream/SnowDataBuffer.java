@@ -34,7 +34,7 @@ public class SnowDataBuffer {
         }
     }
 
-    public void push(SnowDataFrame frame) throws InterruptedException {
+    public void push(SnowDataFrame frame) {
         if (destroyed) {
             throw new IllegalStateException("You cannot push to snow buffer because it has been destroyed!");
         }

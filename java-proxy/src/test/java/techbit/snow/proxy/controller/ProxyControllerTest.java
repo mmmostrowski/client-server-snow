@@ -118,14 +118,14 @@ class ProxyControllerTest {
     }
 
     @Test
-    void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
+    void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
         doThrow(ClientAbortException.class).when(streaming).stream("session-abc", out, Collections.emptyMap());
 
         assertDoesNotThrow(() -> controller.streamToClient("session-abc", "").get().writeTo(out));
     }
 
     @Test
-    void whenThreadInterruptedDuringStreaming_thenErrorOccurs() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
+    void whenThreadInterruptedDuringStreaming_thenErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
         doThrow(InterruptedException.class).when(streaming).stream("session-abc", out, Collections.emptyMap());
 
         assertThrows(IOException.class, () -> controller.streamToClient("session-abc", "").get().writeTo(out));
