@@ -3,6 +3,7 @@ package techbit.snow.proxy.controller;
 import lombok.extern.log4j.Log4j2;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,7 +25,7 @@ public class ProxyController {
     private final ProxyService streaming;
 
     public ProxyController(
-            @Autowired ProxyService streaming
+            @Autowired @Qualifier("ProxyServiceImpl") ProxyService streaming
     ) {
         this.streaming = streaming;
     }
@@ -51,7 +52,7 @@ public class ProxyController {
             try {
                 log.debug("streamToClient( {} ) | Async Start", sessionId);
 
-                streaming.start(sessionId, out, toConfMap(configuration));
+                streaming.startSession(sessionId, out, toConfMap(configuration));
 
                 log.debug("streamToClient( {} ) | Async Finished", sessionId);
             } catch (ClientAbortException e) {
@@ -67,7 +68,7 @@ public class ProxyController {
     public Map<String, Object> stopStreaming(@PathVariable String sessionId) throws IOException, InterruptedException {
         log.debug("stopStreaming( {} )", sessionId);
 
-        streaming.stop(sessionId);
+        streaming.stopSession(sessionId);
 
         return Map.of(
             "sessionId", sessionId,
@@ -81,8 +82,8 @@ public class ProxyController {
 
         return Map.of(
             "sessionId", sessionId,
-            "exists", streaming.hasStream(sessionId),
-            "running", streaming.isRunning(sessionId)
+            "exists", streaming.hasSession(sessionId),
+            "running", streaming.isSessionRunning(sessionId)
         );
     }
 

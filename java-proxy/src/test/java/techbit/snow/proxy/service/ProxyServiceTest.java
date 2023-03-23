@@ -33,11 +33,11 @@ class ProxyServiceTest {
     @Mock
     private Map<String, String> confMap;
 
-    private ProxyService proxyService;
+    private ProxyServiceImpl proxyService;
 
     @BeforeEach
     void setup() {
-        proxyService = new ProxyService(session, snowFactory, configProvider);
+        proxyService = new ProxyServiceImpl(session, snowFactory, configProvider);
     }
 
 
@@ -45,7 +45,7 @@ class ProxyServiceTest {
     void givenNewSessionId_whenStream_thenStreamToANewStream() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
 
-        proxyService.start("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, confMap);
 
         verify(session).create("session-abc");
         verify(snowStream).startPhpApp();
@@ -58,10 +58,10 @@ class ProxyServiceTest {
         when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
 
         when(session.exists("session-abc")).thenReturn(false);
-        proxyService.start("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, confMap);
 
         when(session.exists("session-abc")).thenReturn(true);
-        proxyService.start("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, confMap);
 
         verify(snowStream, times(2)).streamTo(out);
     }
@@ -70,45 +70,45 @@ class ProxyServiceTest {
     void whenSessionDoesNotExist_thenHasNoStream() {
         when(session.exists("session-abc")).thenReturn(false);
 
-        assertFalse(proxyService.hasStream("session-abc"));
+        assertFalse(proxyService.hasSession("session-abc"));
     }
 
     @Test
     void whenSessionExists_thenHasStream() {
         when(session.exists("session-abc")).thenReturn(true);
 
-        assertTrue(proxyService.hasStream("session-abc"));
+        assertTrue(proxyService.hasSession("session-abc"));
     }
 
     @Test
     void whenSessionDoesNotExist_thenProxyIsNotRunning() {
         when(session.exists("session-abc")).thenReturn(false);
 
-        assertFalse(proxyService.isRunning("session-abc"));
+        assertFalse(proxyService.isSessionRunning("session-abc"));
     }
 
     @Test
     void whenStreamIsActive_thenProxyIsRunning() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
         when(snowStream.isActive()).thenReturn(true);
-        proxyService.start("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, confMap);
         when(session.exists("session-abc")).thenReturn(true);
 
-        assertTrue(proxyService.isRunning("session-abc"));
+        assertTrue(proxyService.isSessionRunning("session-abc"));
     }
 
     @Test
     void whenNoActiveStream_thenProxyIsNotRunning() {
-        assertFalse(proxyService.isRunning("session-abc"));
+        assertFalse(proxyService.isSessionRunning("session-abc"));
     }
 
     @Test
     void whenStopProxy_thenDeleteSession() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
-        proxyService.start("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, confMap);
         when(session.exists("session-abc")).thenReturn(true);
 
-        proxyService.stop("session-abc");
+        proxyService.stopSession("session-abc");
 
         verify(session).delete("session-abc");
     }
@@ -116,17 +116,17 @@ class ProxyServiceTest {
     @Test
     void whenStopProxy_thenStopStream() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
-        proxyService.start("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, confMap);
         when(session.exists("session-abc")).thenReturn(true);
 
-        proxyService.stop("session-abc");
+        proxyService.stopSession("session-abc");
 
         verify(snowStream).stop();
     }
 
     @Test
     void whenStopNonExistingSession_noErrorOccurs() {
-        assertDoesNotThrow(() -> proxyService.stop("session-abc"));
+        assertDoesNotThrow(() -> proxyService.stopSession("session-abc"));
     }
 
 }

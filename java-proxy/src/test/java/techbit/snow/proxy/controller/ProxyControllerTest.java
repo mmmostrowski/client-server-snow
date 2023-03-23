@@ -7,7 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import techbit.snow.proxy.service.ProxyService;
+import techbit.snow.proxy.service.ProxyServiceImpl;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 
 import java.io.IOException;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 class ProxyControllerTest {
 
     @Mock
-    private ProxyService streaming;
+    private ProxyServiceImpl streaming;
 
     @Mock
     private OutputStream out;
@@ -57,14 +57,14 @@ class ProxyControllerTest {
     void givenNoCustomConfiguration_whenStreamToClient_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         controller.streamToClient("session-abc", "").get().writeTo(out);
 
-        verify(streaming).start("session-abc", out, Collections.emptyMap());
+        verify(streaming).startSession("session-abc", out, Collections.emptyMap());
     }
 
     @Test
     void givenCustomConfiguration_whenStreamToClient_thenStreamWithProperConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         controller.streamToClient("session-abc", "/key1/value1/key2/value2").get().writeTo(out);
 
-        verify(streaming).start("session-abc", out, Map.of(
+        verify(streaming).startSession("session-abc", out, Map.of(
                 "key1", "value1",
                 "key2", "value2"
         ));
@@ -88,8 +88,8 @@ class ProxyControllerTest {
 
     @Test
     void whenStreamDetails_thenValidDetailsResponded() {
-        when(streaming.hasStream("session-abc")).thenReturn(true);
-        when(streaming.isRunning("session-abc")).thenReturn(true);
+        when(streaming.hasSession("session-abc")).thenReturn(true);
+        when(streaming.isSessionRunning("session-abc")).thenReturn(true);
 
         Map<String, Object> response = controller.streamDetails("session-abc");
 
@@ -104,7 +104,7 @@ class ProxyControllerTest {
     void whenStopStreamingRequested_thenStopStream() throws IOException, InterruptedException {
         controller.stopStreaming("session-abc");
 
-        verify(streaming).stop("session-abc");
+        verify(streaming).stopSession("session-abc");
     }
 
     @Test
@@ -119,14 +119,14 @@ class ProxyControllerTest {
 
     @Test
     void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
-        doThrow(ClientAbortException.class).when(streaming).start("session-abc", out, Collections.emptyMap());
+        doThrow(ClientAbortException.class).when(streaming).startSession("session-abc", out, Collections.emptyMap());
 
         assertDoesNotThrow(() -> controller.streamToClient("session-abc", "").get().writeTo(out));
     }
 
     @Test
     void whenThreadInterruptedDuringStreaming_thenErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
-        doThrow(InterruptedException.class).when(streaming).start("session-abc", out, Collections.emptyMap());
+        doThrow(InterruptedException.class).when(streaming).startSession("session-abc", out, Collections.emptyMap());
 
         assertThrows(IOException.class, () -> controller.streamToClient("session-abc", "").get().writeTo(out));
     }
