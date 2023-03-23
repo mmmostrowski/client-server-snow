@@ -187,7 +187,7 @@ public class SnowStream {
 
     private void stopConsumerThread() throws InterruptedException {
         running = false;
-        if (!consumerGoingDownLock.tryAcquire(2000, TimeUnit.MILLISECONDS)) {
+        if (!consumerGoingDownLock.tryAcquire(2, TimeUnit.SECONDS)) {
             executor.shutdownNow();
             disableConsumerThread();
             buffer.destroy();

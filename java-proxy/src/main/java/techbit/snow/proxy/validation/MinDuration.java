@@ -9,6 +9,7 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = MinDurationValidator.class)
 @Target({ ElementType.FIELD, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
+@SuppressWarnings("unused")
 public @interface MinDuration {
 
     long value();

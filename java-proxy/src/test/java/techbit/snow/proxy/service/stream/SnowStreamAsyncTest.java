@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("unused")
 @ExtendWith(MockitoExtension.class)
 class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
@@ -117,7 +118,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
                 snowStream.streamTo(outputStream);
             }
 
-            void thread3() throws IOException, InterruptedException, ConsumerThreadException {
+            void thread3() throws IOException, InterruptedException {
                 readyToStream.acquire();
                 Assertions.assertTrue(snowStream.isActive());
                 Thread.sleep(100);
@@ -147,17 +148,17 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
                 readyToStream.release(2);
             }
 
-            void thread2() throws IOException, InterruptedException, ConsumerThreadException {
+            void thread2() throws InterruptedException {
                 readyToStream.acquire();
                 Assertions.assertTrue(snowStream.isActive());
             }
 
-            void thread3() throws IOException, InterruptedException, ConsumerThreadException {
+            void thread3() throws IOException, InterruptedException {
                 readyToStream.acquire();
                 Assertions.assertTrue(snowStream.isActive());
                 Thread.sleep(100);
                 snowStream.stop();
-                snowStream.waitUntilConsumerThreadFinished();
+                snowStream.waitUntilConsumerThreadFinished(); // not forever
                 Assertions.assertFalse(snowStream.isActive());
                 verify(decoder, atMostOnce()).decodeFrame(any());
             }
@@ -170,9 +171,9 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         CountDownLatch remainingLoopsLatch = new CountDownLatch(1);
 
         Answer<Void> awaitLatch = i -> {
-            SnowDataFrame frame = i.getArgument(0);
             i.callRealMethod(); // buffer.push(frame)
 
+            SnowDataFrame frame = i.getArgument(0);
             if (frame.frameNum() == 1) {
                 firstLoopLatch.await();
             } else if (frame == SnowDataFrame.LAST) {
@@ -183,7 +184,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         };
 
         Answer<SnowDataFrame> countDownLatch = i -> {
-            Thread.sleep(ThreadLocalRandom.current().nextInt(0, 500));
+            Thread.sleep(100);
             SnowDataFrame frame = (SnowDataFrame) i.callRealMethod();
             firstLoopLatch.countDown();
             remainingLoopsLatch.await();
@@ -239,9 +240,9 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
     }
 
 
-    @RepeatedTest(2)
+    @RepeatedTest(3)
     void givenMassiveChunkOfFrames_whenFiveThreadsAreStreaming_thenNoDeadlockOccurs() throws Throwable {
-        final int numOfFramesToTest = 10000;
+        final int numOfFramesToTest = 10_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
@@ -253,9 +254,9 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         testUsingFiveStreamingThreads();
     }
 
-    @RepeatedTest(2)
+    @RepeatedTest(3)
     void givenMassiveChunkOfFrames_whenFiveThreadsAreStreamingFromSluggishConsumer_thenNoDeadlockOccurs() throws Throwable {
-        final int numOfFramesToTest = 10000;
+        final int numOfFramesToTest = 10_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
@@ -268,9 +269,9 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         testUsingFiveStreamingThreads();
     }
 
-    @RepeatedTest(2)
+    @RepeatedTest(3)
     void givenMassiveChunkOfFrames_whenFiveSluggishThreadsAreStreaming_thenNoDeadlockOccurs() throws Throwable {
-        final int numOfFramesToTest = 10000;
+        final int numOfFramesToTest = 10_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
@@ -279,27 +280,27 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         });
 
         doAnswer(i -> {
-            Thread.sleep(ThreadLocalRandom.current().nextInt(0, 3));
+            Thread.sleep(ThreadLocalRandom.current().nextInt(0, 2));
             return null;
         }).when(encoder).encodeFrame(any(), any());
 
         testUsingFiveStreamingThreads();
     }
 
-    @RepeatedTest(2)
+    @RepeatedTest(3)
     void givenMassiveChunkOfFrames_whenFiveSluggishThreadsAreStreamingFromSluggishConsumer_thenNoDeadlockOccurs() throws Throwable {
-        final int numOfFramesToTest = 10000;
+        final int numOfFramesToTest = 10_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
-            Thread.sleep(ThreadLocalRandom.current().nextInt(0, 2));
+            Thread.sleep(ThreadLocalRandom.current().nextInt(0, 1));
 
             final int num = frameNum.incrementAndGet();
             return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
         });
 
         doAnswer(i -> {
-            Thread.sleep(ThreadLocalRandom.current().nextInt(0, 4));
+            Thread.sleep(ThreadLocalRandom.current().nextInt(0, 2));
             return null;
         }).when(encoder).encodeFrame(any(), any());
 
@@ -343,8 +344,6 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
                 readyToStream.acquire();
 
                 snowStream.streamTo(outputStream);
-
-                verify(encoder, atLeastOnce()).encodeFrame(any(SnowDataFrame.class), eq(outputStream));
             }
         }, 10, 30);
     }

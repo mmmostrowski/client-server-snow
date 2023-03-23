@@ -15,8 +15,6 @@ import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 import java.nio.file.Path;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,8 +35,6 @@ class SnowStreamFactoryTest {
     @Mock
     private ObjectProvider<SnowDataBuffer> snowDataBufferProvider;
     @Mock
-    private ObjectProvider<ProcessBuilder> processBuilderProvider;
-    @Mock
     private ObjectProvider<BlockingBag<Integer, SnowDataFrame>> blockingBagProvider;
     @Mock
     private NamedPipe namedPipe;
@@ -55,8 +51,6 @@ class SnowStreamFactoryTest {
     @Mock
     private Map<String, String> configMap;
     @Mock
-    private ProcessBuilder processBuilder;
-    @Mock
     private BlockingBag<Integer, SnowDataFrame> blockingBag;
     private SnowStreamFactory factory;
 
@@ -68,7 +62,7 @@ class SnowStreamFactoryTest {
                 12,
                 snowStreamProvider, namedPipesProvider,
                 phpSnowAppProvider, snowDataBufferProvider,
-                processBuilderProvider, blockingBagProvider,
+                blockingBagProvider,
                 configProvider, streamDecoderProvider, streamEncoderProvider
         );
     }
@@ -87,9 +81,7 @@ class SnowStreamFactoryTest {
                 .thenReturn(namedPipe);
         when(snowDataBufferProvider.getObject(12, blockingBag))
                 .thenReturn(snowDataBuffer);
-        when(processBuilderProvider.getObject())
-                .thenReturn(processBuilder);
-        when(phpSnowAppProvider.getObject("session-xyz", snowConfig, "131", processBuilder))
+        when(phpSnowAppProvider.getObject(eq("session-xyz"), eq(snowConfig), eq("131"), any()))
                 .thenReturn(phpSnowApp);
 
         factory.create("session-xyz", configMap);

@@ -28,7 +28,6 @@ public class SnowStreamFactory {
     private final ObjectProvider<SnowDataBuffer> snowDataBufferProvider;
     private final ObjectProvider<StreamDecoder> streamDecoderProvider;
     private final ObjectProvider<StreamEncoder> streamEncoderProvider;
-    private final ObjectProvider<ProcessBuilder> processBuilderProvider;
     private final ObjectProvider<BlockingBag<Integer, SnowDataFrame>> blockingBagProvider;
     private final int bufferSizeInFrames;
     private final String applicationPid;
@@ -43,7 +42,6 @@ public class SnowStreamFactory {
             @Autowired ObjectProvider<NamedPipe> namedPipesProvider,
             @Autowired ObjectProvider<PhpSnowApp> phpSnowAppsProvider,
             @Autowired ObjectProvider<SnowDataBuffer> snowDataBufferProvider,
-            @Autowired ObjectProvider<ProcessBuilder> processBuilderProvider,
             @Autowired ObjectProvider<BlockingBag<Integer, SnowDataFrame>> blockingBagProvider,
             @Autowired @Qualifier("phpsnowConfig.create") ObjectProvider<PhpSnowConfig> configProvider,
             @Autowired @Qualifier("BinaryDecoder") ObjectProvider<StreamDecoder> streamDecoderProvider,
@@ -60,7 +58,6 @@ public class SnowStreamFactory {
         this.configProvider = configProvider;
         this.applicationPid = applicationPid;
         this.namedPipesDir = namedPipesDir;
-        this.processBuilderProvider = processBuilderProvider;
     }
 
     @Bean("snowStream.create")
@@ -71,7 +68,7 @@ public class SnowStreamFactory {
                 sessionId,
                 phpSnowConfig,
                 namedPipesProvider.getObject(sessionId, namedPipesDir),
-                phpSnowAppsProvider.getObject(sessionId, phpSnowConfig, applicationPid, processBuilderProvider.getObject()),
+                phpSnowAppsProvider.getObject(sessionId, phpSnowConfig, applicationPid, new ProcessBuilder()),
                 snowDataBufferProvider.getObject(bufferSizeInFrames, blockingBagProvider.getObject()),
                 streamDecoderProvider.getObject(),
                 streamEncoderProvider.getObject()

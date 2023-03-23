@@ -8,14 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+@SuppressWarnings("unused")
 @ExtendWith(MockitoExtension.class)
 class SnowDataBufferTest {
 
@@ -119,7 +118,7 @@ class SnowDataBufferTest {
         buffer.push(frame(2));
         buffer.push(frame(3));
 
-        InOrder inOrder = Mockito.inOrder(bag);
+        InOrder inOrder = inOrder(bag);
 
         inOrder.verify(bag).put(1, frame(1));
         inOrder.verify(bag).put(2, frame(2));
@@ -134,7 +133,7 @@ class SnowDataBufferTest {
         buffer.push(frame(3));
         buffer.push(frame(4));
 
-        InOrder inOrder = Mockito.inOrder(bag);
+        InOrder inOrder = inOrder(bag);
 
         inOrder.verify(bag).put(1, frame(1));
         inOrder.verify(bag).put(2, frame(2));

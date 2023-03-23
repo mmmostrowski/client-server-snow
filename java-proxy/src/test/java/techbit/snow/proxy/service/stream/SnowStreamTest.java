@@ -1,11 +1,9 @@
 package techbit.snow.proxy.service.stream;
 
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
@@ -185,7 +183,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.waitUntilConsumerThreadFinished();
 
-        InOrder inOrder = Mockito.inOrder(buffer);
+        InOrder inOrder = inOrder(buffer);
         inOrder.verify(buffer).push(frame(1));
         inOrder.verify(buffer).push(frame(2));
         inOrder.verify(buffer).push(frame(3));
@@ -209,7 +207,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.waitUntilConsumerThreadFinished();
 
-        InOrder inOrder = Mockito.inOrder(buffer);
+        InOrder inOrder = inOrder(buffer);
         inOrder.verify(buffer).push(frame(1));
         inOrder.verify(buffer).push(frame(2));
         inOrder.verify(buffer).push(frame(3));
@@ -218,7 +216,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
     }
 
     @Test
-    void whenPhpAppIsGoingDownAtSomePoint_thenConsumerThreadIsFinished() throws IOException, InterruptedException {
+    void whenPhpAppIsGoingDownAtSomePoint_thenFinishingConsumerThreadGracefully() throws IOException, InterruptedException {
         final Iterator<Boolean> isAliveFlags = List.of(true, true, false, false, false).iterator();
         when(phpSnow.isAlive()).then(i -> isAliveFlags.next());
 
@@ -226,6 +224,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.waitUntilConsumerThreadFinished();
 
         verify(buffer, times(2)).push(any());
+        verify(buffer, times(1)).push(SnowDataFrame.LAST);
 
         assertFalse(snowStream.isActive());
     }

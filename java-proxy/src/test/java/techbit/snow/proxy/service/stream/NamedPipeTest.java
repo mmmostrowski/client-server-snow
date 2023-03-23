@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
@@ -21,7 +20,9 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mockStatic;
 
+@SuppressWarnings("unused")
 @ExtendWith(MockitoExtension.class)
 class NamedPipeTest {
 
@@ -84,7 +85,7 @@ class NamedPipeTest {
     void givenNoPipeFile_whenWaitingForItTooLong_thenThrowException() {
         Assertions.assertTrue(pipePath.toFile().delete());
 
-        try(MockedStatic<FileUtils> fileUtils = Mockito.mockStatic(FileUtils.class)) {
+        try(MockedStatic<FileUtils> fileUtils = mockStatic(FileUtils.class)) {
             fileUtils.when(() -> FileUtils.waitFor(any(), anyInt())).thenReturn(false);
 
             assertThrows(IllegalStateException.class, namedPipe::inputStream);
