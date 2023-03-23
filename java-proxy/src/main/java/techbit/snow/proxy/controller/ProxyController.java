@@ -51,7 +51,7 @@ public class ProxyController {
             try {
                 log.debug("streamToClient( {} ) | Async Start", sessionId);
 
-                streaming.stream(sessionId, out, toConfMap(configuration));
+                streaming.start(sessionId, out, toConfMap(configuration));
 
                 log.debug("streamToClient( {} ) | Async Finished", sessionId);
             } catch (ClientAbortException e) {
@@ -67,7 +67,7 @@ public class ProxyController {
     public Map<String, Object> stopStreaming(@PathVariable String sessionId) throws IOException, InterruptedException {
         log.debug("stopStreaming( {} )", sessionId);
 
-        streaming.stopStream(sessionId);
+        streaming.stop(sessionId);
 
         return Map.of(
             "sessionId", sessionId,

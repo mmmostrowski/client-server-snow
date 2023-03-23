@@ -25,20 +25,20 @@ public class ProxyService {
 
 
     public ProxyService(
+            @Autowired SessionService session,
             @Autowired @Qualifier("snowStream.create") ObjectProvider<SnowStream> snowFactory,
-            @Autowired @Qualifier("phpsnowConfig.create") ObjectProvider<PhpSnowConfig> configProvider,
-            @Autowired SessionService session
+            @Autowired @Qualifier("phpsnowConfig.create") ObjectProvider<PhpSnowConfig> configProvider
     ) {
         this.snowFactory = snowFactory;
         this.session = session;
         this.configProvider = configProvider;
     }
 
-    public void stream(String sessionId, OutputStream out, Map<String, String> confMap) throws IOException, InterruptedException, ConsumerThreadException {
+    public void start(String sessionId, OutputStream out, Map<String, String> confMap) throws IOException, InterruptedException, ConsumerThreadException {
         snowStream(sessionId, confMap).streamTo(out);
     }
 
-    public void stopStream(String sessionId) throws IOException, InterruptedException {
+    public void stop(String sessionId) throws IOException, InterruptedException {
         if (!session.exists(sessionId)) {
             log.debug("stopStream( {} ) | Nothing to stop!", sessionId);
             return;

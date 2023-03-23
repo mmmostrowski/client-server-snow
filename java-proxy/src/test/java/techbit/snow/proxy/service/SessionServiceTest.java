@@ -1,15 +1,21 @@
 package techbit.snow.proxy.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SessionServiceTest {
 
+    private SessionService sessions;
+
+    @BeforeEach
+    void setup() {
+        sessions = new SessionService();
+    }
+
     @Test
     void whenSessionCreated_thenSessionExists() {
-        SessionService sessions = new SessionService();
-
         sessions.create("xyz");
 
         assertTrue(sessions.exists("xyz"));
@@ -17,15 +23,11 @@ class SessionServiceTest {
 
     @Test
     void whenSessionNotCreated_thenSessionNotExists() {
-        SessionService sessions = new SessionService();
-
         assertFalse(sessions.exists("xyz"));
     }
 
     @Test
     void whenOtherSessionCreated_thenOurSessionNotExists() {
-        SessionService sessions = new SessionService();
-
         sessions.create("other");
 
         assertFalse(sessions.exists("xyz"));
@@ -33,8 +35,6 @@ class SessionServiceTest {
 
     @Test
     void whenSessionDeleted_thenSessionNotExists() {
-        SessionService sessions = new SessionService();
-
         sessions.create("xyz");
         sessions.delete("xyz");
 
@@ -43,16 +43,12 @@ class SessionServiceTest {
 
     @Test
     void whenNonExistentSessionDeleted_thenExceptionIsThrown() {
-        SessionService sessions = new SessionService();
-
         assertThrows(IllegalArgumentException.class,
             () -> sessions.delete("not-exists"));
     }
 
     @Test
     void whenCreatingSameSessionTwice_thenExceptionIsThrown() {
-        SessionService sessions = new SessionService();
-
         sessions.create("xyz");
 
         assertThrows(IllegalArgumentException.class,
@@ -61,8 +57,6 @@ class SessionServiceTest {
 
     @Test
     void whenMultipleSessionsCreated_thenBothExists() {
-        SessionService sessions = new SessionService();
-
         sessions.create("abc");
         sessions.create("xyz");
 
@@ -72,15 +66,19 @@ class SessionServiceTest {
 
     @Test
     void whenEmptySessionName_thenExceptionIsThrown() {
-        SessionService sessions = new SessionService();
-
         assertThrows(IllegalArgumentException.class, () -> sessions.create(""));
     }
 
     @Test
-    void whenInvalidSessionName_thenExceptionIsThrown() {
-        SessionService sessions = new SessionService();
+    void whenValidSessionName_thenNoExceptionIsThrown() {
+        assertDoesNotThrow(() -> sessions.create("session"));
+        assertDoesNotThrow(() -> sessions.create("session-abc"));
+        assertDoesNotThrow(() -> sessions.create("123-other"));
+        assertDoesNotThrow(() -> sessions.create("1-2-3"));
+    }
 
+    @Test
+    void whenInvalidSessionName_thenExceptionIsThrown() {
         assertThrows(IllegalArgumentException.class, () -> sessions.create("!"));
         assertThrows(IllegalArgumentException.class, () -> sessions.create("@"));
         assertThrows(IllegalArgumentException.class, () -> sessions.create("with space"));

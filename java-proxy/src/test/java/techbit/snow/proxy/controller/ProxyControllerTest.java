@@ -57,14 +57,14 @@ class ProxyControllerTest {
     void givenNoCustomConfiguration_whenStreamToClient_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         controller.streamToClient("session-abc", "").get().writeTo(out);
 
-        verify(streaming).stream("session-abc", out, Collections.emptyMap());
+        verify(streaming).start("session-abc", out, Collections.emptyMap());
     }
 
     @Test
     void givenCustomConfiguration_whenStreamToClient_thenStreamWithProperConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         controller.streamToClient("session-abc", "/key1/value1/key2/value2").get().writeTo(out);
 
-        verify(streaming).stream("session-abc", out, Map.of(
+        verify(streaming).start("session-abc", out, Map.of(
                 "key1", "value1",
                 "key2", "value2"
         ));
@@ -104,7 +104,7 @@ class ProxyControllerTest {
     void whenStopStreamingRequested_thenStopStream() throws IOException, InterruptedException {
         controller.stopStreaming("session-abc");
 
-        verify(streaming).stopStream("session-abc");
+        verify(streaming).stop("session-abc");
     }
 
     @Test
@@ -119,14 +119,14 @@ class ProxyControllerTest {
 
     @Test
     void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
-        doThrow(ClientAbortException.class).when(streaming).stream("session-abc", out, Collections.emptyMap());
+        doThrow(ClientAbortException.class).when(streaming).start("session-abc", out, Collections.emptyMap());
 
         assertDoesNotThrow(() -> controller.streamToClient("session-abc", "").get().writeTo(out));
     }
 
     @Test
     void whenThreadInterruptedDuringStreaming_thenErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
-        doThrow(InterruptedException.class).when(streaming).stream("session-abc", out, Collections.emptyMap());
+        doThrow(InterruptedException.class).when(streaming).start("session-abc", out, Collections.emptyMap());
 
         assertThrows(IOException.class, () -> controller.streamToClient("session-abc", "").get().writeTo(out));
     }
