@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -34,13 +35,15 @@ public class PhpSnowApp {
         final Path phpSnowPath = Path.of(Files.simplifyPath(System.getProperty("user.dir") + "/../run"));
 
         builder.environment().put("SCRIPT_OWNER_PID", applicationPid);
-        builder.command(phpSnowPath.toString(),
-            "server", sessionId,
-            Integer.toString(config.getWidth()),
-            Integer.toString(config.getHeight()),
-            Integer.toString(config.getFps()),
-            Long.toString(config.getAnimationDuration().getSeconds()),
-            config.getPresetName()
+        builder.command(
+            Objects.toString(phpSnowPath),
+            "server",
+            Objects.toString(sessionId),
+            Objects.toString(config.getWidth()),
+            Objects.toString(config.getHeight()),
+            Objects.toString(config.getFps()),
+            Objects.toString(config.getAnimationDuration().getSeconds()),
+            Objects.toString(config.getPresetName())
         );
 
         log.debug("start( {} ) | Starting process {}", sessionId, builder.command());

@@ -2,6 +2,7 @@ package techbit.snow.proxy.service.stream;
 
 import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,20 +34,22 @@ class SnowDataBufferTest {
         when(bag.take(1)).thenReturn(frame(1));
 
         TestFramework.runOnce(new MultithreadedTestCase() {
-            void thread1() throws InterruptedException {
-                buffer.firstFrame();
-                assertTick(1);
-            }
-
-            void thread2() {
+            void thread1() {
                 waitForTick(1);
                 buffer.push(frame(1));
+            }
+
+            void thread2() throws InterruptedException {
+                SnowDataFrame frame = buffer.firstFrame();
+
+                Assertions.assertEquals(frame(1), frame);
+                assertTick(1);
             }
         });
     }
 
     @Test
-    void whenHaveRegisteredClients_thenWaitUntilAllUnregistered() throws Throwable {
+    void givenRegisteredClients_whenWaitUntilAllClientsUnregister_thenNoDeadlockOccurs() throws Throwable {
         Object clientId1 = new Object();
         Object clientId2 = new Object();
         Object clientId3 = new Object();
@@ -171,13 +174,13 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void whenFrameGiven_thenNextCanBeTaken() throws InterruptedException {
+    void givenNextFrame_whenTakingIt_thenItIsAvailableWithNoBlocking() throws InterruptedException {
         when(bag.take(2)).thenReturn(frame(2));
 
         buffer.push(frame(1));
         buffer.push(frame(2));
-
         SnowDataFrame nextFrame = buffer.nextFrame(frame(1));
+
         assertEquals(2, nextFrame.frameNum());
     }
 
@@ -191,8 +194,8 @@ class SnowDataBufferTest {
         buffer.push(frame(4));
 
         SnowDataFrame deadFrame = frame(1);
-
         SnowDataFrame nextFrame = buffer.nextFrame(deadFrame);
+
         assertEquals(3, nextFrame.frameNum());
     }
 
@@ -200,33 +203,44 @@ class SnowDataBufferTest {
     void whenFramesAddedInWrongOrder_thenExceptionIsThrown() {
         buffer.push(frame(1));
 
-        assertThrows(Exception.class, () -> buffer.push(frame(3)) );
+        assertThrows(IllegalArgumentException.class, () -> buffer.push(frame(3)) );
     }
 
     @Test
-    void whenLastFrameAdded_thenItIsProvidedFromBuffer() throws InterruptedException {
+    void whenLastFrameIsAdded_thenItIsProvidedByBuffer() throws InterruptedException {
         buffer.push(frame(1));
         buffer.push(frame(2));
         buffer.push(frame(3));
         buffer.push(SnowDataFrame.LAST);
 
-        when(bag.take(3)).thenReturn(frame(3));
-
-        assertEquals(frame(3), buffer.nextFrame(frame(1)));
-        assertEquals(frame(3), buffer.nextFrame(frame(2)));
         assertEquals(SnowDataFrame.LAST, buffer.nextFrame(frame(3)));
+        assertEquals(SnowDataFrame.LAST,  buffer.nextFrame(SnowDataFrame.LAST));
     }
 
     @Test
-    void givenLastFrameInBuffer_whenNewFrameAdded_thenThrowException() {
+    void whenLastFrameIsAdded_thenPreviousFramesAreStillAvailable() throws InterruptedException {
+        when(bag.take(3)).thenReturn(frame(3));
+
+        buffer.push(frame(1));
+        buffer.push(frame(2));
+        buffer.push(frame(3));
+        buffer.push(SnowDataFrame.LAST);
+
+        assertEquals(frame(3), buffer.nextFrame(frame(1)));
+        assertEquals(frame(3), buffer.nextFrame(frame(2)));
+    }
+
+    @Test
+    void givenLastFrameInBuffer_whenMoreFramesAdded_thenThrowException() {
         buffer.push(frame(1));
         buffer.push(frame(2));
         buffer.push(SnowDataFrame.LAST);
+
         assertThrows(IllegalArgumentException.class, () -> buffer.push(frame(3)));
     }
 
     @Test
-    void whenBufferDestroyed_thenLastFrameIsProvided() throws InterruptedException {
+    void whenBufferDestroyed_thenLastFrameIsAlwaysProvided() throws InterruptedException {
         buffer.push(frame(1));
         buffer.push(frame(2));
         buffer.destroy();
@@ -234,6 +248,7 @@ class SnowDataBufferTest {
         assertEquals(SnowDataFrame.LAST, buffer.firstFrame());
         assertEquals(SnowDataFrame.LAST, buffer.nextFrame(frame(1)));
         assertEquals(SnowDataFrame.LAST, buffer.nextFrame(frame(2)));
+        assertEquals(SnowDataFrame.LAST, buffer.nextFrame(frame(33)));
     }
 
     @Test
@@ -241,12 +256,13 @@ class SnowDataBufferTest {
         buffer.push(frame(1));
         buffer.destroy();
 
-        assertThrows(Exception.class, () -> buffer.push(frame(2)));
+        assertThrows(IllegalStateException.class, () -> buffer.push(frame(2)));
     }
 
     @Test
-    void whenNegativeSizeOfBuffer_thenExceptionIsThrown() {
-        assertThrows(Exception.class, () -> new SnowDataBuffer(-1, null));
+    void whenInvalidSizeOfBuffer_thenExceptionITsThrown() {
+        assertThrows(IllegalArgumentException.class, () -> new SnowDataBuffer(0, null));
+        assertThrows(IllegalArgumentException.class, () -> new SnowDataBuffer(-1, null));
     }
 
     private SnowDataFrame frame(int frameNum) {

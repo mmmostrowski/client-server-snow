@@ -39,10 +39,8 @@ abstract public class SnowStreamBaseTest {
 
     @BeforeEach
     void setup() throws IOException {
-        PhpSnowConfig config = new PhpSnowConfig("testingPreset", 87, 76, Duration.ofMinutes(11), 21);
-        snowStream = new SnowStream("session-xyz", config, pipe, phpSnow, buffer, decoder, encoder);
-
-        lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(new byte[]{}));
+        final PhpSnowConfig config = new PhpSnowConfig(
+                "testingPreset", 87, 76, Duration.ofMinutes(11), 21);
 
         final Iterator<SnowDataFrame> inputFrames = List.of(
                 frame(1),
@@ -53,6 +51,10 @@ abstract public class SnowStreamBaseTest {
         ).iterator();
 
         lenient().when(decoder.decodeFrame(any())).then(i -> inputFrames.next());
+
+        lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(new byte[]{}));
+
+        snowStream = new SnowStream("session-xyz", config, pipe, phpSnow, buffer, decoder, encoder);
     }
 
     protected SnowDataFrame frame(int frameNum) {

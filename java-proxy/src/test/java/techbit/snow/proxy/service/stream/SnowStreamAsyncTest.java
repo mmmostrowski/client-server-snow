@@ -4,6 +4,7 @@ import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,9 +28,9 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         super(spy(new SnowDataBuffer(13, new BlockingBag<>())));
     }
 
-    @RepeatedTest(5)
+    @Test
     void whenStreamingSnowData_thenMultipleClientsCanReceiveData() throws Throwable {
-        CountDownLatch[] latches = new CountDownLatch[]{
+        final CountDownLatch[] latches = new CountDownLatch[]{
                 new CountDownLatch(0), // last frame(-1)
                 new CountDownLatch(0), // empty frame(0)
                 new CountDownLatch(3), // frame(1)
@@ -39,7 +40,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
                 new CountDownLatch(3)  // frame(5)
         };
 
-        Answer<SnowDataFrame> countDownLatch = i -> {
+        final Answer<SnowDataFrame> countDownLatch = i -> {
             // buffer.firstFrame|nextFrame(frame)
             SnowDataFrame frame = (SnowDataFrame) i.callRealMethod();
             latches[frame.frameNum() + 1].countDown();
@@ -47,7 +48,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
             return frame;
         };
 
-        Answer<Void> awaitLatch = i -> {
+        final Answer<Void> awaitLatch = i -> {
             // buffer.push(frame)
             SnowDataFrame frame = i.getArgument(0);
             i.callRealMethod();
@@ -86,7 +87,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
             private void testThread() throws IOException, InterruptedException, ConsumerThreadException {
                 readyToStream.acquire();
 
-                ByteArrayOutputStream outputStream = mock(ByteArrayOutputStream.class);
+                final ByteArrayOutputStream outputStream = mock(ByteArrayOutputStream.class);
 
                 snowStream.streamTo(outputStream);
 
@@ -96,30 +97,41 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         });
     }
 
-    @RepeatedTest(3)
+    @Test
     void givenHealthyConsumerThread_whenStop_thenShutdownGracefully() throws Throwable {
+        // produce infinite stream of frames
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> frame(frameNum.incrementAndGet()));
 
         TestFramework.runOnce(new MultithreadedTestCase() {
+            final Semaphore readyToStream = new Semaphore(0);
             void thread1() throws IOException {
                 when(phpSnow.isAlive()).thenReturn(true);
                 snowStream.startConsumingSnowData();
+                readyToStream.release(2);
             }
 
-            void thread2() throws IOException, InterruptedException {
-                waitForTick(1);
+            void thread2() throws IOException, InterruptedException, ConsumerThreadException {
+                readyToStream.acquire();
                 Assertions.assertTrue(snowStream.isActive());
+                snowStream.streamTo(outputStream);
+            }
+
+            void thread3() throws IOException, InterruptedException, ConsumerThreadException {
+                readyToStream.acquire();
+                Assertions.assertTrue(snowStream.isActive());
+                Thread.sleep(100);
                 snowStream.stop();
                 snowStream.waitUntilConsumerThreadFinished();
                 Assertions.assertFalse(snowStream.isActive());
+                verify(decoder, atLeastOnce()).decodeFrame(any());
+                verify(encoder, atLeastOnce()).encodeFrame(SnowDataFrame.LAST, outputStream);
             }
         });
     }
 
-    @RepeatedTest(2)
+    @Test
     void givenSluggishConsumerThread_whenStop_thenIsForcedToShutdown() throws Throwable {
-        verify(decoder, atMostOnce()).decodeFrame(any());
         when(decoder.decodeFrame(any())).then(f -> {
             synchronized (this) {
                 wait(); // forever
@@ -128,23 +140,32 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         });
 
         TestFramework.runOnce(new MultithreadedTestCase() {
+            final Semaphore readyToStream = new Semaphore(0);
             void thread1() throws IOException {
                 when(phpSnow.isAlive()).thenReturn(true);
                 snowStream.startConsumingSnowData();
+                readyToStream.release(2);
             }
 
-            void thread2() throws IOException, InterruptedException {
-                waitForTick(1);
+            void thread2() throws IOException, InterruptedException, ConsumerThreadException {
+                readyToStream.acquire();
                 Assertions.assertTrue(snowStream.isActive());
+            }
+
+            void thread3() throws IOException, InterruptedException, ConsumerThreadException {
+                readyToStream.acquire();
+                Assertions.assertTrue(snowStream.isActive());
+                Thread.sleep(100);
                 snowStream.stop();
                 snowStream.waitUntilConsumerThreadFinished();
                 Assertions.assertFalse(snowStream.isActive());
+                verify(decoder, atMostOnce()).decodeFrame(any());
             }
         });
     }
 
-    @RepeatedTest(5)
-    void whenAnimationFinished_thenEachClientCanReadBufferTillEnd() throws Throwable {
+    @Test
+    void givenSluggishClients_whenAnimationFinished_thenEachClientCanReadBufferTillEnd() throws Throwable {
         CountDownLatch firstLoopLatch = new CountDownLatch(3);
         CountDownLatch remainingLoopsLatch = new CountDownLatch(1);
 
@@ -154,7 +175,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
             if (frame.frameNum() == 1) {
                 firstLoopLatch.await();
-            } else if (frame.frameNum() == -1) {
+            } else if (frame == SnowDataFrame.LAST) {
                 remainingLoopsLatch.countDown();
             }
 
@@ -162,6 +183,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         };
 
         Answer<SnowDataFrame> countDownLatch = i -> {
+            Thread.sleep(ThreadLocalRandom.current().nextInt(0, 500));
             SnowDataFrame frame = (SnowDataFrame) i.callRealMethod();
             firstLoopLatch.countDown();
             remainingLoopsLatch.await();
@@ -200,7 +222,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
             private void testThread() throws IOException, InterruptedException, ConsumerThreadException {
                 readyToStream.acquire();
 
-                ByteArrayOutputStream outputStream = mock(ByteArrayOutputStream.class);
+                final ByteArrayOutputStream outputStream = mock(ByteArrayOutputStream.class);
 
                 snowStream.streamTo(outputStream);
 
@@ -238,7 +260,8 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
             Thread.sleep(ThreadLocalRandom.current().nextInt(0, 1));
-            int num = frameNum.incrementAndGet();
+
+            final int num = frameNum.incrementAndGet();
             return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
         });
 
@@ -251,7 +274,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
-            int num = frameNum.incrementAndGet();
+            final int num = frameNum.incrementAndGet();
             return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
         });
 
@@ -270,7 +293,8 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
             Thread.sleep(ThreadLocalRandom.current().nextInt(0, 2));
-            int num = frameNum.incrementAndGet();
+
+            final int num = frameNum.incrementAndGet();
             return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
         });
 

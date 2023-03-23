@@ -40,19 +40,18 @@ public class SnowDataBuffer {
         }
 
         if (lastValidFrameNum != Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("You cannot push more frames to snow buffer after last frame is pushed.");
+            throw new IllegalArgumentException("You cannot push more frames to snow buffer after last frame is pushed!");
         }
 
         if (frame == SnowDataFrame.LAST) {
             lastValidFrameNum = headFrameNum;
         } else if (frame.frameNum() != headFrameNum + 1) {
-            throw new IllegalStateException("Expected sequenced frames");
+            throw new IllegalArgumentException("Expected frames in sequence!");
         }
 
         if (numOfFrames == 0) {
             numOfFrames = 1;
             tailFrameNum = 1;
-
             synchronized(framesLock) {
                 frames.put(++headFrameNum, frame);
                 framesLock.notifyAll();
@@ -77,6 +76,9 @@ public class SnowDataBuffer {
     }
 
     public SnowDataFrame nextFrame(SnowDataFrame frame) throws InterruptedException {
+        if (frame == SnowDataFrame.LAST) {
+            return SnowDataFrame.LAST;
+        }
         return nextFrameAfter(frame.frameNum());
     }
 
@@ -92,7 +94,7 @@ public class SnowDataBuffer {
             }
         }
 
-        SnowDataFrame result;
+        final SnowDataFrame result;
         synchronized (removeFramesLock) {
             result = frameNum + 1 < tailFrameNum
                 ? frames.take(tailFrameNum)
@@ -114,9 +116,9 @@ public class SnowDataBuffer {
         synchronized (framesLock) {
             numOfFrames = 0;
             tailFrameNum = 0;
-
-            frames.removeAll();
             headFrameNum = 0;
+            frames.removeAll();
+
             framesLock.notifyAll();
         }
     }
@@ -130,7 +132,7 @@ public class SnowDataBuffer {
     public void unregisterClient(Object client) {
         synchronized (noMoreClientsLock) {
             if (!clients.remove(client)) {
-                throw new IllegalArgumentException("Cannot unregister unknown client! Got: " + client);
+                throw new IllegalArgumentException("Unknown client. Cannot unregister! Got: " + client);
             }
             if (clients.isEmpty()) {
                 noMoreClientsLock.notifyAll();

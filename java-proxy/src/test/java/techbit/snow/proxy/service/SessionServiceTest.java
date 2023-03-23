@@ -45,7 +45,7 @@ class SessionServiceTest {
     void whenNonExistentSessionDeleted_thenExceptionIsThrown() {
         SessionService sessions = new SessionService();
 
-        assertThrows(Exception.class,
+        assertThrows(IllegalArgumentException.class,
             () -> sessions.delete("not-exists"));
     }
 
@@ -55,7 +55,7 @@ class SessionServiceTest {
 
         sessions.create("xyz");
 
-        assertThrows(Exception.class,
+        assertThrows(IllegalArgumentException.class,
                 () -> sessions.create("xyz"));
     }
 
@@ -74,18 +74,18 @@ class SessionServiceTest {
     void whenEmptySessionName_thenExceptionIsThrown() {
         SessionService sessions = new SessionService();
 
-        assertThrows(Exception.class, () -> sessions.create(""));
+        assertThrows(IllegalArgumentException.class, () -> sessions.create(""));
     }
 
     @Test
     void whenInvalidSessionName_thenExceptionIsThrown() {
         SessionService sessions = new SessionService();
 
-        assertThrows(Exception.class, () -> sessions.create("!"));
-        assertThrows(Exception.class, () -> sessions.create("@"));
-        assertThrows(Exception.class, () -> sessions.create("with space"));
-        assertThrows(Exception.class, () -> sessions.create("with_underscore"));
-        assertThrows(Exception.class, () -> sessions.create("with_under"));
-        assertThrows(Exception.class, () -> sessions.create("UpperCase"));
+        assertThrows(IllegalArgumentException.class, () -> sessions.create("!"));
+        assertThrows(IllegalArgumentException.class, () -> sessions.create("@"));
+        assertThrows(IllegalArgumentException.class, () -> sessions.create("with space"));
+        assertThrows(IllegalArgumentException.class, () -> sessions.create("with_underscore"));
+        assertThrows(IllegalArgumentException.class, () -> sessions.create("with_under"));
+        assertThrows(IllegalArgumentException.class, () -> sessions.create("UpperCase"));
     }
 }

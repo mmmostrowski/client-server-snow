@@ -59,7 +59,7 @@ class NamedPipeTest {
     void givenPipeFile_whenCannotDeletePipeFile_thenThrowException() {
         assertTrue(folder.getRoot().setWritable(false));
 
-        assertThrows(Exception.class, namedPipe::destroy);
+        assertThrows(IOException.class, namedPipe::destroy);
     }
 
     @Test

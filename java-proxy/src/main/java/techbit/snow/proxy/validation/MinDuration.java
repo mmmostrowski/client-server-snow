@@ -10,9 +10,11 @@ import java.lang.annotation.*;
 @Target({ ElementType.FIELD, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MinDuration {
-    String message() default "Invalid duration";
-    Class<?>[] groups() default {};
-    Class<? extends Payload>[] payload() default {};
 
     long value();
+    String message() default "Invalid duration";
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
 }

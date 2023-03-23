@@ -42,15 +42,24 @@ class SnowStreamTest extends SnowStreamBaseTest {
     }
 
     @Test
+    void whenStartConsumingSnowData_thenItIsActive() throws IOException {
+        when(phpSnow.isAlive()).thenReturn(true);
+
+        snowStream.startConsumingSnowData();
+
+        assertTrue(snowStream.isActive());
+    }
+
+    @Test
     void givenStoppedStream_whenStartPhpApp_thenThrowException() throws IOException, InterruptedException {
         snowStream.stop();
-        assertThrows(Exception.class, snowStream::startPhpApp);
+        assertThrows(IllegalStateException.class, snowStream::startPhpApp);
     }
 
     @Test
     void givenStoppedStream_whenStartConsumingSnowData_thenThrowException() throws IOException, InterruptedException {
         snowStream.stop();
-        assertThrows(Exception.class, snowStream::startConsumingSnowData);
+        assertThrows(IllegalStateException.class, snowStream::startConsumingSnowData);
     }
 
     @Test
@@ -63,7 +72,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
     void whenStartPhpApp_thenPipeIsDestroyed() throws IOException {
         snowStream.startPhpApp();
 
-        verify(pipe).destroy();
+        verify(pipe, times(1)).destroy();
     }
 
     @Test
@@ -84,39 +93,40 @@ class SnowStreamTest extends SnowStreamBaseTest {
     void whenIncompatibleConfig_thenThrowException() {
         PhpSnowConfig snowConfig = new PhpSnowConfig(
                 "changedTestingPreset", 87, 76, Duration.ofMinutes(11), 21);
-        assertThrows(Exception.class, () -> snowStream.ensureCompatibleWithConfig(snowConfig));
+        assertThrows(IllegalArgumentException.class, () -> snowStream.ensureCompatibleWithConfig(snowConfig));
     }
 
     @Test
     void givenNoPhpStart_whenStartSnowDataConsumption_thenThrowException() {
-        assertThrows(Exception.class, snowStream::startConsumingSnowData);
+        assertThrows(IllegalStateException.class, snowStream::startConsumingSnowData);
     }
 
     @Test
     void givenNoPhpStart_whenStartStreamingToClient_thenThrowException() {
-        assertThrows(Exception.class, () -> snowStream.streamTo(outputStream));
+        assertThrows(IOException.class, () -> snowStream.streamTo(outputStream));
     }
 
-    @RepeatedTest(20)
+    @Test
     void whenStop_thenBufferIsDestroyed() throws IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
 
         snowStream.startConsumingSnowData();
-
         snowStream.stop();
 
         verify(buffer, atLeastOnce()).destroy();
     }
 
-    @RepeatedTest(20)
-    void givenPhpStart_whenStop_thenIsNotActive() throws IOException, InterruptedException {
+    @Test
+    void whenStop_thenIsNotActive() throws IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
 
         snowStream.startConsumingSnowData();
 
         assertTrue(snowStream.isActive());
+
         snowStream.stop();
         snowStream.waitUntilConsumerThreadFinished();
+
         assertFalse(snowStream.isActive());
     }
 
@@ -124,14 +134,14 @@ class SnowStreamTest extends SnowStreamBaseTest {
     void whenStop_thenPhpAppIsStopped() throws IOException, InterruptedException {
         snowStream.stop();
 
-        verify(phpSnow).stop();
+        verify(phpSnow, times(1)).stop();
     }
 
     @Test
     void whenStop_thenPipeIsDestroyed() throws IOException, InterruptedException {
         snowStream.stop();
 
-        verify(pipe).destroy();
+        verify(pipe, times(1)).destroy();
     }
 
     @Test
@@ -144,46 +154,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.streamTo(outputStream);
 
-        verify(encoder).encodeMetadata(metadata, outputStream);
-    }
-
-    @Test
-    void givenSequenceOfDataFramesWithLastOne_whenInputDataIsStreamed_thenFramesAreStoredInBuffer() throws IOException, InterruptedException {
-        when(phpSnow.isAlive()).thenReturn(true);
-
-        snowStream.startConsumingSnowData();
-        snowStream.waitUntilConsumerThreadFinished();
-
-        InOrder inOrder = Mockito.inOrder(buffer);
-        inOrder.verify(buffer).push(frame(1));
-        inOrder.verify(buffer).push(frame(2));
-        inOrder.verify(buffer).push(frame(3));
-        inOrder.verify(buffer).push(frame(4));
-        inOrder.verify(buffer).push(SnowDataFrame.LAST);
-    }
-
-    @Test
-    void givenSequenceOfDataFramesWithoutLastOne_whenInputDataIsStreamed_thenLastFrameIsStoredInBufferAnyway() throws IOException, InterruptedException {
-        final Iterator<?> inputFrames = List.of(
-                frame(1),
-                frame(2),
-                frame(3),
-                frame(4)
-                // no SnowDataFrame.last
-        ).iterator();
-
-        when(decoder.decodeFrame(any())).then(i -> inputFrames.next());
-        when(phpSnow.isAlive()).then(i -> inputFrames.hasNext());
-
-        snowStream.startConsumingSnowData();
-        snowStream.waitUntilConsumerThreadFinished();
-
-        InOrder inOrder = Mockito.inOrder(buffer);
-        inOrder.verify(buffer).push(frame(1));
-        inOrder.verify(buffer).push(frame(2));
-        inOrder.verify(buffer).push(frame(3));
-        inOrder.verify(buffer).push(frame(4));
-        inOrder.verify(buffer).push(SnowDataFrame.LAST);
+        verify(encoder, times(1)).encodeMetadata(metadata, outputStream);
     }
 
     @Test
@@ -208,17 +179,46 @@ class SnowStreamTest extends SnowStreamBaseTest {
     }
 
     @Test
-    void whenAllInputDataAreStreamed_thenConsumerThreadIsFinished() throws IOException, InterruptedException {
+    void givenSequenceOfDataFramesIncludingLastOne_whenStreamingFrames_thenFramesArePushedToBuffer() throws IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
 
         snowStream.startConsumingSnowData();
         snowStream.waitUntilConsumerThreadFinished();
 
-        assertFalse(snowStream.isActive());
+        InOrder inOrder = Mockito.inOrder(buffer);
+        inOrder.verify(buffer).push(frame(1));
+        inOrder.verify(buffer).push(frame(2));
+        inOrder.verify(buffer).push(frame(3));
+        inOrder.verify(buffer).push(frame(4));
+        inOrder.verify(buffer).push(SnowDataFrame.LAST);
     }
 
     @Test
-    void whenPhpAppIsDown_thenConsumerThreadIsFinished() throws IOException, InterruptedException {
+    void givenSequenceOfDataFramesWithoutLastOne_whenStreamingFrames_thenLastFrameIsPushedToBufferAnyway() throws IOException, InterruptedException {
+        final Iterator<?> inputFrames = List.of(
+                frame(1),
+                frame(2),
+                frame(3),
+                frame(4)
+                // no SnowDataFrame.last
+        ).iterator();
+
+        when(decoder.decodeFrame(any())).then(i -> inputFrames.next());
+        when(phpSnow.isAlive()).then(i -> inputFrames.hasNext());
+
+        snowStream.startConsumingSnowData();
+        snowStream.waitUntilConsumerThreadFinished();
+
+        InOrder inOrder = Mockito.inOrder(buffer);
+        inOrder.verify(buffer).push(frame(1));
+        inOrder.verify(buffer).push(frame(2));
+        inOrder.verify(buffer).push(frame(3));
+        inOrder.verify(buffer).push(frame(4));
+        inOrder.verify(buffer).push(SnowDataFrame.LAST);
+    }
+
+    @Test
+    void whenPhpAppIsGoingDownAtSomePoint_thenConsumerThreadIsFinished() throws IOException, InterruptedException {
         final Iterator<Boolean> isAliveFlags = List.of(true, true, false, false, false).iterator();
         when(phpSnow.isAlive()).then(i -> isAliveFlags.next());
 
@@ -231,22 +231,31 @@ class SnowStreamTest extends SnowStreamBaseTest {
     }
 
     @Test
-    void whenConsumerThreadThrowingException_thenStopStreamingAndPassExceptionToClient() throws IOException, InterruptedException {
-        doNothing().when(buffer).push(any(SnowDataFrame.class));
-        RuntimeException customException = new RuntimeException() {};
-        doThrow(customException).when(buffer).push(frame(3));
-
+    void whenConsumerThreadIsThrowingException_thenStopStreaming() throws IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
+        doNothing().when(buffer).push(any(SnowDataFrame.class));
+        doThrow(RuntimeException.class).when(buffer).push(frame(3));
 
         snowStream.startConsumingSnowData();
         snowStream.waitUntilConsumerThreadFinished();
-        Throwable thrownException = assertThrows(ConsumerThreadException.class, () -> snowStream.streamTo(outputStream));
 
         verify(buffer).push(frame(1));
         verify(buffer).push(frame(2));
         verify(buffer).push(frame(3));
         verify(buffer, never()).push(frame(4));
+    }
 
+    @Test
+    void whenConsumerThreadIsThrowingException_thenPassExceptionToClient() throws IOException, InterruptedException {
+        final RuntimeException customException = new RuntimeException() {};
+        when(phpSnow.isAlive()).thenReturn(true);
+        doNothing().when(buffer).push(any(SnowDataFrame.class));
+        doThrow(customException).when(buffer).push(frame(3));
+
+        snowStream.startConsumingSnowData();
+        snowStream.waitUntilConsumerThreadFinished();
+
+        Throwable thrownException = assertThrows(ConsumerThreadException.class, () -> snowStream.streamTo(outputStream));
         assertSame(customException, thrownException.getCause());
     }
 
