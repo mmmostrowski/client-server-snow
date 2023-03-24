@@ -5,96 +5,75 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.ObjectProvider;
-import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
-import techbit.snow.proxy.service.stream.encoding.StreamDecoder;
-import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfigFactory;
+import techbit.snow.proxy.service.stream.encoding.BinaryStreamDecoder;
+import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
 import java.nio.file.Path;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SnowStreamFactoryTest {
 
     @Mock
-    private ObjectProvider<SnowStream> snowStreamProvider;
+    private PhpSnowConfigFactory configProvider;
     @Mock
-    private ObjectProvider<NamedPipe> namedPipesProvider;
+    private PlainTextStreamEncoder streamEncoder;
     @Mock
-    private ObjectProvider<PhpSnowConfig> configProvider;
-    @Mock
-    private ObjectProvider<PhpSnowApp> phpSnowAppProvider;
-    @Mock
-    private ObjectProvider<StreamEncoder> streamEncoderProvider;
-    @Mock
-    private ObjectProvider<StreamDecoder> streamDecoderProvider;
-    @Mock
-    private ObjectProvider<SnowDataBuffer> snowDataBufferProvider;
-    @Mock
-    private ObjectProvider<BlockingBag<Integer, SnowDataFrame>> blockingBagProvider;
-    @Mock
-    private NamedPipe namedPipe;
-    @Mock
-    private PhpSnowApp phpSnowApp;
-    @Mock
-    private PhpSnowConfig snowConfig;
-    @Mock
-    private StreamEncoder streamEncoder;
-    @Mock
-    private StreamDecoder streamDecoder;
-    @Mock
-    private SnowDataBuffer snowDataBuffer;
+    private BinaryStreamDecoder streamDecoder;
     @Mock
     private Map<String, String> configMap;
     @Mock
-    private BlockingBag<Integer, SnowDataFrame> blockingBag;
+    private SnowDataBuffer snowDataBuffer;
+    @Mock
+    private PhpSnowConfig snowConfig;
     @Mock
     private SnowStream snowStream;
-    private SnowStreamFactory factory;
+    @Mock
+    private PhpSnowApp phpSnowApp;
+    @Mock
+    private NamedPipe namedPipe;
+    @Mock
+    private Path pipesDir;
+    private SnowStreamFactoryImpl factory;
 
     @BeforeEach
     void setup() {
-        factory = new SnowStreamFactory(
-                mock(Path.class),
-                "131",
-                12,
-                snowStreamProvider, namedPipesProvider,
-                phpSnowAppProvider, snowDataBufferProvider,
-                blockingBagProvider,
-                configProvider, streamDecoderProvider, streamEncoderProvider
-        );
+        factory = spy(new SnowStreamFactoryImpl(pipesDir, 12, "131", configProvider));
     }
 
     @Test
     void whenSnowStreamIsCreated_thenObjectIsCreatedProperly() {
-        when(configProvider.getObject(configMap))
-                .thenReturn(snowConfig);
-        when(streamDecoderProvider.getObject())
-                .thenReturn(streamDecoder);
-        when(streamEncoderProvider.getObject())
-                .thenReturn(streamEncoder);
-        when(blockingBagProvider.getObject())
-                .thenReturn(blockingBag);
-        when(namedPipesProvider.getObject(eq("session-xyz"), any(Path.class)))
-                .thenReturn(namedPipe);
-        when(snowDataBufferProvider.getObject(12, blockingBag))
-                .thenReturn(snowDataBuffer);
-        when(phpSnowAppProvider.getObject(eq("session-xyz"), eq(snowConfig), eq("131"), any()))
-                .thenReturn(phpSnowApp);
-        when(snowStreamProvider.getObject(any())).thenReturn(snowStream);
-
+        when(configProvider.create(configMap)).thenReturn(snowConfig);
+        doReturn(streamDecoder).when(factory).createBinaryStreamDecoder();
+        doReturn(streamEncoder).when(factory).createPlainTextStreamEncoder();
+        doReturn(namedPipe).when(factory).createPipe("session-xyz", pipesDir);
+        doReturn(snowDataBuffer).when(factory).createSnowDataBuffer(eq(12), any());
+        doReturn(phpSnowApp).when(factory).createPhpSnowApp(
+                eq("session-xyz"), eq(snowConfig), eq("131"), any(ProcessBuilder.class));
+        doReturn(snowStream).when(factory).createSnowStream(
+                "session-xyz", snowConfig, namedPipe, phpSnowApp, snowDataBuffer, streamDecoder, streamEncoder
+        );
 
         SnowStream result = factory.create("session-xyz", configMap);
 
-
         assertSame(snowStream, result);
-        verify(snowStreamProvider).getObject("session-xyz",
-                snowConfig, namedPipe, phpSnowApp, snowDataBuffer, streamDecoder, streamEncoder);
+    }
+
+    @Test
+    void whenSnowStreamIsCreated_thenObjectIsCreated() {
+        when(pipesDir.resolve("session-xyz")).thenReturn(mock(Path.class));
+
+        SnowStream result = factory.create("session-xyz", configMap);
+
+        assertNotNull(result);
     }
 
 }

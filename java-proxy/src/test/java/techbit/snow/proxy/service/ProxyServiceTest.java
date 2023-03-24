@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.ObjectProvider;
-import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfigFactory;
 import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
+import techbit.snow.proxy.service.stream.SnowStreamFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,9 +27,9 @@ class ProxyServiceTest {
     @Mock
     private SessionService session;
     @Mock
-    private ObjectProvider<SnowStream> snowFactory;
+    private SnowStreamFactory snowFactory;
     @Mock
-    private ObjectProvider<PhpSnowConfig> configProvider;
+    private PhpSnowConfigFactory configProvider;
     @Mock
     private Map<String, String> confMap;
 
@@ -43,7 +43,7 @@ class ProxyServiceTest {
 
     @Test
     void givenNewSessionId_whenStream_thenStreamToANewStream() throws IOException, InterruptedException, ConsumerThreadException {
-        when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
+        when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
 
         proxyService.startSession("session-abc", out, confMap);
 
@@ -55,7 +55,7 @@ class ProxyServiceTest {
 
     @Test
     void givenSameSessionId_whenStream_thenStreamToTheSameStream() throws IOException, InterruptedException, ConsumerThreadException {
-        when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
+        when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
 
         when(session.exists("session-abc")).thenReturn(false);
         proxyService.startSession("session-abc", out, confMap);
@@ -89,7 +89,7 @@ class ProxyServiceTest {
 
     @Test
     void whenStreamIsActive_thenProxyIsRunning() throws IOException, InterruptedException, ConsumerThreadException {
-        when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
+        when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
         when(snowStream.isActive()).thenReturn(true);
         proxyService.startSession("session-abc", out, confMap);
         when(session.exists("session-abc")).thenReturn(true);
@@ -104,7 +104,7 @@ class ProxyServiceTest {
 
     @Test
     void whenStopProxy_thenDeleteSession() throws IOException, InterruptedException, ConsumerThreadException {
-        when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
+        when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
         proxyService.startSession("session-abc", out, confMap);
         when(session.exists("session-abc")).thenReturn(true);
 
@@ -115,7 +115,7 @@ class ProxyServiceTest {
 
     @Test
     void whenStopProxy_thenStopStream() throws IOException, InterruptedException, ConsumerThreadException {
-        when(snowFactory.getObject("session-abc", confMap)).thenReturn(snowStream);
+        when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
         proxyService.startSession("session-abc", out, confMap);
         when(session.exists("session-abc")).thenReturn(true);
 

@@ -90,7 +90,7 @@ public class ProxyController {
         }
 
         final String[] elements = configuration.substring(1).split("/");
-        if (elements.length % 2 != 0) {
+        if ((elements.length & 1 ) != 0) {
             throw new IllegalArgumentException("Please provide request in form: " +
                     "http://domain.com/sessionId/key1/val1/key2/val2/...");
         }

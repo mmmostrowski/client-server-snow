@@ -2,13 +2,13 @@ package techbit.snow.proxy.service;
 
 import com.google.common.collect.Maps;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfigFactory;
 import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
+import techbit.snow.proxy.service.stream.SnowStreamFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,15 +20,15 @@ import java.util.Map;
 public class ProxyServiceImpl implements ProxyService {
 
     private final Map<String, SnowStream> streams = Maps.newHashMap();
-    private final ObjectProvider<PhpSnowConfig> configProvider;
-    private final ObjectProvider<SnowStream> snowStreamProvider;
+    private final PhpSnowConfigFactory configProvider;
+    private final SnowStreamFactory snowStreamProvider;
     private final SessionService session;
 
 
     public ProxyServiceImpl(
             @Autowired SessionService session,
-            @Autowired ObjectProvider<SnowStream> snowStreamProvider,
-            @Autowired ObjectProvider<PhpSnowConfig> configProvider
+            @Autowired SnowStreamFactory snowStreamProvider,
+            @Autowired PhpSnowConfigFactory configProvider
     ) {
         this.snowStreamProvider = snowStreamProvider;
         this.session = session;
@@ -56,11 +56,11 @@ public class ProxyServiceImpl implements ProxyService {
         if (session.exists(sessionId)) {
             log.debug("snowStream( {} ) | Returning existing stream", sessionId);
             final SnowStream stream = streams.get(sessionId);
-            stream.ensureCompatibleWithConfig(configProvider.getObject(confMap));
+            stream.ensureCompatibleWithConfig(configProvider.create(confMap));
             return stream;
         }
         log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, confMap);
-        final SnowStream snow = snowStreamProvider.getObject(sessionId, confMap);
+        final SnowStream snow = snowStreamProvider.create(sessionId, confMap);
         snow.startPhpApp();
         snow.startConsumingSnowData();
         streams.put(sessionId, snow);

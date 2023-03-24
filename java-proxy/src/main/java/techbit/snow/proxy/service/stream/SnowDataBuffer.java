@@ -18,12 +18,12 @@ public class SnowDataBuffer {
     private final Object noMoreClientsLock = new Object();
     private final Object removeFramesLock = new Object();
     private final Object framesLock = new Object();
+    private final int maxNumOfFrames;
     private volatile int lastValidFrameNum = Integer.MAX_VALUE;
     private volatile boolean destroyed = false;
     private volatile int numOfFrames = 0;
     private volatile int headFrameNum = 0;
     private volatile int tailFrameNum = 0;
-    private final int maxNumOfFrames;
 
 
     public SnowDataBuffer(int maxNumOfFrames, BlockingBag<Integer, SnowDataFrame> frames) {
