@@ -1,6 +1,6 @@
 package techbit.snow.proxy.service.stream.encoding;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
@@ -8,8 +8,8 @@ import techbit.snow.proxy.dto.SnowDataFrame;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+@Primary
 @Component
-@Qualifier("BinaryDecoder")
 public class BinaryStreamDecoder implements StreamDecoder {
 
     public static final String GREETING_MARKER = "hello-php-snow";

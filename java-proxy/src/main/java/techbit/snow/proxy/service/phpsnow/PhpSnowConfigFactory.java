@@ -8,7 +8,6 @@ import com.google.common.collect.Maps;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +21,7 @@ import java.util.Set;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 @Component
+@SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class PhpSnowConfigFactory {
 
     @JsonProperty
@@ -57,13 +57,12 @@ public class PhpSnowConfigFactory {
         this.defaults = mapper.convertValue(this, new TypeReference<>() {});
     }
 
-    @Bean("phpsnowConfig.create")
+    @Bean("configProvider")
     @Scope(SCOPE_PROTOTYPE)
     public PhpSnowConfig create(Map<String, String> config) {
         return validatedConfigOf(objectConvertedFrom(mapMergedWithDefaults(config)));
     }
 
-    @NotNull
     private Map<String, Object> mapMergedWithDefaults(Map<String, String> config) {
         final Map<String, Object> result = Maps.newHashMap(defaults);
         result.putAll(config);

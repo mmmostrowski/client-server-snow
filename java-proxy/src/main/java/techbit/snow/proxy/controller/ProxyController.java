@@ -3,7 +3,6 @@ package techbit.snow.proxy.controller;
 import lombok.extern.log4j.Log4j2;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,9 +23,7 @@ public class ProxyController {
 
     private final ProxyService streaming;
 
-    public ProxyController(
-            @Autowired @Qualifier("ProxyServiceImpl") ProxyService streaming
-    ) {
+    public ProxyController(@Autowired ProxyService streaming) {
         this.streaming = streaming;
     }
 
@@ -40,7 +37,7 @@ public class ProxyController {
     public void favicon() {
     }
 
-    @Async("streamExecutor")
+    @Async("streamAsyncTaskExecutor")
     @GetMapping("/{sessionId}/{*configuration}")
     public CompletableFuture<StreamingResponseBody> streamToClient(
             @PathVariable String sessionId,

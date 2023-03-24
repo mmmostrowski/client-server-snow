@@ -246,7 +246,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
 
     @Test
     void whenConsumerThreadIsThrowingException_thenPassExceptionToClient() throws IOException, InterruptedException {
-        final RuntimeException customException = new RuntimeException() {};
+        final RuntimeException customException = new RuntimeException("Custom Test Exception Passed Properly") {};
         when(phpSnow.isAlive()).thenReturn(true);
         doNothing().when(buffer).push(any(SnowDataFrame.class));
         doThrow(customException).when(buffer).push(frame(3));

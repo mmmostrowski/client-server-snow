@@ -1,6 +1,6 @@
 package techbit.snow.proxy.service.stream.encoding;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+@Primary
 @Component
-@Qualifier("PlainTextEncoder")
 public class PlainTextStreamEncoder implements StreamEncoder {
 
     private final byte[] separator = "\n\n".getBytes(StandardCharsets.UTF_8);

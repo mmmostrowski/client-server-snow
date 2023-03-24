@@ -19,23 +19,29 @@ repositories {
 }
 
 dependencies {
+	// Main
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'jakarta.validation:jakarta.validation-api'
-	implementation 'org.jetbrains:annotations:23.0.0'
-	implementation 'com.google.guava:guava:31.1-jre'
-	implementation 'commons-io:commons-io:2.11.0'
+	implementation 'org.springframework.boot:spring-boot-starter-logging'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	implementation 'jakarta.validation:jakarta.validation-api'
+	implementation 'com.google.guava:guava:31.1-jre'
+	implementation 'commons-io:commons-io:2.11.0'
+
+	// Test
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.mockito', module :'mockito-core'
 	}
-	testImplementation 'edu.umd.cs.mtc:multithreadedtc:1.01'
-	testImplementation 'junit:junit:4.12'
-	testImplementation 'org.mockito:mockito-junit-jupiter:5.2.0'
+
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
 	testImplementation 'org.mockito:mockito-inline:4.6.1'
+	testImplementation 'org.mockito:mockito-junit-jupiter:5.2.0'
+
+	testImplementation 'junit:junit:4.12'
+	testImplementation 'edu.umd.cs.mtc:multithreadedtc:1.01'
 }
 
 test {

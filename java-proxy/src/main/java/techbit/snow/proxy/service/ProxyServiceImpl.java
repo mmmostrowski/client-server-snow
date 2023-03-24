@@ -4,7 +4,7 @@ import com.google.common.collect.Maps;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.stream.SnowStream;
@@ -16,21 +16,21 @@ import java.util.Map;
 
 @Log4j2
 @Service
-@Qualifier("ProxyServiceImpl")
+@Primary
 public class ProxyServiceImpl implements ProxyService {
 
     private final Map<String, SnowStream> streams = Maps.newHashMap();
     private final ObjectProvider<PhpSnowConfig> configProvider;
-    private final ObjectProvider<SnowStream> snowFactory;
+    private final ObjectProvider<SnowStream> snowStreamProvider;
     private final SessionService session;
 
 
     public ProxyServiceImpl(
             @Autowired SessionService session,
-            @Autowired @Qualifier("snowStream.create") ObjectProvider<SnowStream> snowFactory,
-            @Autowired @Qualifier("phpsnowConfig.create") ObjectProvider<PhpSnowConfig> configProvider
+            @Autowired ObjectProvider<SnowStream> snowStreamProvider,
+            @Autowired ObjectProvider<PhpSnowConfig> configProvider
     ) {
-        this.snowFactory = snowFactory;
+        this.snowStreamProvider = snowStreamProvider;
         this.session = session;
         this.configProvider = configProvider;
     }
@@ -60,7 +60,7 @@ public class ProxyServiceImpl implements ProxyService {
             return stream;
         }
         log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, confMap);
-        final SnowStream snow = snowFactory.getObject(sessionId, confMap);
+        final SnowStream snow = snowStreamProvider.getObject(sessionId, confMap);
         snow.startPhpApp();
         snow.startConsumingSnowData();
         streams.put(sessionId, snow);

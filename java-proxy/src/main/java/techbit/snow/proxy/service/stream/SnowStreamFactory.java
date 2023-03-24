@@ -2,7 +2,6 @@ package techbit.snow.proxy.service.stream;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
@@ -31,21 +30,21 @@ public class SnowStreamFactory {
     private final ObjectProvider<BlockingBag<Integer, SnowDataFrame>> blockingBagProvider;
     private final int bufferSizeInFrames;
     private final String applicationPid;
-    private final Path namedPipesDir;
+    private final Path pipesDir;
 
 
     public SnowStreamFactory(
-            @Autowired @Qualifier("namedPipes.dir") Path namedPipesDir,
-            @Autowired @Qualifier("application.pid") String applicationPid,
+            @Autowired Path pipesDir,
+            @Autowired String applicationPid,
             @Value("${phpsnow.buffer-size-in-frames}") int bufferSizeInFrames,
             @Autowired ObjectProvider<SnowStream> snowStreamProvider,
             @Autowired ObjectProvider<NamedPipe> namedPipesProvider,
             @Autowired ObjectProvider<PhpSnowApp> phpSnowAppsProvider,
             @Autowired ObjectProvider<SnowDataBuffer> snowDataBufferProvider,
             @Autowired ObjectProvider<BlockingBag<Integer, SnowDataFrame>> blockingBagProvider,
-            @Autowired @Qualifier("phpsnowConfig.create") ObjectProvider<PhpSnowConfig> configProvider,
-            @Autowired @Qualifier("BinaryDecoder") ObjectProvider<StreamDecoder> streamDecoderProvider,
-            @Autowired @Qualifier("PlainTextEncoder") ObjectProvider<StreamEncoder> streamEncoderProvider
+            @Autowired ObjectProvider<PhpSnowConfig> configProvider,
+            @Autowired ObjectProvider<StreamDecoder> streamDecoderProvider,
+            @Autowired ObjectProvider<StreamEncoder> streamEncoderProvider
     ) {
         this.snowStreamProvider = snowStreamProvider;
         this.namedPipesProvider = namedPipesProvider;
@@ -57,17 +56,17 @@ public class SnowStreamFactory {
         this.bufferSizeInFrames = bufferSizeInFrames;
         this.configProvider = configProvider;
         this.applicationPid = applicationPid;
-        this.namedPipesDir = namedPipesDir;
+        this.pipesDir = pipesDir;
     }
 
-    @Bean("snowStream.create")
+    @Bean("snowStreamProvider")
     @Scope(SCOPE_PROTOTYPE)
     public SnowStream create(String sessionId, Map<String, String> config) {
         PhpSnowConfig phpSnowConfig = configProvider.getObject(config);
         return snowStreamProvider.getObject(
                 sessionId,
                 phpSnowConfig,
-                namedPipesProvider.getObject(sessionId, namedPipesDir),
+                namedPipesProvider.getObject(sessionId, pipesDir),
                 phpSnowAppsProvider.getObject(sessionId, phpSnowConfig, applicationPid, new ProcessBuilder()),
                 snowDataBufferProvider.getObject(bufferSizeInFrames, blockingBagProvider.getObject()),
                 streamDecoderProvider.getObject(),

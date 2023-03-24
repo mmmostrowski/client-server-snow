@@ -10,21 +10,27 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @Generated
 @EnableAsync
 @SpringBootApplication
+@SuppressWarnings("unused")
 public class SnowProxyApplication {
 
-	@Value("${phpsnow.developer-mode:PRODUCTION}")
-	private String developerMode;
+	private final String developerMode;
+
+	public SnowProxyApplication(
+			@Value("${phpsnow.developer-mode:PRODUCTION}") String developerMode)
+	{
+		this.developerMode = developerMode;
+	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(SnowProxyApplication.class, args);
 	}
 
-	@Bean("application.pid")
-	public String pid() {
+	@Bean
+	public String applicationPid() {
 		return System.getProperty("PID");
 	}
 
-	@Bean("is.developer.mode")
+	@Bean
 	public boolean isDeveloperMode() {
 		return developerMode.equals("DEVELOP");
 	}

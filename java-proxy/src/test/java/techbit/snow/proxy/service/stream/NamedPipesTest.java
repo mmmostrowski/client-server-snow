@@ -1,9 +1,8 @@
 package techbit.snow.proxy.service.stream;
 
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,8 +18,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class NamedPipesTest {
 
-    @Rule
-    public final TemporaryFolder folder = new TemporaryFolder();
+    @TempDir
+    public Path folder;
 
     @Spy
     private NamedPipes namedPipes;
@@ -33,15 +32,14 @@ class NamedPipesTest {
 
     @Test
     void whenDestroyingAllPipes_thenFolderWithPipesMustBePurged() throws IOException {
-        folder.create();
-        folder.newFile("x");
-        folder.newFolder("y");
-        folder.newFile("z");
-        when(namedPipes.pipesDir()).thenReturn(folder.getRoot().toPath());
+        Files.createFile(folder.resolve("x"));
+        Files.createFile(folder.resolve("y"));
+        Files.createDirectory(folder.resolve("z"));
+        when(namedPipes.pipesDir()).thenReturn(folder);
 
         namedPipes.destroyAll();
 
-        try (Stream<Path> stream = Files.list(folder.getRoot().toPath())) {
+        try (Stream<Path> stream = Files.list(folder)) {
             assertEquals(0, stream.count());
         }
     }

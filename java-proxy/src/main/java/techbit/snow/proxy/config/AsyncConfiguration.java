@@ -1,7 +1,5 @@
 package techbit.snow.proxy.config;
 
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +14,7 @@ import java.time.Duration;
 
 @EnableAsync
 @Configuration
+@SuppressWarnings("NullableProblems")
 public class AsyncConfiguration implements AsyncConfigurer {
 
     private final Duration timeout;
@@ -23,7 +22,6 @@ public class AsyncConfiguration implements AsyncConfigurer {
     private final int threadCorePoolSize;
     private final int threadQueueCapacity;
 
-    @SuppressWarnings("unused")
     public AsyncConfiguration(
             @Value("#{ ${phpsnow.threads.timeout} * 1000 }") Duration timeout,
             @Value("${phpsnow.threads.max-pool-size}") int threadMaxPoolSize,
@@ -37,7 +35,7 @@ public class AsyncConfiguration implements AsyncConfigurer {
     }
 
     @Override
-    @Bean(name = "streamExecutor")
+    @Bean("streamAsyncTaskExecutor")
     public AsyncTaskExecutor getAsyncExecutor() {
         final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setMaxPoolSize(threadMaxPoolSize);
@@ -48,13 +46,13 @@ public class AsyncConfiguration implements AsyncConfigurer {
 
     @Bean
     public WebMvcConfigurer webMvcConfigurer(
-            @Qualifier("streamExecutor") AsyncTaskExecutor taskExecutor
+            AsyncTaskExecutor streamAsyncTaskExecutor
     ) {
         return new WebMvcConfigurer() {
             @Override
-            public void configureAsyncSupport(@NotNull AsyncSupportConfigurer config) {
+            public void configureAsyncSupport(AsyncSupportConfigurer config) {
                 config.setDefaultTimeout(timeout.toMillis());
-                config.setTaskExecutor(taskExecutor);
+                config.setTaskExecutor(streamAsyncTaskExecutor);
             }
         };
     }

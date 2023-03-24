@@ -3,12 +3,11 @@ package techbit.snow.proxy.service.stream;
 import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
 import org.apache.commons.io.FileUtils;
-import org.junit.Rule;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,8 +25,8 @@ import static org.mockito.Mockito.mockStatic;
 @ExtendWith(MockitoExtension.class)
 class NamedPipeTest {
 
-    @Rule
-    public final TemporaryFolder folder = new TemporaryFolder();
+    @TempDir
+    public Path folder;
 
     private NamedPipe namedPipe;
 
@@ -35,11 +34,10 @@ class NamedPipeTest {
 
     @BeforeEach
     void setup() throws IOException {
-        folder.create();
-        pipePath = folder.newFile("session-xyz").toPath();
+        pipePath = folder.resolve("session-xyz");
         Files.writeString(pipePath, "fake-content");
 
-        namedPipe = new NamedPipe("session-xyz", folder.getRoot().toPath());
+        namedPipe = new NamedPipe("session-xyz", folder);
     }
 
     @Test
@@ -58,7 +56,7 @@ class NamedPipeTest {
 
     @Test
     void givenPipeFile_whenCannotDeletePipeFile_thenThrowException() {
-        assertTrue(folder.getRoot().setWritable(false));
+        assertTrue(folder.toFile().setWritable(false));
 
         assertThrows(IOException.class, namedPipe::destroy);
     }

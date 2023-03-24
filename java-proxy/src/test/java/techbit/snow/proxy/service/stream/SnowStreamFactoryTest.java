@@ -15,6 +15,7 @@ import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 import java.nio.file.Path;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,6 +53,8 @@ class SnowStreamFactoryTest {
     private Map<String, String> configMap;
     @Mock
     private BlockingBag<Integer, SnowDataFrame> blockingBag;
+    @Mock
+    private SnowStream snowStream;
     private SnowStreamFactory factory;
 
     @BeforeEach
@@ -83,9 +86,13 @@ class SnowStreamFactoryTest {
                 .thenReturn(snowDataBuffer);
         when(phpSnowAppProvider.getObject(eq("session-xyz"), eq(snowConfig), eq("131"), any()))
                 .thenReturn(phpSnowApp);
+        when(snowStreamProvider.getObject(any())).thenReturn(snowStream);
 
-        factory.create("session-xyz", configMap);
 
+        SnowStream result = factory.create("session-xyz", configMap);
+
+
+        assertSame(snowStream, result);
         verify(snowStreamProvider).getObject("session-xyz",
                 snowConfig, namedPipe, phpSnowApp, snowDataBuffer, streamDecoder, streamEncoder);
     }
