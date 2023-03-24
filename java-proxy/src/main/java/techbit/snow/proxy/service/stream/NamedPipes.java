@@ -1,7 +1,6 @@
 package techbit.snow.proxy.service.stream;
 
 import jakarta.annotation.PostConstruct;
-import org.apache.commons.io.FileUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +14,13 @@ public class NamedPipes {
 
     @PostConstruct
     public void destroyAll() throws IOException {
-        final File dir = pipesDir().toFile();
-        if (dir.exists()) {
-            FileUtils.cleanDirectory(dir);
+        final File[] files = pipesDir().toFile().listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (!file.isDirectory() && !file.delete()) {
+                    throw new IOException("Cannot delete pipe file: " + file);
+                }
+            }
         }
     }
 

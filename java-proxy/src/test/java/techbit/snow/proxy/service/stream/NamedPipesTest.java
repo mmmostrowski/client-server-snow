@@ -1,5 +1,7 @@
 package techbit.snow.proxy.service.stream;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -11,8 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,6 +25,11 @@ class NamedPipesTest {
     @Spy
     private NamedPipes namedPipes;
 
+    @BeforeEach
+    void setup() {
+        when(namedPipes.pipesDir()).thenReturn(folder);
+    }
+
 
     @Test
     void whenAskedForPipesDir_thenValidDirectoryPathProvided() {
@@ -34,14 +40,21 @@ class NamedPipesTest {
     void whenDestroyingAllPipes_thenFolderWithPipesMustBePurged() throws IOException {
         Files.createFile(folder.resolve("x"));
         Files.createFile(folder.resolve("y"));
-        Files.createDirectory(folder.resolve("z"));
-        when(namedPipes.pipesDir()).thenReturn(folder);
+        Files.createFile(folder.resolve("z"));
 
         namedPipes.destroyAll();
 
         try (Stream<Path> stream = Files.list(folder)) {
             assertEquals(0, stream.count());
         }
+    }
+
+    @Test
+    void whenCannotDestroyAnyOfPipes_thenThrowException() throws IOException {
+        Files.createFile(folder.resolve("x"));
+        Assertions.assertTrue(folder.toFile().setWritable(false));
+
+        assertThrows(IOException.class, () -> namedPipes.destroyAll());
     }
 
 }
