@@ -13,6 +13,11 @@ function main() {
 
     if [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
         export PHP_SNOW_APP_MODE=develop
+
+        if [[ "${2:-}" == "snow-client" ]] || [[ "${2:-}" == "snow-client-reactjs" ]]; then
+            runPhpSnowClientReact dev
+            return 0
+        fi
     fi
 
     if [[ "${1:-}" == "--docker-killer" ]]; then
@@ -21,7 +26,7 @@ function main() {
         return 0
     fi
 
-    if [[ "${1:-}" == "snow-client-reactjs" ]]; then
+    if [[ "${1:-}" == "snow-client" ]] || [[ "${1:-}" == "snow-client-reactjs" ]]; then
         shift 1
         runPhpSnowClientReact "${@}"
         return 0
@@ -95,20 +100,19 @@ function build() {
     local buildFunction="${1}"
     shift 1
 
-    ${buildFunction} "${@}"
-    ${buildFunction} "${@}" --quiet
+    if [[ "${PHP_SNOW_APP_MODE}" == "develop" ]]; then
+        ${buildFunction} "${@}"
+        ${buildFunction} "${@}" --quiet
+        return 0
+    fi
 
-#    if [[ "${PHP_SNOW_APP_MODE}" == "develop" ]]; then
-#        ${buildFunction} "${@}"
-#        ${buildFunction} "${@}" --quiet
-#        return 0
-#    fi
-#
-#        ${buildFunction} "${@}"
-#    if ! ${buildFunction} "${@}" --quiet; then
-#        ${buildFunction} "${@}"
-#        return 1
-#    fi
+    echo 'Building...' >&2
+    ${buildFunction} "${@}"
+
+    if ! ${buildFunction} "${@}" --quiet; then
+        ${buildFunction} "${@}"
+        return 1
+    fi
 }
 
 function removeDockerContainerInBackground() {

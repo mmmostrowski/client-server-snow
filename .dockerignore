@@ -1,0 +1,9 @@
+.idea/
+.github/
+**/node_modules
+**/.gradle
+**/build
+**/vendor
+**/.pipes/
+
+

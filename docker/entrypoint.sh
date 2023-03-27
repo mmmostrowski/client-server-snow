@@ -2,18 +2,21 @@
 set -eu
 
 function main() {
-    installVendorFolderToHost
+    installFreshCopyOfVendorFolder
+    installFreshCopyOfGradleFolders
 
-    if [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
+    if isAskingForDev "${1:-}" || ( [[ "${1:-}" == "snow-server" ]] && isAskingForDev "${2:-}" ); then
         echo ''
         echo '--'
         echo ''
-        echo "To run app please execute: php snow.php [ args ... ]"
-        echo ''
+        echo "To run php snow app please execute: php snow.php [ args ... ]"
         echo "To enable XDebug please run: echo 'xdebug.mode=debug' >> /usr/local/etc/php/conf.d/my-xdebug.ini"
         echo ''
-        echo "To start java-proxy: gradle --project-dir /snow/java-proxy bootRun"
+        echo "To start java-proxy server: java -jar /snow/java-proxy/build/libs/proxy-0.0.1-SNAPSHOT.jar"
+        echo "To start java-proxy development: gradle --project-dir /snow/java-proxy bootRun"
         echo ''
+        echo 'To start reactjs-client server ( please run from host ): ./run snow-client '
+        echo 'To start reactjs-client development ( please run from host ): ./run snow-client dev'
         echo ''
         export PHP_SNOW_APP_MODE=develop
         bash -l
@@ -21,7 +24,7 @@ function main() {
     fi
 
     if [[ "${1:-}" == "snow-server" ]]; then
-        gradle --project-dir /snow/java-proxy bootRun
+        java -jar /snow/java-proxy/build/libs/proxy-0.0.1-SNAPSHOT.jar
         return 0
     fi
 
@@ -31,22 +34,22 @@ function main() {
         terminalCleanupOnExit true
     fi
 
-    
     if ! "php" "snow.php" "${@}"; then
         terminalCleanupOnExit false
         return 1
     fi
 }
 
-function installVendorFolderToHost()
-{
-    if [[ -e /snow/app/vendor/ ]] \
-        && cmp /snow/app/vendor/composer/installed.json /app-vendor/composer/installed.json; then
-        return
-    fi
-
+function installFreshCopyOfVendorFolder() {
     rm -rf /snow/app/vendor/
-    cp -rf /app-vendor/ /snow/app/vendor/
+    cp -rf /data/app-vendor/ /snow/app/vendor/
+}
+
+function installFreshCopyOfGradleFolders() {
+    rm -rf /snow/java-proxy/.gradle/
+    rm -rf /snow/java-proxy/build/
+    cp -rf /data/app-gradle/ /snow/java-proxy/.gradle/
+    cp -rf /data/app-gradle-build/ /snow/java-proxy/build/
 }
 
 function waitUntilTerminalSizeIsAvailable() {
@@ -73,6 +76,12 @@ function terminalCleanupOnExit() {
     else
         trap ""  EXIT
     fi
+}
+
+function isAskingForDev() {
+    local param="${1}"
+
+    [[ "${param}" == 'bash' ]] || [[ "${param}" == 'dev' ]]
 }
 
 main "${@}"

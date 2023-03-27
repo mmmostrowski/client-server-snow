@@ -2,15 +2,15 @@
 set -eu
 
 function main() {
-    installNodeModulesToHost
+    installFreshCopyOfNodeModules
+    installFreshCopyOfNodeBuild
 
     if [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
         echo ''
         echo '--'
         echo ''
-        echo 'To start developing: npm run start'
-        echo ''
-        echo 'To start serve production: serve -s build -n'
+        echo 'To start reactjs-client server: serve -s build -n'
+        echo 'To start reactjs-client development: npm run start'
         echo ''
         echo ''
         export PHP_SNOW_APP_MODE=develop
@@ -26,15 +26,19 @@ function main() {
     "${@}"
 }
 
-function installNodeModulesToHost()
-{
+function installFreshCopyOfNodeModules() {
     if [[ -e /snow/reactjs-client/node_modules/ ]] \
-        && cmp /snow/reactjs-client/node_modules/.package-lock.json /snow-node-modules/.package-lock.json; then
+        && cmp /snow/reactjs-client/node_modules/.package-lock.json /data/snow-node-modules/.package-lock.json; then
         return 0
     fi
 
     rm -rf /snow/reactjs-client/node_modules/
-    cp -rf /snow-node-modules/ /snow/reactjs-client/node_modules/
+    cp -rf /data/snow-node-modules/ /snow/reactjs-client/node_modules/
+}
+
+function installFreshCopyOfNodeBuild() {
+    rm -rf /snow/reactjs-client/build/
+    cp -rf /data/snow-node-build/ /snow/reactjs-client/build/
 }
 
 main "${@}"
