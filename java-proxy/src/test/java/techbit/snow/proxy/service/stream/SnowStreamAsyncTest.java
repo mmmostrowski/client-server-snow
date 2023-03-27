@@ -90,7 +90,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
                 final ByteArrayOutputStream outputStream = mock(ByteArrayOutputStream.class);
 
-                snowStream.streamTo(outputStream);
+                snowStream.streamTo(outputStream, encoder);
 
                 verify(encoder, times(5)).encodeFrame(any(), eq(outputStream));
                 verify(encoder, times(1)).encodeMetadata(any(), eq(outputStream));
@@ -115,7 +115,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
             void thread2() throws IOException, InterruptedException, ConsumerThreadException {
                 readyToStream.acquire();
                 Assertions.assertTrue(snowStream.isActive());
-                snowStream.streamTo(outputStream);
+                snowStream.streamTo(outputStream, encoder);
             }
 
             void thread3() throws IOException, InterruptedException {
@@ -225,7 +225,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
                 final ByteArrayOutputStream outputStream = mock(ByteArrayOutputStream.class);
 
-                snowStream.streamTo(outputStream);
+                snowStream.streamTo(outputStream, encoder);
 
                 InOrder inOrder = inOrder(encoder);
 
@@ -343,7 +343,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
                 readyToStream.acquire();
 
-                snowStream.streamTo(outputStream);
+                snowStream.streamTo(outputStream, encoder);
             }
         }, 10, 30);
     }

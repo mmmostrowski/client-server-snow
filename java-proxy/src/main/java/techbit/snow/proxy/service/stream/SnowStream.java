@@ -38,7 +38,6 @@ public class SnowStream {
     private final SnowDataBuffer buffer;
     private final NamedPipe pipe;
     private final StreamDecoder decoder;
-    private final StreamEncoder encoder;
     private final Semaphore consumerGoingDownLock = new Semaphore(0);
     private volatile boolean running = false;
     private volatile boolean destroyed = false;
@@ -59,7 +58,6 @@ public class SnowStream {
         this.phpSnow = phpSnow;
         this.buffer = buffer;
         this.decoder = decoder;
-        this.encoder = encoder;
     }
 
     public boolean isActive() {
@@ -139,7 +137,9 @@ public class SnowStream {
         }
     }
 
-    public void streamTo(OutputStream out) throws IOException, InterruptedException, ConsumerThreadException {
+    public void streamTo(OutputStream out, StreamEncoder encoder)
+            throws IOException, InterruptedException, ConsumerThreadException
+    {
         throwConsumerExceptionIfAny();
 
         if (!isActive()) {

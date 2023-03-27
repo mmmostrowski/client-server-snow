@@ -9,6 +9,8 @@ import techbit.snow.proxy.service.phpsnow.PhpSnowConfigFactory;
 import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 import techbit.snow.proxy.service.stream.SnowStreamFactory;
+import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
+import techbit.snow.proxy.service.stream.encoding.StreamEncoderFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -23,21 +25,25 @@ public class ProxyServiceImpl implements ProxyService {
     private final PhpSnowConfigFactory configProvider;
     private final SnowStreamFactory snowStreamProvider;
     private final SessionService session;
-
+    private final StreamEncoderFactory streamEncoderFactory;
 
     public ProxyServiceImpl(
             @Autowired SessionService session,
             @Autowired SnowStreamFactory snowStreamProvider,
-            @Autowired PhpSnowConfigFactory configProvider
-    ) {
+            @Autowired PhpSnowConfigFactory configProvider,
+            @Autowired StreamEncoderFactory streamEncoderFactory) {
         this.snowStreamProvider = snowStreamProvider;
         this.session = session;
         this.configProvider = configProvider;
+        this.streamEncoderFactory = streamEncoderFactory;
     }
 
     @Override
-    public void startSession(String sessionId, OutputStream out, Map<String, String> confMap) throws IOException, InterruptedException, ConsumerThreadException {
-        snowStream(sessionId, confMap).streamTo(out);
+    public void startSession(String sessionId, OutputStream out, String outputType, Map<String, String> confMap)
+            throws IOException, InterruptedException, ConsumerThreadException
+    {
+        StreamEncoder encoder = streamEncoderFactory.createEncoder(outputType);
+        snowStream(sessionId, confMap).streamTo(out, encoder);
     }
 
     @Override

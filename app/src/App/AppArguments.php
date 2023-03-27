@@ -21,6 +21,7 @@ final class AppArguments
         private readonly ?string $serverSessionId,
         private readonly int $serverCanvasWidth,
         private readonly int $serverCanvasHeight,
+        private readonly String $serverPipesDir, 
     )
     {
     }
@@ -82,5 +83,10 @@ final class AppArguments
     {
         return $this->serverCanvasHeight;
     }    
+
+    public function serverPipesDir(): string
+    {
+        return $this->serverPipesDir;
+    }
 
 }

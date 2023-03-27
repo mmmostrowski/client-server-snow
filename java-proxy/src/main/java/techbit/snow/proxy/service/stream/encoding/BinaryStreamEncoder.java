@@ -8,22 +8,20 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-@Component(PlainTextStreamEncoder.ENCODER_NAME)
-public class PlainTextStreamEncoder implements StreamEncoder {
+@Component(BinaryStreamEncoder.ENCODER_NAME)
+public class BinaryStreamEncoder implements StreamEncoder {
 
-    public static final String ENCODER_NAME = "PLAIN_TEXT_ENCODER";
+    public static final String ENCODER_NAME = "BINARY_ENCODER";
 
-    private final byte[] separator = "\n\n".getBytes(StandardCharsets.UTF_8);
 
     @Override
     public void encodeMetadata(SnowAnimationMetadata metadata, OutputStream out) throws IOException {
-        out.write(metadata.toString().getBytes(StandardCharsets.UTF_8));
-        out.write(separator);
+        out.write("metadata".getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
     public void encodeFrame(SnowDataFrame frame, OutputStream out) throws IOException {
-        out.write(frame.toString().getBytes(StandardCharsets.UTF_8));
-        out.write(separator);
+        out.write(("frame" + frame.frameNum()).getBytes(StandardCharsets.UTF_8));
     }
+
 }

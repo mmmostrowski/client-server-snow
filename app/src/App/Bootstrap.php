@@ -14,9 +14,9 @@ use Throwable;
 final class Bootstrap
 {
 
-    public static function createArguments(array $argv, string $projectRootDir, bool $isDeveloperMode): AppArguments
+    public static function createArguments(array $argv, string $projectRootDir, bool $isDeveloperMode, array $additional): AppArguments
     {
-        return (new AppArgumentsFactory())->create($argv, $projectRootDir, $isDeveloperMode);
+        return (new AppArgumentsFactory())->create($argv, $projectRootDir, $isDeveloperMode, $additional);
     }
 
     public static function createApp(AppArguments $appArguments): IApp
@@ -31,7 +31,7 @@ final class Bootstrap
                 startupConfig : $startupConfig,
                 renderer : new StreamFramePainter(
                     $appArguments->serverSessionId(),
-                    $appArguments->projectRootDir() . "/.pipes",
+                    $appArguments->serverPipesDir(),
                     $startupConfig,
                     $appArguments->serverCanvasWidth(),
                     $appArguments->serverCanvasHeight(),
@@ -58,7 +58,7 @@ final class Bootstrap
             echo PHP_EOL;
             return 1;
         } catch (Throwable $e) {
-            echo $appArguments->isDeveloperMode() ? $e : 'Unknown error';
+            echo $appArguments->isDeveloperMode() ? $e : "Error: {$e->getMessage()}";
             echo PHP_EOL;
             return 1;
         }

@@ -31,9 +31,11 @@ function runPhpSnow() (
 
     docker run -t"$( [ -t 0 ] && echo 'i' )" --rm \
         --name "php-snow-${SCRIPT_PID}" \
-        --volume "${SCRIPT_DIR}/app/:/app/" \
-        --volume "${SCRIPT_DIR}/java-proxy/:/java-proxy/" \
-        --volume "${SCRIPT_DIR}/.pipes/:/app/.pipes/" \
+        --volume "${SCRIPT_DIR}/app/:/snow/app/" \
+        --volume "${SCRIPT_DIR}/.pipes/:/snow/.pipes/" \
+        --volume "${SCRIPT_DIR}/java-proxy/:/snow/java-proxy/" \
+        $( isLocalPortBusy 8080 || echo '-p 8080:8080' ) \
+        $( isLocalPortBusy 8181 || echo '-p 8181:8181' ) \
         --add-host=host.docker.internal:host-gateway \
         --env PHP_SNOW_APP_MODE \
         $(
@@ -76,6 +78,12 @@ function watchForDockerKill() {
 
         docker rm -f "php-snow-${listenForPid}"
     ) &> /dev/null;
+}
+
+function isLocalPortBusy() {
+    local port="${1}"
+
+    ( echo >/dev/tcp/localhost/${port} ) &>/dev/null
 }
 
 main "${@}"

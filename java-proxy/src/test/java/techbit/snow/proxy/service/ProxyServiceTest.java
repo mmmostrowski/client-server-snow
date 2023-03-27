@@ -9,6 +9,8 @@ import techbit.snow.proxy.service.phpsnow.PhpSnowConfigFactory;
 import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 import techbit.snow.proxy.service.stream.SnowStreamFactory;
+import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
+import techbit.snow.proxy.service.stream.encoding.StreamEncoderFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,38 +34,45 @@ class ProxyServiceTest {
     private PhpSnowConfigFactory configProvider;
     @Mock
     private Map<String, String> confMap;
+    @Mock
+    private StreamEncoderFactory streamEncoderFactory;
+    @Mock
+    private StreamEncoder streamEncoder;
+
 
     private ProxyServiceImpl proxyService;
 
     @BeforeEach
     void setup() {
-        proxyService = new ProxyServiceImpl(session, snowFactory, configProvider);
+        proxyService = new ProxyServiceImpl(session, snowFactory, configProvider, streamEncoderFactory);
     }
 
 
     @Test
     void givenNewSessionId_whenStream_thenStreamToANewStream() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
+        when(streamEncoderFactory.createEncoder("some-encoder")).thenReturn(streamEncoder);
 
-        proxyService.startSession("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, "some-encoder", confMap);
 
         verify(session).create("session-abc");
         verify(snowStream).startPhpApp();
         verify(snowStream).startConsumingSnowData();
-        verify(snowStream).streamTo(out);
+        verify(snowStream).streamTo(out, streamEncoder);
     }
 
     @Test
     void givenSameSessionId_whenStream_thenStreamToTheSameStream() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
+        when(streamEncoderFactory.createEncoder("some-encoder")).thenReturn(streamEncoder);
 
         when(session.exists("session-abc")).thenReturn(false);
-        proxyService.startSession("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, "some-encoder", confMap);
 
         when(session.exists("session-abc")).thenReturn(true);
-        proxyService.startSession("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, "some-encoder", confMap);
 
-        verify(snowStream, times(2)).streamTo(out);
+        verify(snowStream, times(2)).streamTo(out, streamEncoder);
     }
 
     @Test
@@ -91,7 +100,7 @@ class ProxyServiceTest {
     void whenStreamIsActive_thenProxyIsRunning() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
         when(snowStream.isActive()).thenReturn(true);
-        proxyService.startSession("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, "some-encoder", confMap);
         when(session.exists("session-abc")).thenReturn(true);
 
         assertTrue(proxyService.isSessionRunning("session-abc"));
@@ -105,7 +114,7 @@ class ProxyServiceTest {
     @Test
     void whenStopProxy_thenDeleteSession() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
-        proxyService.startSession("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, "some-encoder", confMap);
         when(session.exists("session-abc")).thenReturn(true);
 
         proxyService.stopSession("session-abc");
@@ -116,7 +125,7 @@ class ProxyServiceTest {
     @Test
     void whenStopProxy_thenStopStream() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
-        proxyService.startSession("session-abc", out, confMap);
+        proxyService.startSession("session-abc", out, "some-encoder", confMap);
         when(session.exists("session-abc")).thenReturn(true);
 
         proxyService.stopSession("session-abc");

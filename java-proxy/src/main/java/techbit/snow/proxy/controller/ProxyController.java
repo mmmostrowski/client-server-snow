@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import techbit.snow.proxy.service.ProxyService;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
+import techbit.snow.proxy.service.stream.encoding.BinaryStreamEncoder;
+import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -39,23 +41,46 @@ public class ProxyController {
 
     @Async("streamAsyncTaskExecutor")
     @GetMapping("/{sessionId}/{*configuration}")
-    public CompletableFuture<StreamingResponseBody> streamToClient(
+    public CompletableFuture<StreamingResponseBody> streamBinaryToClient(
             @PathVariable String sessionId,
             @PathVariable String configuration
     ) {
-        log.debug("streamToClient( {}, {} )", sessionId, configuration);
+        log.debug("streamBinaryToClient( {}, {} )", sessionId, configuration);
 
+
+        return streamToClient(sessionId, configuration, BinaryStreamEncoder.ENCODER_NAME);
+    }
+
+    @GetMapping({ "/text", "/text/" })
+    public void text() {
+        throw new IllegalArgumentException("Invalid url! Missing session id, e.x: http://domain.com/text/<session-id>");
+    }
+
+    @Async("streamAsyncTaskExecutor")
+    @GetMapping("/text/{sessionId}/{*configuration}")
+    public CompletableFuture<StreamingResponseBody> streamTextToClient(
+            @PathVariable String sessionId,
+            @PathVariable String configuration
+    ) {
+        log.debug("streamTextToClient( {}, {} )", sessionId, configuration);
+
+        return streamToClient(sessionId, configuration, PlainTextStreamEncoder.ENCODER_NAME);
+    }
+
+    private CompletableFuture<StreamingResponseBody> streamToClient(
+            String sessionId, String configuration, String outputType
+    ) {
         return CompletableFuture.supplyAsync(() -> out -> {
             try {
-                log.debug("streamToClient( {} ) | Async Start", sessionId);
+                log.debug("streamToClient( {} ) | Async Start ( {} )", sessionId, outputType);
 
-                streaming.startSession(sessionId, out, toConfMap(configuration));
+                streaming.startSession(sessionId, out, outputType, toConfMap(configuration));
 
-                log.debug("streamToClient( {} ) | Async Finished", sessionId);
+                log.debug("streamToClient( {} ) | Async Finished ( {} )", sessionId, outputType);
             } catch (ClientAbortException e) {
-                log.debug("streamToClient( {} ) | Client aborted", sessionId);
+                log.debug("streamToClient( {} ) | Client aborted ( {} )", sessionId, outputType);
             } catch (InterruptedException | ConsumerThreadException e) {
-                log.error("streamToClient( {} ) | Error occurred", sessionId);
+                log.error("streamToClient( {} ) | Error occurred ( {} )", sessionId, outputType);
                 throw new IOException("Streaming interrupted ", e);
             }
         });

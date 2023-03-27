@@ -1,6 +1,8 @@
 package techbit.snow.proxy.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.embedded.tomcat.ConfigurableTomcatWebServerFactory;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -56,4 +58,14 @@ public class AsyncConfiguration implements AsyncConfigurer {
             }
         };
     }
+
+    @Bean
+    public WebServerFactoryCustomizer<ConfigurableTomcatWebServerFactory> webServerFactoryCustomizer() {
+        return factory -> {
+            factory.addConnectorCustomizers(connector -> {
+                connector.setProperty("packetSize", "1");
+            });
+        };
+    }
+
 }

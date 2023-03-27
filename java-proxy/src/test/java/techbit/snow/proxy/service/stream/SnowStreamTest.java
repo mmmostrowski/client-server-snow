@@ -101,7 +101,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
 
     @Test
     void givenNoPhpStart_whenStartStreamingToClient_thenThrowException() {
-        assertThrows(IOException.class, () -> snowStream.streamTo(outputStream));
+        assertThrows(IOException.class, () -> snowStream.streamTo(outputStream, encoder));
     }
 
     @Test
@@ -150,7 +150,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         when(phpSnow.isAlive()).thenReturn(true);
 
         snowStream.startConsumingSnowData();
-        snowStream.streamTo(outputStream);
+        snowStream.streamTo(outputStream, encoder);
 
         verify(encoder, times(1)).encodeMetadata(metadata, outputStream);
     }
@@ -165,7 +165,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         when(buffer.nextFrame(frame(4))).thenReturn(SnowDataFrame.LAST);
 
         snowStream.startConsumingSnowData();
-        snowStream.streamTo(outputStream);
+        snowStream.streamTo(outputStream, encoder);
 
         InOrder inOrder = inOrder(encoder);
 
@@ -254,7 +254,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.waitUntilConsumerThreadFinished();
 
-        Throwable thrownException = assertThrows(ConsumerThreadException.class, () -> snowStream.streamTo(outputStream));
+        Throwable thrownException = assertThrows(ConsumerThreadException.class, () -> snowStream.streamTo(outputStream, encoder));
         assertSame(customException, thrownException.getCause());
     }
 

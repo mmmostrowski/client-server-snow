@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import techbit.snow.proxy.service.ProxyServiceImpl;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
+import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -55,16 +56,16 @@ class ProxyControllerTest {
 
     @Test
     void givenNoCustomConfiguration_whenStreamToClient_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
-        controller.streamToClient("session-abc", "").get().writeTo(out);
+        controller.streamTextToClient("session-abc", "").get().writeTo(out);
 
-        verify(streaming).startSession("session-abc", out, Collections.emptyMap());
+        verify(streaming).startSession("session-abc", out, PlainTextStreamEncoder.ENCODER_NAME, Collections.emptyMap());
     }
 
     @Test
     void givenCustomConfiguration_whenStreamToClient_thenStreamWithProperConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
-        controller.streamToClient("session-abc", "/key1/value1/key2/value2").get().writeTo(out);
+        controller.streamTextToClient("session-abc", "/key1/value1/key2/value2").get().writeTo(out);
 
-        verify(streaming).startSession("session-abc", out, Map.of(
+        verify(streaming).startSession("session-abc", out, PlainTextStreamEncoder.ENCODER_NAME, Map.of(
                 "key1", "value1",
                 "key2", "value2"
         ));
@@ -72,7 +73,7 @@ class ProxyControllerTest {
 
     @Test
     void givenCustomConfigurationWithMissingValue_whenStreamToClient_thenThrowException() throws InterruptedException, ExecutionException {
-        StreamingResponseBody responseBody = controller.streamToClient(
+        StreamingResponseBody responseBody = controller.streamTextToClient(
                 "session-abc", "/key1/value1/key2/").get();
 
         assertThrows(IllegalArgumentException.class, () -> responseBody.writeTo(out));
@@ -80,7 +81,7 @@ class ProxyControllerTest {
 
     @Test
     void givenCustomConfigurationWithEmptyKeyValues_whenStreamToClient_thenThrowException() throws InterruptedException, ExecutionException {
-        StreamingResponseBody responseBody = controller.streamToClient(
+        StreamingResponseBody responseBody = controller.streamTextToClient(
                 "session-abc", "/key1///value1/").get();
 
         assertThrows(IllegalArgumentException.class, () -> responseBody.writeTo(out));
@@ -119,16 +120,16 @@ class ProxyControllerTest {
 
     @Test
     void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
-        doThrow(ClientAbortException.class).when(streaming).startSession("session-abc", out, Collections.emptyMap());
+        doThrow(ClientAbortException.class).when(streaming).startSession("session-abc", out, PlainTextStreamEncoder.ENCODER_NAME, Collections.emptyMap());
 
-        assertDoesNotThrow(() -> controller.streamToClient("session-abc", "").get().writeTo(out));
+        assertDoesNotThrow(() -> controller.streamTextToClient("session-abc", "").get().writeTo(out));
     }
 
     @Test
     void whenThreadInterruptedDuringStreaming_thenErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
-        doThrow(InterruptedException.class).when(streaming).startSession("session-abc", out, Collections.emptyMap());
+        doThrow(InterruptedException.class).when(streaming).startSession("session-abc", out, PlainTextStreamEncoder.ENCODER_NAME, Collections.emptyMap());
 
-        assertThrows(IOException.class, () -> controller.streamToClient("session-abc", "").get().writeTo(out));
+        assertThrows(IOException.class, () -> controller.streamTextToClient("session-abc", "").get().writeTo(out));
     }
 
 }

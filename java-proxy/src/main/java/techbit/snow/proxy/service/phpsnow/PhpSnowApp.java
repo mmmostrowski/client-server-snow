@@ -46,8 +46,19 @@ public class PhpSnowApp {
             Objects.toString(config.getPresetName())
         );
 
-        log.debug("start( {} ) | Starting process {}", sessionId, builder.command());
+        String cmd = String.join(" ", builder.command());
+        log.debug("start( {} ) | Starting process: {}", sessionId, cmd);
         process = builder.start();
+        try {
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        if (!process.isAlive() && process.exitValue() > 0) {
+            String stdErr = new String(process.getErrorStream().readAllBytes());
+            String stdOut = new String(process.getInputStream().readAllBytes());
+            throw new RuntimeException("Error during running '" + cmd + "' :\n" + stdErr + "\n\n" + stdOut);
+        }
     }
 
     public void stop() {

@@ -42,11 +42,11 @@ class SnowStreamFactoryTest {
     private NamedPipe namedPipe;
     @Mock
     private Path pipesDir;
-    private SnowStreamFactoryImpl factory;
+    private SnowStreamFactory factory;
 
     @BeforeEach
     void setup() {
-        factory = spy(new SnowStreamFactoryImpl(pipesDir, 12, "131", configProvider));
+        factory = spy(new SnowStreamFactory(pipesDir, 12, "131", configProvider));
     }
 
     @Test

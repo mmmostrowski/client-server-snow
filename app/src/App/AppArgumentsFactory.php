@@ -5,7 +5,7 @@ namespace TechBit\Snow\App;
 final class AppArgumentsFactory
 {
 
-    public function create(array $argv, string $projectRootDir, bool $isDeveloperMode): AppArguments
+    public function create(array $argv, string $projectRootDir, bool $isDeveloperMode, array $additional): AppArguments
     {
         array_shift($argv);
 
@@ -15,7 +15,9 @@ final class AppArgumentsFactory
         $serverSessionId = null;
         $serverCanvasWidth = 0;
         $serverCanvasHeight = 0;
+        $serverPipesDir = "";
         if ($this->isServer($argv)) {
+            $serverPipesDir = $additional['pipesDir'];
             $this->read($argv);
             $serverSessionId = $this->read($argv);
             $serverCanvasWidth = (int)$this->read($argv);
@@ -33,7 +35,8 @@ final class AppArgumentsFactory
         return new AppArguments($projectRootDir, $isDeveloperMode, 
             [], $presetName, $customScene, 
             $targetFps, $animationDurationSec,
-            $serverSessionId, $serverCanvasWidth, $serverCanvasHeight);
+            $serverSessionId, $serverCanvasWidth, $serverCanvasHeight, 
+            $serverPipesDir);
     }
 
     private function isResource(array $argv): bool

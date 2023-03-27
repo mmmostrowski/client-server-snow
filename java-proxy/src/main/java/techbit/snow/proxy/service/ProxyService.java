@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface ProxyService {
 
-    void startSession(String sessionId, OutputStream out, Map<String, String> confMap)
+    void startSession(String sessionId, OutputStream out, String outputType, Map<String, String> confMap)
             throws IOException, InterruptedException, SnowStream.ConsumerThreadException;
 
     void stopSession(String sessionId) throws IOException, InterruptedException;

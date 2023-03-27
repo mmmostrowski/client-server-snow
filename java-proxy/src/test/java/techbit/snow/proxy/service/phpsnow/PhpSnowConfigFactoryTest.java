@@ -32,7 +32,7 @@ class PhpSnowConfigFactoryTest {
 
     @BeforeEach
     void setup() {
-        factory = new PhpSnowConfigFactoryImpl(
+        factory = new PhpSnowConfigFactory(
                 "somePreset", 101, 53, Duration.ofMinutes(3), 23, validator);
     }
 

@@ -5,9 +5,14 @@ function main() {
     installVendorFolderToHost
 
     if [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
+        echo ''
+        echo '--'
+        echo ''
         echo "To run app please execute: php snow.php [ args ... ]"
         echo ''
         echo "To enable XDebug please run: echo 'xdebug.mode=debug' >> /usr/local/etc/php/conf.d/my-xdebug.ini"
+        echo ''
+        echo "To start java-proxy: gradle --project-dir /snow/java-proxy bootRun"
         echo ''
         echo ''
         export PHP_SNOW_APP_MODE=develop
@@ -30,12 +35,13 @@ function main() {
 
 function installVendorFolderToHost()
 {
-    if [[ -e /app/vendor/ ]] && cmp /app/vendor/composer/installed.json /app-vendor/composer/installed.json; then
+    if [[ -e /snow/app/vendor/ ]] \
+        && cmp /snow/app/vendor/composer/installed.json /app-vendor/composer/installed.json; then
         return
     fi
 
-    rm -rf /app/vendor/
-    cp -rf /app-vendor/ /app/vendor/
+    rm -rf /snow/app/vendor/
+    cp -rf /app-vendor/ /snow/app/vendor/
 }
 
 function waitUntilTerminalSizeIsAvailable() {
@@ -58,9 +64,9 @@ function terminalCleanupOnExit() {
     local trapEnabled="${1:-true}"
 
     if $trapEnabled; then
-        echo trap "reset; clear"  EXIT
+        trap "reset; clear"  EXIT
     else
-        echo trap ""  EXIT
+        trap ""  EXIT
     fi
 }
 
