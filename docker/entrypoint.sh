@@ -20,6 +20,11 @@ function main() {
         return 0
     fi
 
+    if [[ "${1:-}" == "snow-server" ]]; then
+        gradle --project-dir /snow/java-proxy bootRun
+        return 0
+    fi
+
     waitUntilTerminalSizeIsAvailable 3s
 
     if [[ "${PHP_SNOW_APP_MODE:-}" != "develop" ]]; then

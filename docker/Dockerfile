@@ -9,9 +9,8 @@ ARG PHP_SNOW_APP_MODE=production
 RUN addgroup -S devbox -g ${GID} \
     && adduser -S devbox -G devbox -u ${UID} \
     && apk update \
-    && apk add ncurses \
     && apk upgrade  \
-    && apk add bash curl nano vim\
+    && apk add bash curl nano vim ncurses \
     && ( \
         echo "export PS1='\u@\h:\w\$ '"; \
         echo 'alias ll="ls -lah"'; \

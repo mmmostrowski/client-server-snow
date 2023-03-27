@@ -16,39 +16,41 @@ function main() {
     fi
 
     if [[ "${1:-}" == "--docker-killer" ]]; then
-        watchForDockerKill "${2}" "${3:-}"
+        shift 1
+        watchForDockerKill "${1}" "${2}" "${3:-}"
         return 0
     fi
 
-    removeDockerContainerInBackground
+    if [[ "${1:-}" == "snow-client-reactjs" ]]; then
+        shift 1
+        runPhpSnowClientReact "${@}"
+        return 0
+    fi
 
     runPhpSnow "${@}"
 }
 
 function runPhpSnow() (
+    removeDockerContainerInBackground "snow-php-server"
+
     cd "${SCRIPT_DIR}"
     mkdir -p ".pipes/";
 
     docker run -t"$( [ -t 0 ] && echo 'i' )" --rm \
-        --name "php-snow-${SCRIPT_PID}" \
+        --name "snow-php-server-${SCRIPT_PID}" \
         --volume "${SCRIPT_DIR}/app/:/snow/app/" \
         --volume "${SCRIPT_DIR}/.pipes/:/snow/.pipes/" \
         --volume "${SCRIPT_DIR}/java-proxy/:/snow/java-proxy/" \
         $( isLocalPortBusy 8080 || echo '-p 8080:8080' ) \
-        $( isLocalPortBusy 8181 || echo '-p 8181:8181' ) \
+        --user $(id -u):$(id -g) \
         --add-host=host.docker.internal:host-gateway \
         --env PHP_SNOW_APP_MODE \
-        $(
-            if [[ "${PHP_SNOW_APP_MODE}" == "develop" ]]; then
-                dockerBuild
-            fi
-            dockerBuild --quiet
-        ) \
+        $( build dockerSnowApp ) \
         "${@}" \
     ;
 )
 
-function dockerBuild() {
+function dockerSnowApp() {
     docker build \
         --file "docker/Dockerfile" \
         --build-arg="UID=$(id -u)" \
@@ -59,13 +61,66 @@ function dockerBuild() {
     ;
 }
 
+function runPhpSnowClientReact() (
+    cd "${SCRIPT_DIR}"
+    mkdir -p ".pipes/";
+
+    removeDockerContainerInBackground "snow-reactjs-client"
+
+    docker run -t"$( [ -t 0 ] && echo 'i' )" --rm \
+        --name "snow-reactjs-client-${SCRIPT_PID}" \
+        --volume "${SCRIPT_DIR}/reactjs-client/:/snow/reactjs-client/" \
+        -p 8181:8181 \
+        -p 3000:3000 \
+        --user $(id -u):$(id -g) \
+        --add-host=host.docker.internal:host-gateway \
+        --env PHP_SNOW_APP_MODE \
+        $( build dockerReactjsClient ) \
+        "${@}" \
+    ;
+)
+
+function dockerReactjsClient() {
+    docker build \
+        --file "docker/reactjs-client/Dockerfile" \
+        --build-arg="UID=$(id -u)" \
+        --build-arg="GID=$(id -g)" \
+        --build-arg="PHP_SNOW_APP_MODE" \
+        . \
+        "${@}" \
+    ;
+}
+
+function build() {
+    local buildFunction="${1}"
+    shift 1
+
+    ${buildFunction} "${@}"
+    ${buildFunction} "${@}" --quiet
+
+#    if [[ "${PHP_SNOW_APP_MODE}" == "develop" ]]; then
+#        ${buildFunction} "${@}"
+#        ${buildFunction} "${@}" --quiet
+#        return 0
+#    fi
+#
+#        ${buildFunction} "${@}"
+#    if ! ${buildFunction} "${@}" --quiet; then
+#        ${buildFunction} "${@}"
+#        return 1
+#    fi
+}
+
 function removeDockerContainerInBackground() {
-    setsid "${BASH_SOURCE[0]}" --docker-killer "${SCRIPT_PID}" "${SCRIPT_OWNER_PID}" &> /dev/null &
+    local containerPrefix="${1}"
+
+    setsid "${BASH_SOURCE[0]}" --docker-killer "${containerPrefix}" "${SCRIPT_PID}" ${SCRIPT_OWNER_PID:-} &> /dev/null &
 }
 
 function watchForDockerKill() {
-    local listenForPid="${1}"
-    local listenForAnotherPid="${2:-}"
+    local containerPrefix="${1}"
+    local listenForPid="${2}"
+    local listenForAnotherPid="${3:-}"
 
     (
         while true; do
@@ -76,7 +131,7 @@ function watchForDockerKill() {
             fi
         done
 
-        docker rm -f "php-snow-${listenForPid}"
+        docker rm -f "${containerPrefix}-${listenForPid}"
     ) &> /dev/null;
 }
 
