@@ -6,7 +6,6 @@ import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 @Component(BinaryStreamEncoder.ENCODER_NAME)
 public class BinaryStreamEncoder implements StreamEncoder {

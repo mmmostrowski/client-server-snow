@@ -21,19 +21,20 @@ export default class FirstComponent extends React.Component <{}, MyState> {
   }
 
   componentDidMount() {
+        var sessionId = this.generateMyUniqueSessionId();
 
         const client = new Client({
-          webSocketFactory: () => {
-              const ws = new WebSocket('ws://127.0.0.1:8080/mywebsockets');
-              ws.binaryType = 'arraybuffer';
-              return ws;
-          },
-          onConnect: () => {
-            client.publish({ destination: '/app/news', body: 'First Message' });
-            client.subscribe('/topic/news2', this.handleMessage);
+          brokerURL: 'ws://127.0.0.1:8080/stream-ws',
+          onConnect: (frame) => {
+            client.publish({
+                destination: '/app/stream/',
+                body: JSON.stringify({
+                    sessionId: sessionId
+                })
+            });
+            client.subscribe('/user/' + sessionId + '/user/stream/', this.handleMessage);
           },
         });
-
         client.activate();
 
         this.stompClient = client;
@@ -42,9 +43,9 @@ export default class FirstComponent extends React.Component <{}, MyState> {
   componentWillUnmount() {
      if (this.stompClient) {
        this.stompClient.deactivate();
+       this.stompClient = null;
      }
    }
-
 
   handleMessage = (message: any) => {
      const data = new DataView(message.binaryBody.buffer);
@@ -62,20 +63,22 @@ export default class FirstComponent extends React.Component <{}, MyState> {
         ptr += 9;
      }
 
-     console.log(frameNum);
-     console.log(chunkSize);
-     console.log(x);
-     console.log(y);
-     console.log(flakes);
+     console.log(frameNum, chunkSize, x, y, flakes);
   };
 
   handleError = (event: Event) => {
-    console.error("STOMP error:", event);
+    console.error("WebSockets STOMP error:", event);
   };
 
   handleClick() {
     this.setState({ message: "bam" });
-    this.stompClient.publish({ destination: '/app/news', body: 'Next Message' });
+//     this.stompClient.publish({ destination: '/app/news', body: 'Next Message' });
+  }
+
+  generateMyUniqueSessionId(): string {
+    return Math.random().toString(36).slice(2)
+        + Math.random().toString(36).slice(2)
+        + Math.random().toString(36).slice(2);
   }
 
   render() {

@@ -1,21 +1,17 @@
 package techbit.snow.proxy.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.socket.BinaryMessage;
 import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.dto.SnowStreamRequestMessage;
 import techbit.snow.proxy.service.stream.encoding.BinaryStreamEncoder;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.stream.IntStream;
 
 @Controller
 public class WebsocketsController {
@@ -26,9 +22,8 @@ public class WebsocketsController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @MessageMapping("/news")
-    @SendTo("/topic/news2")
-    public void broadcastNews(@Payload String message) throws InterruptedException, IOException {
+    @MessageMapping("/stream/")
+    public void stream(@Payload SnowStreamRequestMessage message) throws InterruptedException, IOException {
         for (int i = 0; i < 100; ++i) {
             StreamEncoder encoder = new BinaryStreamEncoder();
             ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -41,17 +36,10 @@ public class WebsocketsController {
 
             encoder.encodeFrame(frame, new DataOutputStream(os));
 
-            messagingTemplate.convertAndSend("/topic/news2", os.toByteArray());
+            messagingTemplate.convertAndSendToUser(message.sessionId(), "/user/stream/", os.toByteArray());
 
             Thread.sleep(30);
-        };
+        }
     }
 
-//    @MessageMapping("/mywebsockets")
-//    @SendToUser("/queue/greetings")
-//    public String reply(@Payload String message,
-//                        Principal user) {
-//        return  "Hello " + message;
-//    }
-//
 }
