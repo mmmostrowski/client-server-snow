@@ -80,6 +80,7 @@ function runPhpSnowClientReact() (
         --user $(id -u):$(id -g) \
         --add-host=host.docker.internal:host-gateway \
         --env PHP_SNOW_APP_MODE \
+        --env PORT=8181 \
         $( build dockerReactjsClient ) \
         "${@}" \
     ;

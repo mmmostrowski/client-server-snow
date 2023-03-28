@@ -4,8 +4,8 @@ import org.springframework.stereotype.Component;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 @Component(BinaryStreamEncoder.ENCODER_NAME)
@@ -15,13 +15,22 @@ public class BinaryStreamEncoder implements StreamEncoder {
 
 
     @Override
-    public void encodeMetadata(SnowAnimationMetadata metadata, OutputStream out) throws IOException {
-        out.write("metadata".getBytes(StandardCharsets.UTF_8));
+    public void encodeMetadata(SnowAnimationMetadata metadata, DataOutputStream out) throws IOException {
+        out.writeInt(metadata.width());
+        out.writeInt(metadata.height());
+        out.writeInt(metadata.fps());
     }
 
     @Override
-    public void encodeFrame(SnowDataFrame frame, OutputStream out) throws IOException {
-        out.write(("frame" + frame.frameNum()).getBytes(StandardCharsets.UTF_8));
+    public void encodeFrame(SnowDataFrame frame, DataOutputStream out) throws IOException {
+        out.writeInt(frame.frameNum());
+        out.writeInt(frame.chunkSize());
+
+        for (int i = 0; i < frame.chunkSize(); ++i) {
+            out.writeFloat(frame.x(i));
+            out.writeFloat(frame.y(i));
+            out.writeByte(frame.flakeShape(i));
+        }
     }
 
 }

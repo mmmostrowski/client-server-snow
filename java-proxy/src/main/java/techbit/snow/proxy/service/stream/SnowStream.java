@@ -13,10 +13,7 @@ import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.stream.encoding.StreamDecoder;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -151,21 +148,21 @@ public class SnowStream {
         log.debug("streamTo( {} ) | Register To Buffer", sessionId);
         buffer.registerClient(clientIdentifier);
 
-        try {
+        try (DataOutputStream dataStream = new DataOutputStream(out) ) {
             log.debug("streamTo( {} ) | Metadata", sessionId);
-            encoder.encodeMetadata(metadata, out);
+            encoder.encodeMetadata(metadata, dataStream);
 
             log.debug("streamTo( {} ) | Reading Frames", sessionId);
             for (SnowDataFrame frame = buffer.firstFrame(); frame != SnowDataFrame.LAST; frame = buffer.nextFrame(frame)) {
                 log.trace("streamTo( {} ) | Frame {}", sessionId, frame.frameNum());
 
-                encoder.encodeFrame(frame, out);
+                encoder.encodeFrame(frame, dataStream);
             }
 
             throwConsumerExceptionIfAny();
 
             log.debug("streamTo( {} ) | Last frame", sessionId);
-            encoder.encodeFrame(SnowDataFrame.LAST, out);
+            encoder.encodeFrame(SnowDataFrame.LAST, dataStream);
         } finally {
             log.debug("streamTo( {} ) | Unregister From Buffer", sessionId);
             buffer.unregisterClient(clientIdentifier);
