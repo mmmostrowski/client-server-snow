@@ -42,7 +42,7 @@ public class PhpSnowApp {
             Objects.toString(config.getWidth()),
             Objects.toString(config.getHeight()),
             Objects.toString(config.getFps()),
-            Objects.toString(config.getAnimationDuration().getSeconds()),
+            Objects.toString(config.getDuration().getSeconds()),
             Objects.toString(config.getPresetName())
         );
 

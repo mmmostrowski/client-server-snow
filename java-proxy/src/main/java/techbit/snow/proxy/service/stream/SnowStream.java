@@ -10,10 +10,15 @@ import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
 import techbit.snow.proxy.service.stream.encoding.StreamDecoder;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -25,6 +30,12 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @Service
 @Scope(SCOPE_PROTOTYPE)
 public class SnowStream {
+
+    public interface Customizations {
+        default void onMetadataEncoded(SnowAnimationMetadata metadata) {}
+        default void onFrameEncoded(SnowDataFrame frame) {}
+        default boolean isStreamActive() { return true; }
+    }
 
     @StandardException
     public static class ConsumerThreadException extends Exception { }
@@ -86,7 +97,7 @@ public class SnowStream {
         log.debug("startConsumingSnowData( {} ) | Reading metadata", sessionId);
         metadata = decoder.decodeMetadata(new DataInputStream(stream));
 
-        executor.submit(() -> consumeSnowFromPipeThread(stream));
+        executor.submit(() -> consumeSnowFromPhpInThread(stream));
         running = true;
     }
 
@@ -107,7 +118,7 @@ public class SnowStream {
         destroyed = true;
     }
 
-    private void consumeSnowFromPipeThread(InputStream stream) {
+    private void consumeSnowFromPhpInThread(InputStream stream) {
         try (stream) {
             log.debug("consumeSnowFromPipeThread( {} ) | Start pipe", sessionId);
             try (final DataInputStream dataStream = new DataInputStream(stream)) {
@@ -137,32 +148,46 @@ public class SnowStream {
     public void streamTo(OutputStream out, StreamEncoder encoder)
             throws IOException, InterruptedException, ConsumerThreadException
     {
+        streamTo(out, encoder, new Customizations() {} );
+    }
+
+    public void streamTo(OutputStream out, StreamEncoder encoder, Customizations customs)
+            throws IOException, InterruptedException, ConsumerThreadException
+    {
         throwConsumerExceptionIfAny();
 
         if (!isActive()) {
             throw new IOException("Stream is not active!");
         }
 
+        log.debug("streamTo( {} ) | Start ({})", sessionId, phpSnowConfig);
+
         final Object clientIdentifier = Thread.currentThread();
 
         log.debug("streamTo( {} ) | Register To Buffer", sessionId);
         buffer.registerClient(clientIdentifier);
 
-        try (DataOutputStream dataStream = new DataOutputStream(out) ) {
+        try {
             log.debug("streamTo( {} ) | Metadata", sessionId);
-            encoder.encodeMetadata(metadata, dataStream);
+            encoder.encodeMetadata(metadata, out);
+            customs.onMetadataEncoded(metadata);
 
             log.debug("streamTo( {} ) | Reading Frames", sessionId);
             for (SnowDataFrame frame = buffer.firstFrame(); frame != SnowDataFrame.LAST; frame = buffer.nextFrame(frame)) {
                 log.trace("streamTo( {} ) | Frame {}", sessionId, frame.frameNum());
 
-                encoder.encodeFrame(frame, dataStream);
+                if (!customs.isStreamActive()) {
+                    break;
+                }
+
+                encoder.encodeFrame(frame, out);
+                customs.onFrameEncoded(frame);
             }
 
             throwConsumerExceptionIfAny();
 
             log.debug("streamTo( {} ) | Last frame", sessionId);
-            encoder.encodeFrame(SnowDataFrame.LAST, dataStream);
+            encoder.encodeFrame(SnowDataFrame.LAST, out);
         } finally {
             log.debug("streamTo( {} ) | Unregister From Buffer", sessionId);
             buffer.unregisterClient(clientIdentifier);
@@ -180,6 +205,10 @@ public class SnowStream {
         if (!phpSnowConfig.equals(config)) {
             throw new IllegalArgumentException("You cannot change config when animation is running.");
         }
+    }
+
+    public Map<String, Object> configDetails(PhpSnowConfigConverter configConverter) {
+        return configConverter.toMap(phpSnowConfig);
     }
 
     private void stopConsumerThread() throws InterruptedException {

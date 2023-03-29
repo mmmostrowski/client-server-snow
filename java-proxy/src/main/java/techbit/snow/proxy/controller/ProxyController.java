@@ -1,101 +1,108 @@
 package techbit.snow.proxy.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.log4j.Log4j2;
+import org.apache.catalina.connector.ClientAbortException;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import techbit.snow.proxy.service.ProxyService;
+import techbit.snow.proxy.service.stream.SnowStream;
+import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Log4j2
 @RestController
+@CrossOrigin({ "http://127.0.0.1:3000", "http://127.0.0.1:8181" })
 public class ProxyController {
 
     private final ProxyService streaming;
+    private final PlainTextStreamEncoder textStreamEncoder;
 
-    public ProxyController(ProxyService streaming) {
+    public ProxyController(ProxyService streaming, PlainTextStreamEncoder textStreamEncoder) {
         this.streaming = streaming;
+        this.textStreamEncoder = textStreamEncoder;
     }
 
-//    @GetMapping("/")
-//    public void index() {
-//        throw new IllegalArgumentException("Invalid url! Missing session id, e.x: http://domain.com/<session-id>");
-//    }
-//
-//    @SuppressWarnings("EmptyMethod")
-//    @GetMapping("/favicon.ico")
-//    public void favicon() {
-//    }
-//
-//    @Async("streamAsyncTaskExecutor")
-//    @GetMapping("/stream/{sessionId}/{*configuration}")
-//    public CompletableFuture<StreamingResponseBody> streamBinaryToClient(
-//            @PathVariable String sessionId,
-//            @PathVariable String configuration
-//    ) {
-//        log.debug("streamBinaryToClient( {}, {} )", sessionId, configuration);
-//
-//        return streamToClient(sessionId, configuration, IdleStreamEncoder.ENCODER_NAME);
-//    }
-//
-//    @GetMapping({ "/text", "/text/" })
-//    public void text() {
-//        throw new IllegalArgumentException("Invalid url! Missing session id, e.x: http://domain.com/text/<session-id>");
-//    }
-//
-//    @Async("streamAsyncTaskExecutor")
-//    @GetMapping("/stream-text/{sessionId}/{*configuration}")
-//    public CompletableFuture<StreamingResponseBody> streamTextToClient(
-//            @PathVariable String sessionId,
-//            @PathVariable String configuration
-//    ) {
-//        log.debug("streamTextToClient( {}, {} )", sessionId, configuration);
-//
-//        return streamToClient(sessionId, configuration, PlainTextStreamEncoder.ENCODER_NAME);
-//    }
-//
-//    private CompletableFuture<StreamingResponseBody> streamToClient(
-//            String sessionId, String configuration, String outputType
-//    ) {
-//        return CompletableFuture.supplyAsync(() -> out -> {
-//            try {
-//                log.debug("streamToClient( {} ) | Async Start ( {} )", sessionId, outputType);
-//
-//                streaming.startSession(sessionId, out, outputType, toConfMap(configuration));
-//
-//                log.debug("streamToClient( {} ) | Async Finished ( {} )", sessionId, outputType);
-//            } catch (ClientAbortException e) {
-//                log.debug("streamToClient( {} ) | Client aborted ( {} )", sessionId, outputType);
-//            } catch (InterruptedException | ConsumerThreadException e) {
-//                log.error("streamToClient( {} ) | Error occurred ( {} )", sessionId, outputType);
-//                throw new IOException("Streaming interrupted ", e);
-//            }
-//        });
-//    }
-//
-//    @GetMapping({"/stop/{sessionId}", "/stop/{sessionId}/"})
-//    public Map<String, Object> stopStreaming(@PathVariable String sessionId) throws IOException, InterruptedException {
-//        log.debug("stopStreaming( {} )", sessionId);
-//
-//        streaming.stopSession(sessionId);
-//
-//        return Map.of(
-//            "sessionId", sessionId,
-//            "stopped", "ok"
-//        );
-//    }
-//
-//    @GetMapping({"/details/{sessionId}", "/details/{sessionId}/"})
-//    public Map<String, Object> streamDetails(@PathVariable String sessionId) {
-//        log.debug("streamDetails( {} )", sessionId);
-//
-//        return Map.of(
-//            "sessionId", sessionId,
-//            "exists", streaming.hasSession(sessionId),
-//            "running", streaming.isSessionRunning(sessionId)
-//        );
-//    }
+    @GetMapping({ "/", "/start", "/start/", "/text", "/text/", "/stop", "/stop/", "/details/", "/details" })
+    public void insufficientParams() {
+        throw new IllegalArgumentException("Invalid url! Url Should follow pattern: http://domain.com/<action>/<session-id>");
+    }
+
+    @GetMapping("/start/{sessionId}/{*configuration}")
+    public Map<String, Object> startSession(@PathVariable String sessionId, @PathVariable String configuration, HttpServletRequest request)
+            throws SnowStream.ConsumerThreadException, IOException, InterruptedException
+    {
+        log.debug("startSession( {}, {} )", sessionId, configuration.isBlank() ? "<default-config>" : configuration);
+
+        streaming.startSession(sessionId, toConfMap(configuration));
+
+        return streamDetails(sessionId, request);
+    }
+
+    @Async("streamAsyncTaskExecutor")
+    @GetMapping("/text/{sessionId}/{*configuration}")
+    public CompletableFuture<StreamingResponseBody> streamTextToClient(
+            @PathVariable String sessionId,
+            @PathVariable String configuration
+    ) {
+        log.debug("streamTextToClient( {}, {} )", sessionId, configuration);
+
+        return CompletableFuture.supplyAsync(() -> out -> {
+            try {
+                log.debug("streamTextToClient( {} ) | Async Start ", sessionId);
+
+                streaming.streamSessionTo(sessionId, out, textStreamEncoder, toConfMap(configuration));
+
+                log.debug("streamTextToClient( {} ) | Async Finished", sessionId);
+            } catch (ClientAbortException e) {
+                log.debug("streamTextToClient( {} ) | Client aborted", sessionId);
+            } catch (InterruptedException | SnowStream.ConsumerThreadException e) {
+                log.error("streamTextToClient( {} ) | Error occurred", sessionId);
+                throw new IOException("Streaming interrupted ", e);
+            }
+        });
+    }
+
+    @GetMapping({"/stop/{sessionId}", "/stop/{sessionId}/"})
+    public Map<String, Object> stopStreaming(@PathVariable String sessionId) throws IOException, InterruptedException {
+        log.debug("stopStreaming( {} )", sessionId);
+
+        streaming.stopSession(sessionId);
+
+        return Map.of(
+            "sessionId", sessionId,
+            "stopped", "ok"
+        );
+    }
+
+    @GetMapping({"/details/{sessionId}", "/details/{sessionId}/"})
+    public Map<String, Object> streamDetails(@PathVariable String sessionId, HttpServletRequest request) {
+        log.debug("streamDetails( {} )", sessionId);
+
+        Map<String, Object> map = streaming.hasSession(sessionId)
+                ? streaming.sessionDetails(sessionId)
+                : new HashMap<>();
+
+        map.putAll(Map.of(
+                "sessionId", sessionId,
+                "exists", streaming.hasSession(sessionId),
+                "running", streaming.isSessionRunning(sessionId),
+                "streamTextUrl", urlOf(request, "/text/" + sessionId),
+                "streamWebsocketsStompBrokerUrl", urlOf(request, "/ws/"),
+                "streamWebsocketsUrl", "/app/stream/" + sessionId
+        ));
+
+        return map;
+    }
 
     private Map<String, String> toConfMap(String configuration) {
         if (configuration.isBlank() || configuration.equals("/")) {
@@ -123,4 +130,8 @@ public class ProxyController {
         return confMap;
     }
 
+    private static String urlOf(HttpServletRequest request, String s) {
+        return request.getScheme() + "://" + request.getServerName() + ':' + request.getServerPort()
+                + s;
+    }
 }

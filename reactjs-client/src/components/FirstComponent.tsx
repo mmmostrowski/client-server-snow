@@ -5,6 +5,7 @@ import { Stomp, Client } from '@stomp/stompjs';
 type MyState = {
    message: string;
    messages: string[];
+   isFirstFrame: boolean;
 };
 
 export default class FirstComponent extends React.Component <{}, MyState> {
@@ -12,6 +13,7 @@ export default class FirstComponent extends React.Component <{}, MyState> {
   private stompClient: Client | null = null;
 
   state: MyState = {
+     isFirstFrame: true,
      message: "Blah",
      messages: [],
   };
@@ -20,24 +22,44 @@ export default class FirstComponent extends React.Component <{}, MyState> {
      super(props);
   }
 
+  set isFirstFrame(value: boolean) {
+     this.setState({ isFirstFrame: value });
+  }
+
+  get isFirstFrame() {
+     return this.state.isFirstFrame;
+  }
+
   componentDidMount() {
-        var sessionId = this.generateMyUniqueSessionId();
+        var clientId = this.generateMyUniqueSessionId();
+        var sessionId = "session-abc";
 
-        const client = new Client({
-          brokerURL: 'ws://127.0.0.1:8080/stream-ws',
-          onConnect: (frame) => {
-            client.publish({
-                destination: '/app/stream/',
-                body: JSON.stringify({
-                    sessionId: sessionId
-                })
-            });
-            client.subscribe('/user/' + sessionId + '/user/stream/', this.handleMessage);
-          },
-        });
-        client.activate();
+        fetch('http://127.0.0.1:8080/start/' + sessionId + '/fps/3')
+             .then((response) => response.json())
+             .then((data) => data.running)
+             .then((running) => {
+                if (!running) {
+                    throw "Snow session is not running!"
+                }
 
-        this.stompClient = client;
+                this.isFirstFrame = true;
+                const client = new Client({
+                  brokerURL: 'ws://127.0.0.1:8080/ws/',
+                  onConnect: (frame) => {
+                    client.publish({
+                        destination: '/app/stream/' + sessionId,
+                        body: clientId
+                    });
+                    client.subscribe('/user/' + clientId + '/user/stream/', this.handleMessage.bind(this));
+                  },
+                });
+                client.activate();
+
+                this.stompClient = client;
+             })
+             .catch((err) => {
+                console.log(err.message);
+             });
   }
 
   componentWillUnmount() {
@@ -47,15 +69,27 @@ export default class FirstComponent extends React.Component <{}, MyState> {
      }
    }
 
-  handleMessage = (message: any) => {
+  handleMessage(message: any) {
      const data = new DataView(message.binaryBody.buffer);
+     if (this.isFirstFrame) {
+         this.isFirstFrame = false;
+         this.handleSnowMetadata(data);
+     } else {
+         this.handleSnowDataFrame(data);
+     }
+  };
 
-     const frameNum = data.getUint32(0, false);
+  handleSnowMetadata(data : DataView) {
+  }
+
+  handleSnowDataFrame(data : DataView) {
+     const frameNum = data.getInt32(0, false);
      const chunkSize = data.getUint32(4, false);
      var x = new Float32Array(chunkSize);
      var y = new Float32Array(chunkSize);
      var flakes = new Uint8Array(chunkSize);
      var ptr = 8;
+     console.log("chunkSize", chunkSize);
      for (var i = 0; i < chunkSize; ++i) {
         x[i] = data.getFloat32(ptr, false);
         y[i] = data.getFloat32(ptr + 4, false);
@@ -63,8 +97,9 @@ export default class FirstComponent extends React.Component <{}, MyState> {
         ptr += 9;
      }
 
-     console.log(frameNum, chunkSize, x, y, flakes);
-  };
+     console.log(frameNum);
+//      console.log(frameNum, chunkSize, x, y, flakes);
+  }
 
   handleError = (event: Event) => {
     console.error("WebSockets STOMP error:", event);
@@ -85,7 +120,6 @@ export default class FirstComponent extends React.Component <{}, MyState> {
     const { message } = this.state;
     return (
       <div>
-        <h3>A Simple React Component Example with Typescript</h3>
         <h2>{message}</h2>
         <hr/>
             <div>

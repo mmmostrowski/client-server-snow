@@ -56,4 +56,15 @@ class PlainTextStreamEncoderTest {
         assertTrue(out.toString().contains("99"));
         assertTrue(out.toString().contains("88"));
     }
+
+    @Test
+    void whenEncodingLastFrame_thenIsAvailableInOutput() throws IOException {
+        SnowDataFrame frame = SnowDataFrame.LAST;
+
+        encoder.encodeFrame(frame, out);
+
+        assertTrue(out.toString().contains("-1"));
+        assertTrue(out.toString().contains("0"));
+    }
+
 }

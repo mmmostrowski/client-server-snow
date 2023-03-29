@@ -7,7 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
-import techbit.snow.proxy.service.phpsnow.PhpSnowConfigFactory;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
 import techbit.snow.proxy.service.stream.encoding.BinaryStreamDecoder;
 import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 class SnowStreamFactoryTest {
 
     @Mock
-    private PhpSnowConfigFactory configProvider;
+    private PhpSnowConfigConverter configProvider;
     @Mock
     private PlainTextStreamEncoder streamEncoder;
     @Mock
@@ -51,7 +51,7 @@ class SnowStreamFactoryTest {
 
     @Test
     void whenSnowStreamIsCreated_thenObjectIsCreatedProperly() {
-        when(configProvider.create(configMap)).thenReturn(snowConfig);
+        when(configProvider.fromMap(configMap)).thenReturn(snowConfig);
         doReturn(streamDecoder).when(factory).createBinaryStreamDecoder();
         doReturn(streamEncoder).when(factory).createPlainTextStreamEncoder();
         doReturn(namedPipe).when(factory).createPipe("session-xyz", pipesDir);

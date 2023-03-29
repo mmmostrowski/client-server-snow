@@ -144,7 +144,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void whenFrameAdded_thenItCanBeTakenMultipleTimes() throws InterruptedException {
+    void whenFrameAdded_thenItCanBeTakenMultipleTimes() throws Exception {
         buffer.push(frame(1));
 
         when(bag.take(1)).thenReturn(frame(1));
@@ -154,7 +154,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void whenAddingFrames_thenFirstFrameIsDrifting() throws InterruptedException {
+    void whenAddingFrames_thenFirstFrameIsDrifting() throws Exception {
         when(bag.take(1)).thenReturn(frame(1));
         when(bag.take(2)).thenReturn(frame(2));
         when(bag.take(3)).thenReturn(frame(3));
@@ -173,7 +173,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void givenNextFrame_whenTakingIt_thenItIsAvailableWithNoBlocking() throws InterruptedException {
+    void givenNextFrame_whenTakingIt_thenItIsAvailableWithNoBlocking() throws Exception {
         when(bag.take(2)).thenReturn(frame(2));
 
         buffer.push(frame(1));
@@ -184,7 +184,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void whenDeadFrameGiven_thenSkipToNextAlive() throws InterruptedException {
+    void whenDeadFrameGiven_thenSkipToNextAlive() throws Exception {
         when(bag.take(3)).thenReturn(frame(3));
 
         buffer.push(frame(1));
@@ -217,7 +217,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void whenLastFrameIsAdded_thenPreviousFramesAreStillAvailable() throws InterruptedException {
+    void whenLastFrameIsAdded_thenPreviousFramesAreStillAvailable() throws Exception {
         when(bag.take(3)).thenReturn(frame(3));
 
         buffer.push(frame(1));
@@ -262,6 +262,30 @@ class SnowDataBufferTest {
     void whenInvalidSizeOfBuffer_thenExceptionITsThrown() {
         assertThrows(IllegalArgumentException.class, () -> new SnowDataBuffer(0, null));
         assertThrows(IllegalArgumentException.class, () -> new SnowDataBuffer(-1, null));
+    }
+
+    @Test
+    void givenClientWaitingForNextFrame_whenBufferIsDestroyed_thenClientReceiveLastFrame() throws Throwable {
+        buffer = new SnowDataBuffer(10, new BlockingBag<>());
+
+        TestFramework.runOnce(new MultithreadedTestCase() {
+
+            void thread1() throws InterruptedException {
+                waitForTick(1);
+                buffer.push(frame(1));
+                waitForTick(2);
+                buffer.destroy();
+            }
+
+            void thread2() throws InterruptedException {
+                SnowDataFrame frame1 = buffer.firstFrame();
+                assertTick(1);
+                SnowDataFrame frame2 = buffer.nextFrame(frame1);
+                assertTick(2);
+
+                Assertions.assertEquals(SnowDataFrame.LAST, frame2);
+            }
+        }, 10, 100);
     }
 
     private SnowDataFrame frame(int frameNum) {

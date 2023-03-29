@@ -5,15 +5,15 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import techbit.snow.proxy.service.phpsnow.PhpSnowConfigFactory;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
 import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 import techbit.snow.proxy.service.stream.SnowStreamFactory;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
-import techbit.snow.proxy.service.stream.encoding.StreamEncoderFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.Map;
 
 @Log4j2
@@ -22,27 +22,36 @@ import java.util.Map;
 public class ProxyServiceImpl implements ProxyService {
 
     private final Map<String, SnowStream> streams = Maps.newHashMap();
-    private final PhpSnowConfigFactory configProvider;
+    private final PhpSnowConfigConverter configConverter;
     private final SnowStreamFactory snowStreamProvider;
     private final SessionService session;
-    private final StreamEncoderFactory streamEncoderFactory;
 
     public ProxyServiceImpl(
             @Autowired SessionService session,
             @Autowired SnowStreamFactory snowStreamProvider,
-            @Autowired PhpSnowConfigFactory configProvider,
-            @Autowired StreamEncoderFactory streamEncoderFactory) {
+            @Autowired PhpSnowConfigConverter configConverter
+    ) {
         this.snowStreamProvider = snowStreamProvider;
         this.session = session;
-        this.configProvider = configProvider;
-        this.streamEncoderFactory = streamEncoderFactory;
+        this.configConverter = configConverter;
     }
 
     @Override
-    public void startSession(String sessionId, OutputStream out, String outputType, Map<String, String> confMap)
+    public void startSession(String sessionId, Map<String, String> confMap) throws IOException {
+        snowStream(sessionId, confMap);
+    }
+
+    @Override
+    public void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.Customizations customs)
             throws IOException, InterruptedException, ConsumerThreadException
     {
-        StreamEncoder encoder = streamEncoderFactory.createEncoder(outputType);
+        snowStream(sessionId, Collections.emptyMap()).streamTo(out, encoder, customs);
+    }
+
+    @Override
+    public void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, Map<String, String> confMap)
+            throws IOException, InterruptedException, ConsumerThreadException
+    {
         snowStream(sessionId, confMap).streamTo(out, encoder);
     }
 
@@ -58,11 +67,23 @@ public class ProxyServiceImpl implements ProxyService {
         snowStream.stop();
     }
 
+    @Override
+    public synchronized Map<String, Object> sessionDetails(String sessionId) {
+        if (!session.exists(sessionId)) {
+            throw new IllegalArgumentException("Unknown streaming session:" + sessionId);
+        }
+
+        final SnowStream stream = streams.get(sessionId);
+        return stream.configDetails(configConverter);
+    }
+
     private synchronized SnowStream snowStream(String sessionId, Map<String, String> confMap) throws IOException {
         if (session.exists(sessionId)) {
             log.debug("snowStream( {} ) | Returning existing stream", sessionId);
             final SnowStream stream = streams.get(sessionId);
-            stream.ensureCompatibleWithConfig(configProvider.create(confMap));
+            if (!confMap.isEmpty()) {
+                stream.ensureCompatibleWithConfig(configConverter.fromMap(confMap));
+            }
             return stream;
         }
         log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, confMap);

@@ -20,7 +20,7 @@ import java.util.Set;
 @Component
 @Primary
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
-public class PhpSnowConfigFactory {
+public class PhpSnowConfigConverter {
 
     @JsonProperty
     private final String presetName;
@@ -29,25 +29,25 @@ public class PhpSnowConfigFactory {
     @JsonProperty
     private final int height;
     @JsonProperty
-    private final Duration animationDuration;
+    private final Duration duration;
     @JsonProperty
     private final int fps;
     private final Validator validator;
     private final ObjectMapper mapper;
     private final Map<String, Object> defaults;
 
-    public PhpSnowConfigFactory(
+    public PhpSnowConfigConverter(
             @Value("${phpsnow.default.preset-name}") String presetName,
             @Value("${phpsnow.default.width}") int width,
             @Value("${phpsnow.default.height}") int height,
-            @Value("#{ ${phpsnow.default.animation-duration} * 1000 }") Duration animationDuration,
+            @Value("#{ ${phpsnow.default.animation-duration} * 1000 }") Duration duration,
             @Value("${phpsnow.default.fps}") int fps,
             @Autowired Validator validator
     ) {
         this.presetName = presetName;
         this.width = width;
         this.height = height;
-        this.animationDuration = animationDuration;
+        this.duration = duration;
         this.fps = fps;
         this.validator = validator;
 
@@ -56,15 +56,19 @@ public class PhpSnowConfigFactory {
         this.defaults = mapper.convertValue(this, new TypeReference<>() {});
     }
 
-    public PhpSnowConfig create(Map<String, String> config) {
+    public PhpSnowConfig fromMap(Map<String, String> config) {
         return validatedConfigOf(objectConvertedFrom(mapMergedWithDefaults(config)));
+    }
+
+    public Map<String, Object> toMap(PhpSnowConfig config) {
+        return mapper.convertValue(this, new TypeReference<>() {});
     }
 
     private Map<String, Object> mapMergedWithDefaults(Map<String, String> config) {
         final Map<String, Object> result = Maps.newHashMap(defaults);
         result.putAll(config);
-        if (config.containsKey("animationDuration")) {
-            result.put("animationDuration", "PT" + config.get("animationDuration") + "S");
+        if (config.containsKey("duration")) {
+            result.put("duration", "PT" + config.get("duration") + "S");
         }
         return result;
     }

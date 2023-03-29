@@ -20,7 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PhpSnowConfigFactoryTest {
+class PhpSnowConfigConverterTest {
 
     @Mock
     private Validator validator;
@@ -28,19 +28,19 @@ class PhpSnowConfigFactoryTest {
     @Mock
     private ConstraintViolation<PhpSnowConfig> issue;
 
-    private PhpSnowConfigFactory factory;
+    private PhpSnowConfigConverter factory;
 
     @BeforeEach
     void setup() {
-        factory = new PhpSnowConfigFactory(
+        factory = new PhpSnowConfigConverter(
                 "somePreset", 101, 53, Duration.ofMinutes(3), 23, validator);
     }
 
     @Test
     void givenEmptyConfigMap_whenCreate_thenReturnsConfigObjectWithDefaults() {
-        PhpSnowConfig config = factory.create(Collections.emptyMap());
+        PhpSnowConfig config = factory.fromMap(Collections.emptyMap());
 
-        assertEquals(Duration.ofMinutes(3), config.getAnimationDuration());
+        assertEquals(Duration.ofMinutes(3), config.getDuration());
         assertEquals("somePreset", config.getPresetName());
         assertEquals(101, config.getWidth());
         assertEquals(53, config.getHeight());
@@ -49,81 +49,81 @@ class PhpSnowConfigFactoryTest {
 
     @Test
     void givenPresetName_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.create(Map.of("presetName", "redefinedPresetName"));
+        PhpSnowConfig config = factory.fromMap(Map.of("presetName", "redefinedPresetName"));
 
         assertEquals("redefinedPresetName", config.getPresetName());
     }
 
     @Test
     void givenFps_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.create(Map.of("fps", "13"));
+        PhpSnowConfig config = factory.fromMap(Map.of("fps", "13"));
 
         assertEquals(13, config.getFps());
     }
 
     @Test
     void givenWidth_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.create(Map.of("width", "113"));
+        PhpSnowConfig config = factory.fromMap(Map.of("width", "113"));
 
         assertEquals(113, config.getWidth());
     }
 
     @Test
     void givenHeight_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.create(Map.of("height", "73"));
+        PhpSnowConfig config = factory.fromMap(Map.of("height", "73"));
 
         assertEquals(73, config.getHeight());
     }
 
     @Test
-    void givenAnimationDuration_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.create(Map.of("animationDuration", "30"));
+    void givenduration_whenCreate_thenReturnsValidConfigObject() {
+        PhpSnowConfig config = factory.fromMap(Map.of("duration", "30"));
 
-        assertEquals(Duration.ofSeconds(30), config.getAnimationDuration());
+        assertEquals(Duration.ofSeconds(30), config.getDuration());
     }
 
     @Test
     void givenInvalidFps_whenCreate_thenThrowException() {
         when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("fps", "0")));
-        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("fps", "-1")));
+        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("fps", "0")));
+        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("fps", "-1")));
     }
 
     @Test
     void givenInvalidWidth_whenCreate_thenThrowException() {
         when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("width", "0")));
-        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("width", "-1")));
+        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("width", "0")));
+        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("width", "-1")));
     }
 
     @Test
     void givenInvalidHeight_whenCreate_thenThrowException() {
         when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("height", "0")));
-        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("height", "-1")));
+        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("height", "0")));
+        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("height", "-1")));
     }
 
     @Test
-    void givenInvalidAnimationDuration_whenCreate_thenThrowException() {
+    void givenInvalidduration_whenCreate_thenThrowException() {
         when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("animationDuration", "0")));
-        assertThrows(ConstraintViolationException.class, () -> factory.create(Map.of("animationDuration", "-1")));
+        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("duration", "0")));
+        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("duration", "-1")));
     }
 
     @Test
     void givenValidConfigMap_whenCreate_thenReturnsConfigObject() {
-        PhpSnowConfig config = factory.create(Map.of(
+        PhpSnowConfig config = factory.fromMap(Map.of(
             "presetName", "redefinedPresetName",
                 "fps", "13",
                 "width", "113",
                 "height", "73",
-                "animationDuration", "5940"
+                "duration", "5940"
         ));
 
         assertEquals("redefinedPresetName", config.getPresetName());
         assertEquals(113, config.getWidth());
         assertEquals(73, config.getHeight());
-        assertEquals(Duration.ofMinutes(99), config.getAnimationDuration());
+        assertEquals(Duration.ofMinutes(99), config.getDuration());
         assertEquals(13, config.getFps());
     }
 

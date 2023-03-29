@@ -5,6 +5,7 @@ import edu.umd.cs.mtc.TestFramework;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import techbit.snow.proxy.service.stream.BlockingBag.ItemNoLongerExistsException;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,14 +22,14 @@ class BlockingBagTest {
 
     
     @Test
-    public void whenItemIsInBag_thenItCanBeTaken() throws InterruptedException {
+    public void whenItemIsInBag_thenItCanBeTaken() throws Exception {
         bag.put(12, "value");
 
         assertEquals("value", bag.take(12));
     }
 
     @Test
-    public void whenItemIsInBag_thenItCanBeTakenMultipleTimes() throws InterruptedException {
+    public void whenItemIsInBag_thenItCanBeTakenMultipleTimes() throws Exception {
         bag.put(12, "value");
 
         assertEquals("value", bag.take(12));
@@ -63,7 +64,7 @@ class BlockingBagTest {
                 bag.put(1, "one");
             }
 
-            public void thread1() throws InterruptedException {
+            public void thread1() throws Exception {
                 String element = bag.take(1);
                 assertTick(1);
                 Assertions.assertEquals("one", element);
@@ -84,7 +85,7 @@ class BlockingBagTest {
                 bag.put(5, "five");
             }
 
-            public void thread1() throws InterruptedException {
+            public void thread1() throws Exception {
                 String element3 = bag.take(3);
                 assertTick(1);
                 String element5 = bag.take(5);
@@ -108,7 +109,7 @@ class BlockingBagTest {
                 bag.put(2, "two");
             }
 
-            public void thread1() throws InterruptedException {
+            public void thread1() throws Exception {
                 String element1 = bag.take(1);
                 assertTick(1);
                 String element2 = bag.take(2);
@@ -117,7 +118,7 @@ class BlockingBagTest {
                 Assertions.assertEquals("two", element2);
             }
 
-            public void thread2() throws InterruptedException {
+            public void thread2() throws InterruptedException, ItemNoLongerExistsException {
                 String element1 = bag.take(2);
                 assertTick(2);
                 String element2 = bag.take(1);
@@ -137,19 +138,19 @@ class BlockingBagTest {
                 bag.put(1, "one");
             }
 
-            public void thread1() throws InterruptedException {
+            public void thread1() throws Exception {
                 test();
             }
 
-            public void thread2() throws InterruptedException {
+            public void thread2() throws Exception {
                 test();
             }
 
-            public void thread3() throws InterruptedException {
+            public void thread3() throws Exception {
                 test();
             }
 
-            private void test() throws InterruptedException {
+            private void test() throws Exception {
                 String element = bag.take(1);
                 assertTick(1);
                 Assertions.assertEquals("one", element);
@@ -180,7 +181,7 @@ class BlockingBagTest {
                 bag.put(3, "other");
             }
 
-            public void thread2() throws InterruptedException {
+            public void thread2() throws Exception {
                 bag.put(3, "three");
                 bag.remove(3);
                 bag.take(3);
@@ -197,7 +198,7 @@ class BlockingBagTest {
                 bag.put(3, "other");
             }
 
-            public void thread2() throws InterruptedException {
+            public void thread2() throws Exception {
                 bag.put(3, "three");
                 bag.remove(3);
                 String element = bag.take(3);
@@ -208,7 +209,7 @@ class BlockingBagTest {
     }
 
     @Test
-    public void whenListeningForRemovedItem_thenThrowNPE() throws Throwable {
+    public void whenListeningForRemovedItem_thenThrowException() throws Throwable {
         TestFramework.runOnce(new MultithreadedTestCase() {
             public void thread1() {
                 waitForTick(1);
@@ -216,13 +217,13 @@ class BlockingBagTest {
             }
 
             public void thread2() {
-                Assertions.assertThrows(NullPointerException.class, () -> bag.take(3));
+                Assertions.assertThrows(ItemNoLongerExistsException.class, () -> bag.take(3));
             }
         });
     }
 
     @Test
-    public void whenRemovingAllItems_thenThrowNPE() throws Throwable {
+    public void whenRemovingAllItems_thenThrowException() throws Throwable {
         TestFramework.runOnce(new MultithreadedTestCase() {
             public void thread1() {
                 waitForTick(1);
@@ -230,15 +231,15 @@ class BlockingBagTest {
             }
 
             public void thread2() {
-                Assertions.assertThrows(NullPointerException.class, () -> bag.take(1));
+                Assertions.assertThrows(ItemNoLongerExistsException.class, () -> bag.take(1));
             }
 
             public void thread3() {
-                Assertions.assertThrows(NullPointerException.class, () -> bag.take(2));
+                Assertions.assertThrows(ItemNoLongerExistsException.class, () -> bag.take(2));
             }
 
             public void thread4() {
-                Assertions.assertThrows(NullPointerException.class, () -> bag.take(33));
+                Assertions.assertThrows(ItemNoLongerExistsException.class, () -> bag.take(33));
             }
         });
     }
@@ -253,7 +254,7 @@ class BlockingBagTest {
                 bag.put(3, "other3");
             }
 
-            public void thread2() throws InterruptedException {
+            public void thread2() throws Exception {
                 bag.put(1, "one");
                 bag.put(2, "two");
                 bag.put(3, "three");

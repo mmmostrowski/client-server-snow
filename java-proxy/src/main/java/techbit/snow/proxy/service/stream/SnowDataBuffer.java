@@ -87,20 +87,23 @@ public class SnowDataBuffer {
             return SnowDataFrame.LAST;
         }
         waitForContent();
-
-        synchronized(framesLock) {
-            if (frameNum + 1 < tailFrameNum) {
-                return frames.take(tailFrameNum);
+        try{
+            synchronized(framesLock) {
+                if (frameNum + 1 < tailFrameNum) {
+                    return frames.take(tailFrameNum);
+                }
             }
-        }
 
-        final SnowDataFrame result;
-        synchronized (removeFramesLock) {
-            result = frameNum + 1 < tailFrameNum
-                ? frames.take(tailFrameNum)
-                : frames.take(frameNum + 1);
+            final SnowDataFrame result;
+            synchronized (removeFramesLock) {
+                result = frameNum + 1 < tailFrameNum
+                        ? frames.take(tailFrameNum)
+                        : frames.take(frameNum + 1);
+            }
+            return result;
+        } catch (BlockingBag.ItemNoLongerExistsException e) {
+            return SnowDataFrame.LAST;
         }
-        return result;
     }
 
     private void waitForContent() throws InterruptedException {

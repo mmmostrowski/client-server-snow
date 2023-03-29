@@ -40,4 +40,4 @@ ARG PHP_SNOW_APP_MODE=production
 
 COPY /docker/reactjs-client/entrypoint.sh /
 ENTRYPOINT [ "/entrypoint.sh" ]
-CMD [ "serve", "-s", "build", "--no-clipboard" ]
+CMD [ "node", "app.js" ]

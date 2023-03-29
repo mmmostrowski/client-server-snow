@@ -6,29 +6,31 @@ import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
-@Component(BinaryStreamEncoder.ENCODER_NAME)
+@Component
 public class BinaryStreamEncoder implements StreamEncoder {
 
-    public static final String ENCODER_NAME = "BINARY_ENCODER";
-
-
     @Override
-    public void encodeMetadata(SnowAnimationMetadata metadata, DataOutputStream out) throws IOException {
-        out.writeInt(metadata.width());
-        out.writeInt(metadata.height());
-        out.writeInt(metadata.fps());
+    public void encodeMetadata(SnowAnimationMetadata metadata, OutputStream out) throws IOException {
+        DataOutputStream data = new DataOutputStream(out);
+
+        data.writeInt(metadata.width());
+        data.writeInt(metadata.height());
+        data.writeInt(metadata.fps());
     }
 
     @Override
-    public void encodeFrame(SnowDataFrame frame, DataOutputStream out) throws IOException {
-        out.writeInt(frame.frameNum());
-        out.writeInt(frame.chunkSize());
+    public void encodeFrame(SnowDataFrame frame, OutputStream out) throws IOException {
+        DataOutputStream data = new DataOutputStream(out);
+
+        data.writeInt(frame.frameNum());
+        data.writeInt(frame.chunkSize());
 
         for (int i = 0; i < frame.chunkSize(); ++i) {
-            out.writeFloat(frame.x(i));
-            out.writeFloat(frame.y(i));
-            out.writeByte(frame.flakeShape(i));
+            data.writeFloat(frame.x(i));
+            data.writeFloat(frame.y(i));
+            data.writeByte(frame.flakeShape(i));
         }
     }
 

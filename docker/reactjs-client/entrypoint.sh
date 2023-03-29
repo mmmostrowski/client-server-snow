@@ -9,7 +9,7 @@ function main() {
         echo ''
         echo '--'
         echo ''
-        echo 'To start reactjs-client server: serve -s build -n'
+        echo 'To start reactjs-client server: node app.js'
         echo 'To start reactjs-client development: npm run start'
         echo ''
         echo ''

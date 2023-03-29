@@ -2,6 +2,7 @@ package techbit.snow.proxy.service.stream;
 
 import com.google.common.collect.Maps;
 import jakarta.annotation.Nonnull;
+import lombok.experimental.StandardException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,9 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 public class BlockingBag<K, V> {
 
+    @StandardException
+    public static class ItemNoLongerExistsException extends Exception {}
+
     private final Map<K, V> map = Maps.newConcurrentMap();
     private final Map<K, Object> locks = Maps.newConcurrentMap();
 
@@ -27,7 +31,7 @@ public class BlockingBag<K, V> {
         }
     }
 
-    public @Nonnull V take(@Nonnull K key) throws InterruptedException {
+    public @Nonnull V take(@Nonnull K key) throws InterruptedException, ItemNoLongerExistsException {
         final Object lock = lockFor(key);
         final V result;
         synchronized (lock) {
@@ -35,6 +39,9 @@ public class BlockingBag<K, V> {
                 lock.wait();
             }
             result = map.get(key);
+            if (result == null) {
+                throw new ItemNoLongerExistsException("Item was present but has been removed: " + key);
+            }
             Objects.requireNonNull(result);
         }
         return result;

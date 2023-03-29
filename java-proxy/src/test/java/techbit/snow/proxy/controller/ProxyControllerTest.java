@@ -1,5 +1,6 @@
 package techbit.snow.proxy.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.catalina.connector.ClientAbortException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,43 +30,35 @@ class ProxyControllerTest {
     @Mock
     private OutputStream out;
 
+    @Mock
+    private PlainTextStreamEncoder textStreamEncoder;
+
     private ProxyController controller;
 
 
     @BeforeEach
     void setup() {
-        controller = new ProxyController(streaming);
+        controller = new ProxyController(streaming, textStreamEncoder);
     }
 
 
     @Test
-    void whenIndexRequested_thenThrowException() {
-        assertThrows(IllegalArgumentException.class, controller::index);
+    void whenNotEnoughParamsRequested_thenThrowException() {
+        assertThrows(IllegalArgumentException.class, controller::insufficientParams);
     }
 
     @Test
-    void whenFaviconRequested_thenDoNothing() {
-        ProxyController controller = mock(ProxyController.class);
-        doCallRealMethod().when(controller).favicon();
-
-        controller.favicon();
-
-        verify(controller).favicon();
-        verifyNoMoreInteractions(controller);
-    }
-
-    @Test
-    void givenNoCustomConfiguration_whenStreamToClient_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
+    void givenNoCustomConfiguration_whenStreamTextToClient_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         controller.streamTextToClient("session-abc", "").get().writeTo(out);
 
-        verify(streaming).startSession("session-abc", out, PlainTextStreamEncoder.ENCODER_NAME, Collections.emptyMap());
+        verify(streaming).streamSessionTo("session-abc", out, textStreamEncoder, Collections.emptyMap());
     }
 
     @Test
-    void givenCustomConfiguration_whenStreamToClient_thenStreamWithProperConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
+    void givenCustomConfiguration_whenStreamTextToClient_thenStreamWithProperConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         controller.streamTextToClient("session-abc", "/key1/value1/key2/value2").get().writeTo(out);
 
-        verify(streaming).startSession("session-abc", out, PlainTextStreamEncoder.ENCODER_NAME, Map.of(
+        verify(streaming).streamSessionTo("session-abc", out, textStreamEncoder, Map.of(
                 "key1", "value1",
                 "key2", "value2"
         ));
@@ -89,15 +82,22 @@ class ProxyControllerTest {
 
     @Test
     void whenStreamDetails_thenValidDetailsResponded() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
         when(streaming.hasSession("session-abc")).thenReturn(true);
         when(streaming.isSessionRunning("session-abc")).thenReturn(true);
+        when(request.getScheme()).thenReturn("http");
+        when(request.getServerName()).thenReturn("domain.com");
+        when(request.getServerPort()).thenReturn(1234);
 
-        Map<String, Object> response = controller.streamDetails("session-abc");
+        Map<String, Object> response = controller.streamDetails("session-abc", request);
 
         assertEquals(Map.of(
                 "sessionId", "session-abc",
                 "exists", true,
-                "running", true
+                "running", true,
+                "streamTextUrl", "http://domain.com:1234/text/session-abc",
+                "streamWebsocketsStompBrokerUrl", "http://domain.com:1234/ws/",
+                "streamWebsocketsUrl", "/app/stream/session-abc"
         ), response);
     }
 
@@ -120,14 +120,16 @@ class ProxyControllerTest {
 
     @Test
     void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
-        doThrow(ClientAbortException.class).when(streaming).startSession("session-abc", out, PlainTextStreamEncoder.ENCODER_NAME, Collections.emptyMap());
+        doThrow(ClientAbortException.class).when(streaming).streamSessionTo(
+                "session-abc", out, textStreamEncoder, Collections.emptyMap());
 
         assertDoesNotThrow(() -> controller.streamTextToClient("session-abc", "").get().writeTo(out));
     }
 
     @Test
     void whenThreadInterruptedDuringStreaming_thenErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
-        doThrow(InterruptedException.class).when(streaming).startSession("session-abc", out, PlainTextStreamEncoder.ENCODER_NAME, Collections.emptyMap());
+        doThrow(InterruptedException.class).when(streaming).streamSessionTo(
+                "session-abc", out, textStreamEncoder, Collections.emptyMap());
 
         assertThrows(IOException.class, () -> controller.streamTextToClient("session-abc", "").get().writeTo(out));
     }

@@ -38,7 +38,7 @@ public class PhpSnowConfig {
 
     @Nonnull
     @MinDuration(value = 1, message = "Invalid animation duration. Please provide a positive number!")
-    Duration animationDuration;
+    Duration duration;
 
     @Min(value = 1, message = "Invalid animation FPS. Please provide a number in between 1 and 60")
     @Max(value = 60, message = "Invalid animation FPS. Please provide a number in between 1 and 60")

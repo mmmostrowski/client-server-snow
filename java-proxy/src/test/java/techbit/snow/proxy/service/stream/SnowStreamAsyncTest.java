@@ -185,6 +185,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
         Answer<SnowDataFrame> countDownLatch = i -> {
             Thread.sleep(100);
+            // buffer.firstFrame|nextFrame(frame)
             SnowDataFrame frame = (SnowDataFrame) i.callRealMethod();
             firstLoopLatch.countDown();
             remainingLoopsLatch.await();
@@ -238,7 +239,6 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
             }
         });
     }
-
 
     @RepeatedTest(3)
     void givenMassiveChunkOfFrames_whenFiveThreadsAreStreaming_thenNoDeadlockOccurs() throws Throwable {

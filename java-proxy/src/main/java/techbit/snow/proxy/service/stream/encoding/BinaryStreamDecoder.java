@@ -38,6 +38,9 @@ public class BinaryStreamDecoder implements StreamDecoder {
             y[i] = dataStream.readFloat();
             flakeShapes[i] = dataStream.readByte();
         }
+        if (frameNum == -1) {
+            return SnowDataFrame.LAST;
+        }
         return new SnowDataFrame(frameNum, chunkSize, x, y, flakeShapes);
     }
 

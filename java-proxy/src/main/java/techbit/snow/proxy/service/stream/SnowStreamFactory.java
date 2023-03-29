@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
-import techbit.snow.proxy.service.phpsnow.PhpSnowConfigFactory;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
 import techbit.snow.proxy.service.stream.encoding.BinaryStreamDecoder;
 import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
@@ -20,7 +20,7 @@ public class SnowStreamFactory {
 
     private final int bufferSizeInFrames;
 
-    private final PhpSnowConfigFactory configProvider;
+    private final PhpSnowConfigConverter configProvider;
 
     private final String applicationPid;
 
@@ -31,7 +31,7 @@ public class SnowStreamFactory {
             @Autowired Path pipesDir,
             @Value("${phpsnow.buffer-size-in-frames}") int bufferSizeInFrames,
             @Autowired String applicationPid,
-            @Autowired PhpSnowConfigFactory configProvider
+            @Autowired PhpSnowConfigConverter configProvider
     ) {
         this.bufferSizeInFrames = bufferSizeInFrames;
         this.configProvider = configProvider;
@@ -40,7 +40,7 @@ public class SnowStreamFactory {
     }
 
     public SnowStream create(String sessionId, Map<String, String> config) {
-        final PhpSnowConfig phpSnowConfig = configProvider.create(config);
+        final PhpSnowConfig phpSnowConfig = configProvider.fromMap(config);
         return createSnowStream(sessionId,
                 phpSnowConfig,
                 createPipe(sessionId, pipesDir),

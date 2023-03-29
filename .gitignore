@@ -2,5 +2,5 @@
 /*.iml
 app.log
 /app/vendor/
-
+/reactjs-client/dist/
 

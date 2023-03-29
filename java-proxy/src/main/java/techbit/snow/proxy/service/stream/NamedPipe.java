@@ -24,7 +24,7 @@ public class NamedPipe {
     }
 
     public InputStream inputStream() throws IOException {
-        if (!FileUtils.waitFor(pipeFile, (int) Duration.ofMinutes(30).getSeconds())) {
+        if (!FileUtils.waitFor(pipeFile, (int) Duration.ofMinutes(3).getSeconds())) {
             throw new IllegalStateException("PhpSnow did not create a pipe file: " + pipeFile);
         }
         return new FileInputStream(pipeFile);
