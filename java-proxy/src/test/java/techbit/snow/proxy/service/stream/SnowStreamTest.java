@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.exception.IncompatibleConfigException;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 
@@ -91,7 +92,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
     void whenIncompatibleConfig_thenThrowException() {
         PhpSnowConfig snowConfig = new PhpSnowConfig(
                 "changedTestingPreset", 87, 76, Duration.ofMinutes(11), 21);
-        assertThrows(IllegalArgumentException.class, () -> snowStream.ensureCompatibleWithConfig(snowConfig));
+        assertThrows(IncompatibleConfigException.class, () -> snowStream.ensureCompatibleWithConfig(snowConfig));
     }
 
     @Test

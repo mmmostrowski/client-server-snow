@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.exception.InvalidSessionException;
 import techbit.snow.proxy.service.ProxyService;
 import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.encoding.BinaryStreamEncoder;
@@ -39,7 +40,7 @@ public class WebsocketsController implements ApplicationListener<SessionDisconne
             throws InterruptedException, IOException, SnowStream.ConsumerThreadException
     {
         if (!streaming.hasSession(sessionId)) {
-            throw new IllegalArgumentException("Please start session first. Unknown session: " + sessionId);
+            throw new InvalidSessionException("Please start session first. Unknown session: " + sessionId);
         }
 
         final String simpSessionId = (String) headers.get("simpSessionId");

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import techbit.snow.proxy.exception.InvalidRequestException;
 import techbit.snow.proxy.service.ProxyServiceImpl;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
@@ -44,7 +45,7 @@ class ProxyControllerTest {
 
     @Test
     void whenNotEnoughParamsRequested_thenThrowException() {
-        assertThrows(IllegalArgumentException.class, controller::insufficientParams);
+        assertThrows(InvalidRequestException.class, controller::insufficientParams);
     }
 
     @Test
@@ -69,7 +70,7 @@ class ProxyControllerTest {
         StreamingResponseBody responseBody = controller.streamTextToClient(
                 "session-abc", "/key1/value1/key2/").get();
 
-        assertThrows(IllegalArgumentException.class, () -> responseBody.writeTo(out));
+        assertThrows(InvalidRequestException.class, () -> responseBody.writeTo(out));
     }
 
     @Test
@@ -77,7 +78,7 @@ class ProxyControllerTest {
         StreamingResponseBody responseBody = controller.streamTextToClient(
                 "session-abc", "/key1///value1/").get();
 
-        assertThrows(IllegalArgumentException.class, () -> responseBody.writeTo(out));
+        assertThrows(InvalidRequestException.class, () -> responseBody.writeTo(out));
     }
 
     @Test

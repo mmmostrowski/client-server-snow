@@ -4,10 +4,13 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import jakarta.annotation.Nullable;
 import lombok.experimental.StandardException;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.exception.IncompatibleConfigException;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
@@ -31,22 +34,33 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @Scope(SCOPE_PROTOTYPE)
 public class SnowStream {
 
+    @StandardException
+    public static class ConsumerThreadException extends Exception { }
+
     public interface Customizations {
         default void onMetadataEncoded(SnowAnimationMetadata metadata) {}
         default void onFrameEncoded(SnowDataFrame frame) {}
         default boolean isStreamActive() { return true; }
     }
 
-    @StandardException
-    public static class ConsumerThreadException extends Exception { }
+    public class SnowStreamFinishedEvent extends ApplicationEvent {
+        public SnowStreamFinishedEvent(Object source) {
+            super(source);
+        }
+
+        public String getSessionId() {
+            return sessionId;
+        }
+    }
 
     private final String sessionId;
-    private final PhpSnowApp phpSnow;
+    private final PhpSnowApp phpSnowApp;
     private final PhpSnowConfig phpSnowConfig;
     private final SnowDataBuffer buffer;
     private final NamedPipe pipe;
     private final StreamDecoder decoder;
     private final Semaphore consumerGoingDownLock = new Semaphore(0);
+    private final ApplicationEventPublisher applicationEventPublisher;
     private volatile boolean running = false;
     private volatile boolean destroyed = false;
     private volatile ConsumerThreadException consumerException;
@@ -57,19 +71,20 @@ public class SnowStream {
 
 
     public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
-                      NamedPipe pipe, PhpSnowApp phpSnow, SnowDataBuffer buffer,
-                      StreamDecoder decoder, StreamEncoder encoder
+                      NamedPipe pipe, PhpSnowApp phpSnowApp, SnowDataBuffer buffer,
+                      StreamDecoder decoder, ApplicationEventPublisher applicationEventPublisher
     ) {
         this.sessionId = sessionId;
         this.phpSnowConfig = phpSnowConfig;
         this.pipe = pipe;
-        this.phpSnow = phpSnow;
+        this.phpSnowApp = phpSnowApp;
         this.buffer = buffer;
         this.decoder = decoder;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     public boolean isActive() {
-        return running && phpSnow.isAlive();
+        return running && phpSnowApp.isAlive();
     }
 
     public void startPhpApp() throws IOException {
@@ -79,7 +94,7 @@ public class SnowStream {
 
         pipe.destroy();
 
-        phpSnow.start();
+        phpSnowApp.start();
     }
 
     public void startConsumingSnowData() throws IOException {
@@ -87,7 +102,7 @@ public class SnowStream {
             throw new IllegalStateException("You cannot use snow stream twice!");
         }
 
-        if (!phpSnow.isAlive()) {
+        if (!phpSnowApp.isAlive()) {
             throw new IllegalStateException("Please startPhpApp() first!");
         }
 
@@ -112,7 +127,7 @@ public class SnowStream {
         if (running) {
             stopConsumerThread();
         }
-        phpSnow.stop();
+        phpSnowApp.stop();
         pipe.destroy();
         metadata = null;
         destroyed = true;
@@ -135,13 +150,14 @@ public class SnowStream {
                 buffer.waitUntilAllClientsUnregister();
             }
             log.trace("consumeSnowFromPipeThread( {} ) | Stop pipe", sessionId);
-        } catch (InterruptedException ignored) {
+//        } catch (InterruptedException ignored) {
         } catch (Throwable e) {
             log.error("consumeSnowFromPipeThread( {} ) | ERROR", sessionId, e);
             consumerException = new ConsumerThreadException(e);
         } finally {
             buffer.destroy();
             disableConsumerThread();
+            applicationEventPublisher.publishEvent(new SnowStreamFinishedEvent(this));
         }
     }
 
@@ -203,7 +219,7 @@ public class SnowStream {
 
     public void ensureCompatibleWithConfig(PhpSnowConfig config) {
         if (!phpSnowConfig.equals(config)) {
-            throw new IllegalArgumentException("You cannot change config when animation is running.");
+            throw new IncompatibleConfigException("You cannot change config when animation is running.");
         }
     }
 

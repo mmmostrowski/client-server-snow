@@ -1,6 +1,7 @@
 package techbit.snow.proxy.service;
 
 import org.springframework.stereotype.Service;
+import techbit.snow.proxy.exception.InvalidSessionException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -16,7 +17,7 @@ public class SessionService {
     public void create(String sessionId) {
         validate(sessionId);
         if (sessions.contains(sessionId)) {
-            throw new IllegalArgumentException("You cannot create session with same id twice: " + sessionId);
+            throw new InvalidSessionException("You cannot create session with same id twice: " + sessionId);
         }
         sessions.add(sessionId);
     }
@@ -27,14 +28,14 @@ public class SessionService {
 
     public void delete(String sessionId) {
         if (!sessions.contains(sessionId)) {
-            throw new IllegalArgumentException("Session does not exist: " + sessionId);
+            throw new InvalidSessionException("Session does not exist: " + sessionId);
         }
         sessions.remove(sessionId);
     }
 
     private void validate(String sessionId) {
         if (!sessionIdValidator.matcher(sessionId).matches()) {
-            throw new IllegalArgumentException("Invalid session id: " + sessionId
+            throw new InvalidSessionException("Invalid session id: " + sessionId
                     + ". Only lowercase alphanumeric characters and dashes are allowed!");
         }
     }

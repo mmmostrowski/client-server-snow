@@ -1,10 +1,13 @@
 package techbit.snow.proxy.service;
 
 import com.google.common.collect.Maps;
+import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import techbit.snow.proxy.exception.InvalidSessionException;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
 import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
@@ -19,7 +22,7 @@ import java.util.Map;
 @Log4j2
 @Service
 @Primary
-public class ProxyServiceImpl implements ProxyService {
+public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowStream.SnowStreamFinishedEvent> {
 
     private final Map<String, SnowStream> streams = Maps.newHashMap();
     private final PhpSnowConfigConverter configConverter;
@@ -70,7 +73,7 @@ public class ProxyServiceImpl implements ProxyService {
     @Override
     public synchronized Map<String, Object> sessionDetails(String sessionId) {
         if (!session.exists(sessionId)) {
-            throw new IllegalArgumentException("Unknown streaming session:" + sessionId);
+            throw new InvalidSessionException("Unknown snow streaming session:" + sessionId);
         }
 
         final SnowStream stream = streams.get(sessionId);
@@ -115,4 +118,9 @@ public class ProxyServiceImpl implements ProxyService {
         return session.exists(sessionId) && streams.get(sessionId).isActive();
     }
 
+    @Override
+    @SneakyThrows
+    public void onApplicationEvent(SnowStream.SnowStreamFinishedEvent event) {
+        stopSession(event.getSessionId());
+    }
 }

@@ -2,6 +2,7 @@ package techbit.snow.proxy.controller;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
@@ -10,6 +11,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import techbit.snow.proxy.exception.UserException;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -33,12 +35,18 @@ public class ErrorHandler implements ErrorController {
         String exceptionDetails = "";
 
         Exception exception = (Exception) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
-        if (canShowStacktrace && exception != null) {
-            message = exception.getMessage();
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            exception.printStackTrace(pw);
-            exceptionDetails = exception + "\n\n" + sw;
+        if (exception != null) {
+            if (canShowStacktrace) {
+                message = exception.getMessage();
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                exception.printStackTrace(pw);
+                exceptionDetails = exception + "\n\n" + sw;
+            } else if ( exception.getCause() instanceof UserException ) {
+                message = exception.getCause().getMessage();
+            } else if ( exception.getCause() instanceof ConstraintViolationException ) {
+                message = exception.getCause().getMessage();
+            }
         }
 
         log.error(message, exception);

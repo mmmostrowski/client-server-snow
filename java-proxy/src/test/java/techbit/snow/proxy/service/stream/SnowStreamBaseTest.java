@@ -2,6 +2,7 @@ package techbit.snow.proxy.service.stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
+import org.springframework.context.ApplicationEventPublisher;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
@@ -30,8 +31,10 @@ abstract public class SnowStreamBaseTest {
     protected StreamEncoder encoder;
     @Mock
     protected OutputStream outputStream;
-    protected SnowStream snowStream;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
     protected final SnowDataBuffer buffer;
+    protected SnowStream snowStream;
 
     public SnowStreamBaseTest(SnowDataBuffer buffer) {
         this.buffer = buffer;
@@ -54,7 +57,7 @@ abstract public class SnowStreamBaseTest {
 
         lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(new byte[]{}));
 
-        snowStream = new SnowStream("session-xyz", config, pipe, phpSnow, buffer, decoder, encoder);
+        snowStream = new SnowStream("session-xyz", config, pipe, phpSnow, buffer, decoder, eventPublisher);
     }
 
     protected SnowDataFrame frame(int frameNum) {

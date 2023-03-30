@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
@@ -22,6 +23,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SnowStreamFactoryTest {
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
     @Mock
     private PhpSnowConfigConverter configProvider;
     @Mock
@@ -46,20 +49,20 @@ class SnowStreamFactoryTest {
 
     @BeforeEach
     void setup() {
-        factory = spy(new SnowStreamFactory(pipesDir, 12, "131", configProvider));
+        factory = spy(new SnowStreamFactory(
+                pipesDir, 12, "131", configProvider, eventPublisher));
     }
 
     @Test
     void whenSnowStreamIsCreated_thenObjectIsCreatedProperly() {
         when(configProvider.fromMap(configMap)).thenReturn(snowConfig);
         doReturn(streamDecoder).when(factory).createBinaryStreamDecoder();
-        doReturn(streamEncoder).when(factory).createPlainTextStreamEncoder();
         doReturn(namedPipe).when(factory).createPipe("session-xyz", pipesDir);
         doReturn(snowDataBuffer).when(factory).createSnowDataBuffer(eq(12), any());
         doReturn(phpSnowApp).when(factory).createPhpSnowApp(
                 eq("session-xyz"), eq(snowConfig), eq("131"), any(ProcessBuilder.class));
         doReturn(snowStream).when(factory).createSnowStream(
-                "session-xyz", snowConfig, namedPipe, phpSnowApp, snowDataBuffer, streamDecoder, streamEncoder
+                "session-xyz", snowConfig, namedPipe, phpSnowApp, snowDataBuffer, streamDecoder, eventPublisher
         );
 
         SnowStream result = factory.create("session-xyz", configMap);

@@ -2,6 +2,7 @@ package techbit.snow.proxy.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import techbit.snow.proxy.exception.InvalidSessionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -43,7 +44,7 @@ class SessionServiceTest {
 
     @Test
     void whenNonExistentSessionDeleted_thenExceptionIsThrown() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(InvalidSessionException.class,
             () -> sessions.delete("not-exists"));
     }
 
@@ -51,7 +52,7 @@ class SessionServiceTest {
     void whenCreatingSameSessionTwice_thenExceptionIsThrown() {
         sessions.create("xyz");
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(InvalidSessionException.class,
                 () -> sessions.create("xyz"));
     }
 
@@ -66,7 +67,7 @@ class SessionServiceTest {
 
     @Test
     void whenEmptySessionName_thenExceptionIsThrown() {
-        assertThrows(IllegalArgumentException.class, () -> sessions.create(""));
+        assertThrows(InvalidSessionException.class, () -> sessions.create(""));
     }
 
     @Test
@@ -79,11 +80,11 @@ class SessionServiceTest {
 
     @Test
     void whenInvalidSessionName_thenExceptionIsThrown() {
-        assertThrows(IllegalArgumentException.class, () -> sessions.create("!"));
-        assertThrows(IllegalArgumentException.class, () -> sessions.create("@"));
-        assertThrows(IllegalArgumentException.class, () -> sessions.create("with space"));
-        assertThrows(IllegalArgumentException.class, () -> sessions.create("with_underscore"));
-        assertThrows(IllegalArgumentException.class, () -> sessions.create("with_under"));
-        assertThrows(IllegalArgumentException.class, () -> sessions.create("UpperCase"));
+        assertThrows(InvalidSessionException.class, () -> sessions.create("!"));
+        assertThrows(InvalidSessionException.class, () -> sessions.create("@"));
+        assertThrows(InvalidSessionException.class, () -> sessions.create("with space"));
+        assertThrows(InvalidSessionException.class, () -> sessions.create("with_underscore"));
+        assertThrows(InvalidSessionException.class, () -> sessions.create("with_under"));
+        assertThrows(InvalidSessionException.class, () -> sessions.create("UpperCase"));
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import techbit.snow.proxy.exception.InvalidRequestException;
 import techbit.snow.proxy.service.ProxyService;
 import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
@@ -34,7 +35,7 @@ public class ProxyController {
 
     @GetMapping({ "/", "/start", "/start/", "/text", "/text/", "/stop", "/stop/", "/details/", "/details" })
     public void insufficientParams() {
-        throw new IllegalArgumentException("Invalid url! Url Should follow pattern: http://domain.com/<action>/<session-id>");
+        throw new InvalidRequestException("Invalid url! Url Should follow pattern: http://domain.com/<action>/<session-id>");
     }
 
     @GetMapping("/start/{sessionId}/{*configuration}")
@@ -111,7 +112,7 @@ public class ProxyController {
 
         final String[] elements = configuration.substring(1).split("/");
         if ((elements.length & 1 ) != 0) {
-            throw new IllegalArgumentException("Please provide request in form: " +
+            throw new InvalidRequestException("Please provide request in form: " +
                     "http://domain.com/sessionId/key1/val1/key2/val2/...");
         }
 
@@ -121,7 +122,7 @@ public class ProxyController {
             final String value = elements[i + 1];
 
             if (key.isBlank() || value.isBlank()) {
-                throw new IllegalArgumentException("Neither keys nor values can be empty! " +
+                throw new InvalidRequestException("Neither keys nor values can be empty! " +
                         "Please provide request in form: http://domain.com/sessionId/key1/val1/key2/val2/...");
             }
 

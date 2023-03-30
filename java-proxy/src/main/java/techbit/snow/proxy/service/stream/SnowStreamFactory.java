@@ -2,6 +2,7 @@ package techbit.snow.proxy.service.stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import techbit.snow.proxy.dto.SnowDataFrame;
@@ -9,7 +10,6 @@ import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
 import techbit.snow.proxy.service.stream.encoding.BinaryStreamDecoder;
-import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -26,17 +26,20 @@ public class SnowStreamFactory {
 
     private final Path pipesDir;
 
+    private final ApplicationEventPublisher applicationEventPublisher;
+
 
     public SnowStreamFactory(
             @Autowired Path pipesDir,
             @Value("${phpsnow.buffer-size-in-frames}") int bufferSizeInFrames,
             @Autowired String applicationPid,
-            @Autowired PhpSnowConfigConverter configProvider
-    ) {
+            @Autowired PhpSnowConfigConverter configProvider,
+            @Autowired ApplicationEventPublisher applicationEventPublisher) {
         this.bufferSizeInFrames = bufferSizeInFrames;
         this.configProvider = configProvider;
         this.applicationPid = applicationPid;
         this.pipesDir = pipesDir;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     public SnowStream create(String sessionId, Map<String, String> config) {
@@ -47,14 +50,14 @@ public class SnowStreamFactory {
                 createPhpSnowApp(sessionId, phpSnowConfig, applicationPid, new ProcessBuilder()),
                 createSnowDataBuffer(bufferSizeInFrames, new BlockingBag<>()),
                 createBinaryStreamDecoder(),
-                createPlainTextStreamEncoder());
+                applicationEventPublisher);
     }
 
     SnowStream createSnowStream(
             String sessionId, PhpSnowConfig phpSnowConfig, NamedPipe pipe,
             PhpSnowApp phpSnowApp, SnowDataBuffer snowDataBuffer,
             BinaryStreamDecoder binaryStreamDecoder,
-            PlainTextStreamEncoder plainTextStreamEncoder
+            ApplicationEventPublisher applicationEventPublisher
     ) {
         return new SnowStream(sessionId,
                 phpSnowConfig,
@@ -62,12 +65,8 @@ public class SnowStreamFactory {
                 phpSnowApp,
                 snowDataBuffer,
                 binaryStreamDecoder,
-                plainTextStreamEncoder
+                applicationEventPublisher
         );
-    }
-
-    PlainTextStreamEncoder createPlainTextStreamEncoder() {
-        return new PlainTextStreamEncoder();
     }
 
     BinaryStreamDecoder createBinaryStreamDecoder() {
