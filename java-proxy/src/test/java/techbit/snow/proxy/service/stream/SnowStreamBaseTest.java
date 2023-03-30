@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
+import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
 import techbit.snow.proxy.service.stream.encoding.StreamDecoder;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 
@@ -32,8 +33,13 @@ abstract public class SnowStreamBaseTest {
     @Mock
     protected OutputStream outputStream;
     @Mock
-    private ApplicationEventPublisher eventPublisher;
+    protected PhpSnowConfigConverter converter;
+    @Mock
+    protected SnowStream.Customizations customs;
+    @Mock
+    protected ApplicationEventPublisher eventPublisher;
     protected final SnowDataBuffer buffer;
+    protected PhpSnowConfig snowConfig;
     protected SnowStream snowStream;
 
     public SnowStreamBaseTest(SnowDataBuffer buffer) {
@@ -42,7 +48,7 @@ abstract public class SnowStreamBaseTest {
 
     @BeforeEach
     void setup() throws IOException {
-        final PhpSnowConfig config = new PhpSnowConfig(
+        snowConfig = new PhpSnowConfig(
                 "testingPreset", 87, 76, Duration.ofMinutes(11), 21);
 
         final Iterator<SnowDataFrame> inputFrames = List.of(
@@ -57,7 +63,9 @@ abstract public class SnowStreamBaseTest {
 
         lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(new byte[]{}));
 
-        snowStream = new SnowStream("session-xyz", config, pipe, phpSnow, buffer, decoder, eventPublisher);
+        lenient().when(customs.isStreamActive()).thenReturn(true);
+
+        snowStream = new SnowStream("session-xyz", snowConfig, pipe, phpSnow, buffer, decoder, eventPublisher);
     }
 
     protected SnowDataFrame frame(int frameNum) {

@@ -16,10 +16,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .setAllowedOrigins("http://127.0.0.1:8181");
     }
 
-    public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.setApplicationDestinationPrefixes("/app");
-        config.enableSimpleBroker("/user/");
-        config.setUserDestinationPrefix("/user/");
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        registry.setApplicationDestinationPrefixes("/app");
+        registry.enableSimpleBroker("/user/");
+        registry.setUserDestinationPrefix("/user/");
     }
 
 }

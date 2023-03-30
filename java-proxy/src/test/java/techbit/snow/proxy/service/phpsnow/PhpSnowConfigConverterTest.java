@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
@@ -28,17 +29,17 @@ class PhpSnowConfigConverterTest {
     @Mock
     private ConstraintViolation<PhpSnowConfig> issue;
 
-    private PhpSnowConfigConverter factory;
+    private PhpSnowConfigConverter coverter;
 
     @BeforeEach
     void setup() {
-        factory = new PhpSnowConfigConverter(
+        coverter = new PhpSnowConfigConverter(
                 "somePreset", 101, 53, Duration.ofMinutes(3), 23, validator);
     }
 
     @Test
-    void givenEmptyConfigMap_whenCreate_thenReturnsConfigObjectWithDefaults() {
-        PhpSnowConfig config = factory.fromMap(Collections.emptyMap());
+    void givenEmptyConfigMap_whenConvertFromMap_thenReturnsConfigObjectWithDefaults() {
+        PhpSnowConfig config = coverter.fromMap(Collections.emptyMap());
 
         assertEquals(Duration.ofMinutes(3), config.getDuration());
         assertEquals("somePreset", config.getPresetName());
@@ -48,71 +49,71 @@ class PhpSnowConfigConverterTest {
     }
 
     @Test
-    void givenPresetName_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.fromMap(Map.of("presetName", "redefinedPresetName"));
+    void givenPresetName_whenConvertFromMap_thenReturnsValidConfigObject() {
+        PhpSnowConfig config = coverter.fromMap(Map.of("presetName", "redefinedPresetName"));
 
         assertEquals("redefinedPresetName", config.getPresetName());
     }
 
     @Test
-    void givenFps_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.fromMap(Map.of("fps", "13"));
+    void givenFps_whenConvertFromMap_thenReturnsValidConfigObject() {
+        PhpSnowConfig config = coverter.fromMap(Map.of("fps", "13"));
 
         assertEquals(13, config.getFps());
     }
 
     @Test
-    void givenWidth_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.fromMap(Map.of("width", "113"));
+    void givenWidth_whenConvertFromMap_thenReturnsValidConfigObject() {
+        PhpSnowConfig config = coverter.fromMap(Map.of("width", "113"));
 
         assertEquals(113, config.getWidth());
     }
 
     @Test
-    void givenHeight_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.fromMap(Map.of("height", "73"));
+    void givenHeight_whenConvertFromMap_thenReturnsValidConfigObject() {
+        PhpSnowConfig config = coverter.fromMap(Map.of("height", "73"));
 
         assertEquals(73, config.getHeight());
     }
 
     @Test
-    void givenduration_whenCreate_thenReturnsValidConfigObject() {
-        PhpSnowConfig config = factory.fromMap(Map.of("duration", "30"));
+    void givenduration_whenConvertFromMap_thenReturnsValidConfigObject() {
+        PhpSnowConfig config = coverter.fromMap(Map.of("duration", "30"));
 
         assertEquals(Duration.ofSeconds(30), config.getDuration());
     }
 
     @Test
-    void givenInvalidFps_whenCreate_thenThrowException() {
+    void givenInvalidFps_whenConvertFromMap_thenThrowException() {
         when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("fps", "0")));
-        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("fps", "-1")));
+        assertThrows(ConstraintViolationException.class, () -> coverter.fromMap(Map.of("fps", "0")));
+        assertThrows(ConstraintViolationException.class, () -> coverter.fromMap(Map.of("fps", "-1")));
     }
 
     @Test
-    void givenInvalidWidth_whenCreate_thenThrowException() {
+    void givenInvalidWidth_whenConvertFromMap_thenThrowException() {
         when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("width", "0")));
-        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("width", "-1")));
+        assertThrows(ConstraintViolationException.class, () -> coverter.fromMap(Map.of("width", "0")));
+        assertThrows(ConstraintViolationException.class, () -> coverter.fromMap(Map.of("width", "-1")));
     }
 
     @Test
-    void givenInvalidHeight_whenCreate_thenThrowException() {
+    void givenInvalidHeight_whenConvertFromMap_thenThrowException() {
         when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("height", "0")));
-        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("height", "-1")));
+        assertThrows(ConstraintViolationException.class, () -> coverter.fromMap(Map.of("height", "0")));
+        assertThrows(ConstraintViolationException.class, () -> coverter.fromMap(Map.of("height", "-1")));
     }
 
     @Test
-    void givenInvalidduration_whenCreate_thenThrowException() {
+    void givenInvalidDuration_whenConvertFromMap_thenThrowException() {
         when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("duration", "0")));
-        assertThrows(ConstraintViolationException.class, () -> factory.fromMap(Map.of("duration", "-1")));
+        assertThrows(ConstraintViolationException.class, () -> coverter.fromMap(Map.of("duration", "0")));
+        assertThrows(ConstraintViolationException.class, () -> coverter.fromMap(Map.of("duration", "-1")));
     }
 
     @Test
-    void givenValidConfigMap_whenCreate_thenReturnsConfigObject() {
-        PhpSnowConfig config = factory.fromMap(Map.of(
+    void givenValidConfigMap_whenConvertFromMap_thenReturnsConfigObject() {
+        PhpSnowConfig config = coverter.fromMap(Map.of(
             "presetName", "redefinedPresetName",
                 "fps", "13",
                 "width", "113",
@@ -126,5 +127,20 @@ class PhpSnowConfigConverterTest {
         assertEquals(Duration.ofMinutes(99), config.getDuration());
         assertEquals(13, config.getFps());
     }
+
+    @Test
+    void givenConfigObject_whenConvertToMap_thenReturnsProperMap() {
+        PhpSnowConfig config = new PhpSnowConfig(
+                "preset-name", 999, 888, Duration.ofDays(1), 66);
+
+        Map<String, Object> map = coverter.toMap(config);
+
+        assertEquals("preset-name", map.get("presetName"));
+        assertEquals(999, map.get("width"));
+        assertEquals(888, map.get("height"));
+        assertEquals(66, map.get("fps"));
+        assertEquals(86400L, ((BigDecimal)map.get("duration")).longValue());
+    }
+
 
 }

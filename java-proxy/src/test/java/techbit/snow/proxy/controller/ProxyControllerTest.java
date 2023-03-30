@@ -33,12 +33,17 @@ class ProxyControllerTest {
 
     @Mock
     private PlainTextStreamEncoder textStreamEncoder;
-
+    @Mock
+    private HttpServletRequest request;
     private ProxyController controller;
 
 
     @BeforeEach
     void setup() {
+        lenient().when(request.getScheme()).thenReturn("http");
+        lenient().when(request.getServerName()).thenReturn("domain.com");
+        lenient().when(request.getServerPort()).thenReturn(1234);
+
         controller = new ProxyController(streaming, textStreamEncoder);
     }
 
@@ -46,6 +51,48 @@ class ProxyControllerTest {
     @Test
     void whenNotEnoughParamsRequested_thenThrowException() {
         assertThrows(InvalidRequestException.class, controller::insufficientParams);
+    }
+
+    @Test
+    void givenNoCustomConfiguration_whenStartSession_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
+        Map<?, ?> details = controller.startSession("session-abc", "", request);
+
+        verify(streaming).startSession("session-abc", Collections.emptyMap());
+        assertFalse(details.isEmpty());
+    }
+
+    @Test
+    void givenNoCustomConfiguration_whenStartSession_thenProvideDetails() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
+        when(streaming.hasSession("session-abc")).thenReturn(true);
+        when(streaming.isSessionRunning("session-abc")).thenReturn(true);
+
+        Map<?, ?> details = controller.startSession(
+                "session-abc", "", request);
+
+        assertFalse(details.isEmpty());
+        assertExpectedDetails(details);
+    }
+
+    @Test
+    void whenAskingForDetails_thenProvideDetails() {
+        when(streaming.hasSession("session-abc")).thenReturn(true);
+        when(streaming.isSessionRunning("session-abc")).thenReturn(true);
+
+        Map<?,?> details = controller.streamDetails(
+                "session-abc", request);
+
+        assertExpectedDetails(details);
+    }
+
+    private void assertExpectedDetails(Map<?, ?> details) {
+        assertEquals(Map.of(
+                "exists", true,
+                "running", true,
+                "sessionId", "session-abc",
+                "streamTextUrl", "http://domain.com:1234/text/session-abc",
+                "streamWebsocketsStompBrokerUrl", "http://domain.com:1234/ws/",
+                "streamWebsocketsUrl", "/app/stream/session-abc"
+        ), details);
     }
 
     @Test

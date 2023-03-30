@@ -1,10 +1,14 @@
 package techbit.snow.proxy.service;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import techbit.snow.proxy.exception.InvalidSessionException;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
 import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
@@ -14,6 +18,8 @@ import techbit.snow.proxy.service.stream.encoding.StreamEncoderFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,24 +35,38 @@ class ProxyServiceTest {
     @Mock
     private SessionService session;
     @Mock
-    private SnowStreamFactory snowFactory;
-    @Mock
-    private PhpSnowConfigConverter configProvider;
+    private StreamEncoder streamEncoder;
     @Mock
     private Map<String, String> confMap;
     @Mock
-    private StreamEncoderFactory streamEncoderFactory;
+    private SnowStreamFactory snowFactory;
+    @Spy
+    private Map<String, SnowStream> streams = new HashMap<>();
     @Mock
-    private StreamEncoder streamEncoder;
-
-
+    private PhpSnowConfigConverter configProvider;
+    @Mock
+    private SnowStream.Customizations customizations;
+    @Mock
+    private SnowStream.SnowStreamFinishedEvent streamFinishedEvent;
     private ProxyServiceImpl proxyService;
 
     @BeforeEach
     void setup() {
-        proxyService = new ProxyServiceImpl(session, snowFactory, configProvider);
+        proxyService = new ProxyServiceImpl(session, snowFactory, configProvider, streams);
     }
 
+    @Test
+    void whenStartStream_thenStartPhpAppAndStartConsumingData() throws IOException, InterruptedException, ConsumerThreadException {
+        when(snowFactory.create("session-abc", confMap)).thenReturn(snowStream);
+
+        proxyService.startSession("session-abc", confMap);
+
+        verify(session).create("session-abc");
+
+        InOrder inOrder = inOrder(snowStream);
+        inOrder.verify(snowStream).startPhpApp();
+        inOrder.verify(snowStream).startConsumingSnowData();
+    }
 
     @Test
     void givenNewSessionId_whenStream_thenStreamToANewStream() throws IOException, InterruptedException, ConsumerThreadException {
@@ -71,6 +91,18 @@ class ProxyServiceTest {
         proxyService.streamSessionTo("session-abc", out, streamEncoder, confMap);
 
         verify(snowStream, times(2)).streamTo(out, streamEncoder);
+    }
+
+    @Test
+    void givenCustomizations_whenStream_thenStreamToANewStream() throws IOException, InterruptedException, ConsumerThreadException {
+        when(snowFactory.create(eq("session-abc"), eq(Collections.emptyMap()))).thenReturn(snowStream);
+
+        proxyService.streamSessionTo("session-abc", out, streamEncoder, customizations);
+
+        verify(session).create("session-abc");
+        verify(snowStream).startPhpApp();
+        verify(snowStream).startConsumingSnowData();
+        verify(snowStream).streamTo(out, streamEncoder, customizations);
     }
 
     @Test
@@ -134,6 +166,35 @@ class ProxyServiceTest {
     @Test
     void whenStopNonExistingSession_noErrorOccurs() {
         assertDoesNotThrow(() -> proxyService.stopSession("session-abc"));
+    }
+
+    @Test
+    void givenValidSession_whenAskingForDetails_thenProvideThemFromProxyService() {
+        Map<String, Object> expected = Collections.emptyMap();
+        when(session.exists("session-abc")).thenReturn(true);
+        when(streams.get("session-abc")).thenReturn(snowStream);
+        when(snowStream.configDetails(any())).thenReturn(expected);
+
+        Map<String, Object> details = proxyService.sessionDetails("session-abc");
+
+        assertSame(expected, details);
+    }
+
+    @Test
+    void givenInvalidSession_whenAskingForDetails_thenThrowException() {
+        assertThrows(InvalidSessionException.class,
+                () -> proxyService.sessionDetails("session-abc"));
+    }
+
+    @Test
+    void whenSnowStreamFinishEventOccurs_thenStopSession() throws IOException, InterruptedException {
+        when(session.exists("session-abc")).thenReturn(true);
+        when(streamFinishedEvent.getSessionId()).thenReturn("session-abc");
+        when(streams.get("session-abc")).thenReturn(snowStream);
+
+        proxyService.onApplicationEvent(streamFinishedEvent);
+
+        verify(snowStream).stop();
     }
 
 }

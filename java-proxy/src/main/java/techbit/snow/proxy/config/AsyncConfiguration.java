@@ -59,13 +59,4 @@ public class AsyncConfiguration implements AsyncConfigurer {
         };
     }
 
-    @Bean
-    public WebServerFactoryCustomizer<ConfigurableTomcatWebServerFactory> webServerFactoryCustomizer() {
-        return factory -> {
-            factory.addConnectorCustomizers(connector -> {
-                connector.setProperty("packetSize", "1");
-            });
-        };
-    }
-
 }

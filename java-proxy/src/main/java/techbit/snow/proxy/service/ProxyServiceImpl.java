@@ -24,7 +24,7 @@ import java.util.Map;
 @Primary
 public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowStream.SnowStreamFinishedEvent> {
 
-    private final Map<String, SnowStream> streams = Maps.newHashMap();
+    private final Map<String, SnowStream> streams;
     private final PhpSnowConfigConverter configConverter;
     private final SnowStreamFactory snowStreamProvider;
     private final SessionService session;
@@ -34,9 +34,19 @@ public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowS
             @Autowired SnowStreamFactory snowStreamProvider,
             @Autowired PhpSnowConfigConverter configConverter
     ) {
+        this(session, snowStreamProvider, configConverter, Maps.newHashMap());
+    }
+
+    public ProxyServiceImpl(
+            @Autowired SessionService session,
+            @Autowired SnowStreamFactory snowStreamProvider,
+            @Autowired PhpSnowConfigConverter configConverter,
+            Map<String, SnowStream> streams
+    ) {
         this.snowStreamProvider = snowStreamProvider;
         this.session = session;
         this.configConverter = configConverter;
+        this.streams = streams;
     }
 
     @Override

@@ -39,7 +39,8 @@ public class ProxyController {
     }
 
     @GetMapping("/start/{sessionId}/{*configuration}")
-    public Map<String, Object> startSession(@PathVariable String sessionId, @PathVariable String configuration, HttpServletRequest request)
+    public Map<String, Object> startSession(
+            @PathVariable String sessionId, @PathVariable String configuration, HttpServletRequest request)
             throws SnowStream.ConsumerThreadException, IOException, InterruptedException
     {
         log.debug("startSession( {}, {} )", sessionId, configuration.isBlank() ? "<default-config>" : configuration);

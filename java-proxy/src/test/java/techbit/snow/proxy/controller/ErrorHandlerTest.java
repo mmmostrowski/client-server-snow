@@ -2,15 +2,22 @@ package techbit.snow.proxy.controller;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import techbit.snow.proxy.exception.UserException;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,7 +51,7 @@ class ErrorHandlerTest {
     }
 
     @Test
-    void givenProductionMode_whenErrorWithExceptionOccurs_thenNoErrorDetailsReturned() {
+    void givenProductionMode_whenExceptionOccurs_thenNoErrorDetailsReturned() {
         when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(new Exception("Stub"));
 
         Map<String, Object> response = new ErrorHandler(false).error(request);
@@ -55,5 +62,36 @@ class ErrorHandlerTest {
                 "exceptionDetails", ""
         ), response);
     }
+
+    @Test
+    void givenProductionMode_whenUserExceptionOccurs_thenItIsTransmittedToUser() {
+        when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(
+                new Exception(new UserException("Stub") {}));
+
+        Map<String, Object> response = new ErrorHandler(false).error(request);
+
+        assertEquals(Map.of(
+                "status", false,
+                "message", "Stub",
+                "exceptionDetails", ""
+        ), response);
+    }
+
+    @Test
+    void givenProductionMode_whenConstraintViolationExceptionOccurs_thenItIsTransmittedToUser() {
+        Exception exception = Mockito.mock(ConstraintViolationException.class);
+        when(exception.getMessage()).thenReturn("Stub");
+        Exception wrappingException = new Exception(exception);
+        when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(wrappingException);
+
+        Map<String, Object> response = new ErrorHandler(false).error(request);
+
+        assertEquals(Map.of(
+                "status", false,
+                "message", "Stub",
+                "exceptionDetails", ""
+        ), response);
+    }
+
 
 }

@@ -3,6 +3,7 @@ package techbit.snow.proxy.service.phpsnow;
 import com.google.common.io.Files;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -49,11 +50,7 @@ public class PhpSnowApp {
         String cmd = String.join(" ", builder.command());
         log.debug("start( {} ) | Starting process: {}", sessionId, cmd);
         process = builder.start();
-        try {
-            Thread.sleep(300);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        waitAMoment();
         if (!process.isAlive() && process.exitValue() > 0) {
             String stdErr = new String(process.getErrorStream().readAllBytes());
             String stdOut = new String(process.getInputStream().readAllBytes());
@@ -73,5 +70,10 @@ public class PhpSnowApp {
 
     public boolean isAlive() {
         return process != null && process.isAlive();
+    }
+
+    @SneakyThrows
+    private void waitAMoment()  {
+        Thread.sleep(300);
     }
 }

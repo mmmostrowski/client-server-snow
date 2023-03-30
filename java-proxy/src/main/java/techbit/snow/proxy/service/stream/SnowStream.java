@@ -157,7 +157,7 @@ public class SnowStream {
         } finally {
             buffer.destroy();
             disableConsumerThread();
-            applicationEventPublisher.publishEvent(new SnowStreamFinishedEvent(this));
+            applicationEventPublisher.publishEvent(createSnowStreamFinishedEvent());
         }
     }
 
@@ -204,6 +204,7 @@ public class SnowStream {
 
             log.debug("streamTo( {} ) | Last frame", sessionId);
             encoder.encodeFrame(SnowDataFrame.LAST, out);
+            customs.onFrameEncoded(SnowDataFrame.LAST);
         } finally {
             log.debug("streamTo( {} ) | Unregister From Buffer", sessionId);
             buffer.unregisterClient(clientIdentifier);
@@ -239,5 +240,9 @@ public class SnowStream {
     private void disableConsumerThread() {
         running = false;
         consumerGoingDownLock.release(Integer.MAX_VALUE);
+    }
+
+    SnowStreamFinishedEvent createSnowStreamFinishedEvent() {
+        return new SnowStreamFinishedEvent(this);
     }
 }

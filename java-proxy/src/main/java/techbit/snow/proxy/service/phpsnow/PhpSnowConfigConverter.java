@@ -61,7 +61,7 @@ public class PhpSnowConfigConverter {
     }
 
     public Map<String, Object> toMap(PhpSnowConfig config) {
-        return mapper.convertValue(this, new TypeReference<>() {});
+        return mapper.convertValue(config, new TypeReference<>() {});
     }
 
     private Map<String, Object> mapMergedWithDefaults(Map<String, String> config) {
