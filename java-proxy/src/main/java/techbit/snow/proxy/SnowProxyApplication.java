@@ -32,7 +32,7 @@ public class SnowProxyApplication {
 
 	@Bean
 	public boolean isDeveloperMode() {
-		return developerMode.equals("DEVELOP");
+		return developerMode.equalsIgnoreCase("develop");
 	}
 
 }

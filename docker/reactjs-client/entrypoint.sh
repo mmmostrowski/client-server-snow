@@ -13,7 +13,6 @@ function main() {
         echo 'To start reactjs-client development: npm run start'
         echo ''
         echo ''
-        export PHP_SNOW_APP_MODE=develop
         bash -l
         return 0
     fi

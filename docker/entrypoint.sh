@@ -18,12 +18,14 @@ function main() {
         echo 'To start reactjs-client server ( please run from host ): ./run snow-client '
         echo 'To start reactjs-client development ( please run from host ): ./run snow-client dev'
         echo ''
-        export PHP_SNOW_APP_MODE=develop
         bash -l
         return 0
     fi
 
     if [[ "${1:-}" == "snow-server" ]]; then
+        if [[ ! -e /snow/java-proxy/build/libs/proxy-0.0.1-SNAPSHOT.jar ]]; then
+            gradle bootJar --project-dir /snow/java-proxy/
+        fi
         java -jar /snow/java-proxy/build/libs/proxy-0.0.1-SNAPSHOT.jar
         return 0
     fi
@@ -46,10 +48,15 @@ function installFreshCopyOfVendorFolder() {
 }
 
 function installFreshCopyOfGradleFolders() {
-    rm -rf /snow/java-proxy/.gradle/
-    rm -rf /snow/java-proxy/build/
-    cp -rf /data/app-gradle/ /snow/java-proxy/.gradle/
-    cp -rf /data/app-gradle-build/ /snow/java-proxy/build/
+    if [[ -e /data/app-gradle/ ]]; then
+        rm -rf /snow/java-proxy/.gradle/
+        cp -rf /data/app-gradle/ /snow/java-proxy/.gradle/
+    fi
+
+    if [[ -e /data/app-gradle-build/ ]]; then
+        rm -rf /snow/java-proxy/build/
+        cp -rf /data/app-gradle-build/ /snow/java-proxy/build/
+    fi
 }
 
 function waitUntilTerminalSizeIsAvailable() {

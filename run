@@ -5,15 +5,13 @@ function init() {
     export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
     export SCRIPT_PID="${BASHPID}"
     export SCRIPT_OWNER_PID="${SCRIPT_OWNER_PID:-}"
-    export PHP_SNOW_APP_MODE="${PHP_SNOW_APP_MODE:-production}"
+    export PHP_SNOW_APP_MODE="develop"
 }
 
 function main() {
     init;
 
     if [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
-        export PHP_SNOW_APP_MODE=develop
-
         if [[ "${2:-}" == "snow-client" ]] || [[ "${2:-}" == "snow-client-reactjs" ]]; then
             runPhpSnowClientReact dev
             return 0
