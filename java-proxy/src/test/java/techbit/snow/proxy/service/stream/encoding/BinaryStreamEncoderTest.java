@@ -2,15 +2,13 @@ package techbit.snow.proxy.service.stream.encoding;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class BinaryStreamEncoderTest {
 
@@ -43,7 +41,17 @@ class BinaryStreamEncoderTest {
                 78, 2,
                 new float[] { 103, 22.5f },
                 new float[] { 0.5f, 11f },
-                new byte[] { 99, 88 }
+                new byte[] { 99, 88 },
+                new SnowDataFrame.Background(3, 2, new byte[][]{
+                        new byte[] { 1, 2 },
+                        new byte[] { 3, 4 },
+                        new byte[] { 5, 6 },
+                }),
+                new SnowDataFrame.Basis(4,
+                        new int[] { 1, 2, 3, 4 },
+                        new int[] { 11, 12, 13, 14 },
+                        new byte[] { 8, 7, 6, 5 }
+                )
         );
 
         encoder.encodeFrame(frame, out);

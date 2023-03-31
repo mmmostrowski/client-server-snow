@@ -9,4 +9,6 @@ interface ISnowFlakeShape
 
     public function pressedSnowSymbol(): string;
 
+    public function shapeIdx($shape): int;
+
 }

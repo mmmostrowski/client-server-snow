@@ -96,6 +96,9 @@ final class SnowBasis implements IAnimationAliveObject, IAnimationVisibleObject,
 
         foreach ($this->staticParticles as $x => $list) {
             foreach ($list as $y => $particle) {
+                if ($particle[self::SHAPE] == '') {
+                    continue;
+                }
                 $this->renderer->renderBasisParticle($x, $y, $particle[self::SHAPE]);
             }
         }
@@ -109,13 +112,8 @@ final class SnowBasis implements IAnimationAliveObject, IAnimationVisibleObject,
     private function drawHLine(float $minX, float $maxX, float $y): void
     {
         for ($x = $minX; $x <= $maxX; ++$x) {
-            $this->drawPoint($x, $y);
+            $this->addPoint($x, $y, '');
         }
-    }
-
-    private function drawPoint(float $x, float $y): void
-    {
-        $this->addPoint($x, $y, '');
     }
 
     private function addPoint(float $x, float $y, string $shape): void
@@ -192,7 +190,11 @@ final class SnowBasis implements IAnimationAliveObject, IAnimationVisibleObject,
                     continue;
                 }
 
-                $this->drawPoint($pX, $pY);
+                if (!$this->console->isIn($pX, $pY)) {
+                    continue;
+                }
+
+                $this->addPoint($pX, $pY, '');
                 $this->renderer->renderBackgroundPixel($pX, $pY, $c, $color);
             }
             // echo PHP_EOL;

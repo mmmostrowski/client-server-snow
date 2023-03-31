@@ -289,6 +289,7 @@ class SnowDataBufferTest {
     }
 
     private SnowDataFrame frame(int frameNum) {
-        return new SnowDataFrame(frameNum, 0, null, null, null);
+        return new SnowDataFrame(frameNum, 0, null, null, null,
+                SnowDataFrame.NO_BACKGROUND, SnowDataFrame.NO_BASIS);
     }
 }

@@ -47,6 +47,7 @@ function runPhpSnow() (
         $( isLocalPortBusy 8080 || echo '-p 8080:8080' ) \
         --user $(id -u):$(id -g) \
         --add-host=host.docker.internal:host-gateway \
+        --env XDEBUG_SESSION=1 \
         --env PHP_SNOW_APP_MODE \
         $( build dockerSnowApp ) \
         "${@}" \

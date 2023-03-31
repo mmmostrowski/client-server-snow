@@ -29,18 +29,19 @@ public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowS
     private final SnowStreamFactory snowStreamProvider;
     private final SessionService session;
 
+    @Autowired
     public ProxyServiceImpl(
-            @Autowired SessionService session,
-            @Autowired SnowStreamFactory snowStreamProvider,
-            @Autowired PhpSnowConfigConverter configConverter
+            SessionService session,
+            SnowStreamFactory snowStreamProvider,
+            PhpSnowConfigConverter configConverter
     ) {
         this(session, snowStreamProvider, configConverter, Maps.newHashMap());
     }
 
     public ProxyServiceImpl(
-            @Autowired SessionService session,
-            @Autowired SnowStreamFactory snowStreamProvider,
-            @Autowired PhpSnowConfigConverter configConverter,
+            SessionService session,
+            SnowStreamFactory snowStreamProvider,
+            PhpSnowConfigConverter configConverter,
             Map<String, SnowStream> streams
     ) {
         this.snowStreamProvider = snowStreamProvider;
@@ -81,7 +82,7 @@ public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowS
     }
 
     @Override
-    public synchronized Map<String, Object> sessionDetails(String sessionId) {
+    public Map<String, Object> sessionDetails(String sessionId) {
         if (!session.exists(sessionId)) {
             throw new InvalidSessionException("Unknown snow streaming session:" + sessionId);
         }

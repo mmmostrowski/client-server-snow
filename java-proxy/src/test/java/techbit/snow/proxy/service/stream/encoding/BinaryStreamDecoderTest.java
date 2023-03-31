@@ -1,5 +1,6 @@
 package techbit.snow.proxy.service.stream.encoding;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,9 +55,9 @@ class BinaryStreamDecoderTest {
     }
 
     @Test
-    void givenValidBinaryData_whenDecodingFrame_thenCreatesValidEntity() throws IOException {
+    void givenValidSimpleFrame_whenDecodingFrame_thenCreatesValidEntity() throws IOException {
         byte[] binary = new byte[] {
-                0x0, 0x0, 0x0, 0x7F,  // frame num
+                0x0, 0x0, 0x0, 0x1,  // frame num
                 0x0, 0x0, 0x0, 0x2,   // chunk size
                 // chunk 0
                 0x0, 0x0, 0x0, 0x0,   // frame1.x
@@ -66,12 +67,16 @@ class BinaryStreamDecoderTest {
                 0x40, 0x30, 0x0, 0x0, // frame2.x
                 0x0, 0x0, 0x0, 0x0,   // frame2.y
                 0x4,                  // frame.flakeShape
+                // background
+                0x0,
+                // basis
+                0x0, 0x0, 0x0, 0x0
         };
 
         SnowDataFrame frame = decoder.decodeFrame(
                 new DataInputStream(new ByteArrayInputStream(binary)));
 
-        assertEquals(127, frame.frameNum());
+        assertEquals(1, frame.frameNum());
         assertEquals(2, frame.chunkSize());
 
         assertEquals(2, frame.x().length);
@@ -84,14 +89,79 @@ class BinaryStreamDecoderTest {
         assertEquals(2.75f, frame.x(1));
         assertEquals(0.0f, frame.y(1));
         assertEquals(4, frame.flakeShape(1));
+        assertSame(SnowDataFrame.NO_BACKGROUND, frame.background());
+        assertSame(SnowDataFrame.NO_BASIS, frame.basis());
     }
 
+    @Test
+    void givenValidFrameWithBackground_whenDecodingFrame_thenCreatesValidEntity() throws IOException {
+        byte[] binary = new byte[] {
+                0x0, 0x0, 0x0, 0x1,  // frame num
+                0x0, 0x0, 0x0, 0x0,   // chunk size
+                // background
+                0x1,
+                0x0, 0x0, 0x0, 0x2,
+                0x0, 0x0, 0x0, 0x2,
+                0x3, 0x5,
+                0x7, 0x9,
+                // basis
+                0x0, 0x0, 0x0, 0x0
+        };
+
+        SnowDataFrame frame = decoder.decodeFrame(
+                new DataInputStream(new ByteArrayInputStream(binary)));
+
+        assertEquals(2, frame.background().width());
+        assertEquals(2, frame.background().height());
+        assertArrayEquals(new byte[][] {
+                         // y0  y1
+                new byte[] { 3, 7, }, // x0
+                new byte[] { 5, 9, }, // x1
+        }, frame.background().pixels());
+    }
+
+    @Test
+    void givenValidFrameWithBasis_whenDecodingFrame_thenCreatesValidEntity() throws IOException {
+        byte[] binary = new byte[] {
+                0x0, 0x0, 0x0, 0x1,  // frame num
+                0x0, 0x0, 0x0, 0x0,   // chunk size
+                // background
+                0x0,
+                // basis
+                0x0, 0x0, 0x0, 0x2,
+
+                0x0, 0x0, 0x0, 0x9,
+                0x0, 0x0, 0x0, 0x0,
+                0x7,
+
+                0x0, 0x0, 0x3, 0x0,
+                0x0, 0x0, 0x0, 0x3,
+                0x9,
+        };
+
+        SnowDataFrame frame = decoder.decodeFrame(
+                new DataInputStream(new ByteArrayInputStream(binary)));
+
+        assertEquals(2, frame.basis().numOfPixels());
+
+        assertArrayEquals(new int[] { 9, 768 }, frame.basis().x());
+        assertArrayEquals(new int[] { 0, 3 }, frame.basis().y());
+    }
+
+    @Test
+    void givenInvalidFrameNum_whenDecodingFrame_thenThrowsException() throws IOException {
+        byte[] binary = new byte[] {
+                0x0, 0x0, 0x0, 0x11,  // invalid frame num
+        };
+
+        Assertions.assertThrows(IllegalStateException.class, () -> decoder.decodeFrame(
+                new DataInputStream(new ByteArrayInputStream(binary))));
+    }
 
     @Test
     void givenLastFrame_whenDecodingFrame_thenCreatesValidEntity() throws IOException {
         byte[] binary = new byte[] {
                 -1, -1, -1, -1,  // frame num
-                0x0, 0x0, 0x0, 0x0,   // chunk size
         };
 
         SnowDataFrame frame = decoder.decodeFrame(

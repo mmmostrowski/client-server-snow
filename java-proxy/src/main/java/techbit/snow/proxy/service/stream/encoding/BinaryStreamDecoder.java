@@ -14,6 +14,8 @@ public class BinaryStreamDecoder implements StreamDecoder {
 
     public static final String GREETING_MARKER = "hello-php-snow";
 
+    private int framesCounter;
+
     @Override
     public SnowAnimationMetadata decodeMetadata(DataInputStream dataStream) throws IOException {
         readHelloMarker(dataStream);
@@ -25,25 +27,6 @@ public class BinaryStreamDecoder implements StreamDecoder {
         return new SnowAnimationMetadata(width, height, fps);
     }
 
-    @Override
-    public SnowDataFrame decodeFrame(DataInputStream dataStream) throws IOException {
-        final int frameNum = dataStream.readInt();
-        final int chunkSize = dataStream.readInt();
-        final float[] x = new float[chunkSize];
-        final float[] y = new float[chunkSize];
-        final byte[] flakeShapes = new byte[chunkSize];
-
-        for (int i = 0; i < chunkSize; ++i) {
-            x[i] = dataStream.readFloat();
-            y[i] = dataStream.readFloat();
-            flakeShapes[i] = dataStream.readByte();
-        }
-        if (frameNum == -1) {
-            return SnowDataFrame.LAST;
-        }
-        return new SnowDataFrame(frameNum, chunkSize, x, y, flakeShapes);
-    }
-
     private void readHelloMarker(DataInputStream inputStream) throws IOException {
         for (char c : GREETING_MARKER.toCharArray()) {
             if (inputStream.readByte() != c) {
@@ -51,4 +34,72 @@ public class BinaryStreamDecoder implements StreamDecoder {
             }
         }
     }
+
+    @Override
+    public SnowDataFrame decodeFrame(DataInputStream dataStream) throws IOException {
+        // frame num
+        final int frameNum = dataStream.readInt();
+        if (frameNum == -1) {
+            return SnowDataFrame.LAST;
+        }
+
+        if (frameNum != ++framesCounter) {
+            throw new IllegalStateException("Binary stream protocol issues! Expected frames in sequence!");
+        }
+
+        // particles
+        final int chunkSize = dataStream.readInt();
+        final float[] particlesX = new float[chunkSize];
+        final float[] particlesY = new float[chunkSize];
+        final byte[] flakeShapes = new byte[chunkSize];
+        for (int i = 0; i < chunkSize; ++i) {
+            particlesX[i] = dataStream.readFloat();
+            particlesY[i] = dataStream.readFloat();
+            flakeShapes[i] = dataStream.readByte();
+        }
+
+        // background
+        SnowDataFrame.Background background = decodeBackground(dataStream);
+
+        // basis
+        SnowDataFrame.Basis basis = decodeBasis(dataStream);
+
+        return new SnowDataFrame(frameNum, chunkSize, particlesX, particlesY, flakeShapes, background, basis);
+    }
+
+    private SnowDataFrame.Background decodeBackground(DataInputStream dataStream) throws IOException {
+        byte hasBackground = dataStream.readByte();
+        if (hasBackground == 0) {
+            return SnowDataFrame.NO_BACKGROUND;
+        }
+
+        final int canvasWidth = dataStream.readInt();
+        final int canvasHeight = dataStream.readInt();
+        final byte[][] pixels = new byte[canvasWidth][canvasHeight];
+        for (int y = 0; y < canvasHeight; ++y) {
+            for (int x = 0; x < canvasWidth; ++x) {
+                pixels[x][y] = dataStream.readByte();
+            }
+        }
+        return new SnowDataFrame.Background(canvasWidth, canvasHeight, pixels);
+    }
+
+    private SnowDataFrame.Basis decodeBasis(DataInputStream dataStream) throws IOException {
+        final int numOfPixels = dataStream.readInt();
+        if (numOfPixels == 0) {
+            return SnowDataFrame.NO_BASIS;
+        }
+        final int[] x = new int[numOfPixels];
+        final int[] y = new int[numOfPixels];
+        final byte[] pixels = new byte[numOfPixels];
+
+        for (int i = 0; i < numOfPixels; ++i) {
+            x[i] = dataStream.readInt();
+            y[i] = dataStream.readInt();
+            pixels[i] = dataStream.readByte();
+        }
+
+        return new SnowDataFrame.Basis(numOfPixels, x, y, pixels);
+    }
+
 }

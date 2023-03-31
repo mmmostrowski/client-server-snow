@@ -9,6 +9,7 @@ use TechBit\Snow\Server\StreamFramePainter;
 use TechBit\Snow\SnowFallAnimation\AnimationFactory;
 use TechBit\Snow\SnowFallAnimation\Config\StartupConfig;
 use TechBit\Snow\SnowFallAnimation\Config\StartupConfigFactory;
+use TechBit\Snow\SnowFallAnimation\Snow\SnowFlakeShape;
 use Throwable;
 
 final class Bootstrap
@@ -23,6 +24,7 @@ final class Bootstrap
     {
         if ($appArguments->isServer()) {
             $startupConfig = (new StartupConfigFactory())->create($appArguments);
+            $flakeShapes = new SnowFlakeShape();
             return new App(new AnimationFactory(
                 console: new MockConsole(
                     $appArguments->serverCanvasWidth(), 
@@ -35,8 +37,10 @@ final class Bootstrap
                     $startupConfig,
                     $appArguments->serverCanvasWidth(),
                     $appArguments->serverCanvasHeight(),
-                ))
-            );
+                    $flakeShapes
+                ),
+                flakeShapes : $flakeShapes,
+            ));
         }
         return new App();
     }

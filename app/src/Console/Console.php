@@ -29,10 +29,10 @@ class Console implements IConsole
         $width = $this->width();
         $height = $this->height();
 
-        if ($width < $minWidth || $height < $minHeight) {
-            throw new InvalidConsoleSizeException("Console size must be at least {$minWidth}x{$minHeight}!\n" .
-                "Current console size is {$width}x{$height}.\n\nPlease make your terminal window larger!");
-        }
+        // if ($width < $minWidth || $height < $minHeight) {
+        //     throw new InvalidConsoleSizeException("Console size must be at least {$minWidth}x{$minHeight}!\n" .
+        //         "Current console size is {$width}x{$height}.\n\nPlease make your terminal window larger!");
+        // }
     }
 
     public function refreshConsoleSize(): void

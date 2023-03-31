@@ -23,4 +23,17 @@ enum ConsoleColor
             self::LIGHT_BLUE => "\e[38;5;39m",
         };
     }
+
+    public function toInt(): int
+    {
+        return match ($this) {
+            self::RESET => -1,
+
+            self::BLACK => 0,
+            self::WHITE => 1,
+            self::BLUE => 2,
+            self::LIGHT_BLUE => 3,
+        };
+    }
+
 }

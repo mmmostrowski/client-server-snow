@@ -14,7 +14,6 @@ import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 import techbit.snow.proxy.service.stream.SnowStreamFactory;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
-import techbit.snow.proxy.service.stream.encoding.StreamEncoderFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
