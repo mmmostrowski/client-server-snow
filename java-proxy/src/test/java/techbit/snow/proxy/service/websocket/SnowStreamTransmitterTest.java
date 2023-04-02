@@ -6,16 +6,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import techbit.snow.proxy.dto.SnowAnimationBackground;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.io.ByteArrayOutputStream;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SnowStreamTransmitterTest {
@@ -25,6 +25,8 @@ class SnowStreamTransmitterTest {
     private ByteArrayOutputStream output;
     @Mock
     private SnowAnimationMetadata metadata;
+    @Mock
+    private SnowAnimationBackground background;
     @Mock
     private SnowDataFrame snowDataFrame;
     private byte[] byteArray;
@@ -39,20 +41,20 @@ class SnowStreamTransmitterTest {
 
     @Test
     void whenBrandNewTransmitter_thenHasActiveStream() {
-        Assertions.assertTrue(transmitter.isStreamActive());
+        Assertions.assertTrue(transmitter.isAnimationActive());
     }
 
     @Test
     void whenTransmitterDeactivated_thenHasInactiveStream() {
         transmitter.deactivate();
-        Assertions.assertFalse(transmitter.isStreamActive());
+        Assertions.assertFalse(transmitter.isAnimationActive());
     }
 
     @Test
     void whenMetadataEncodedIntoOutputStream_thenFlushItToWebsocketMessage() {
         when(output.toByteArray()).thenReturn(byteArray);
 
-        transmitter.onMetadataEncoded(metadata);
+        transmitter.onAnimationInitialized(metadata, background);
 
         InOrder inOrder = inOrder(messagingTemplate, output);
         inOrder.verify(messagingTemplate).convertAndSendToUser(
@@ -64,7 +66,7 @@ class SnowStreamTransmitterTest {
     void whenSnowDataFrameEncodedIntoOutputStream_thenFlushItToWebsocketMessage() {
         when(output.toByteArray()).thenReturn(byteArray);
 
-        transmitter.onFrameEncoded(snowDataFrame);
+        transmitter.onFrameSent(snowDataFrame);
 
         InOrder inOrder = inOrder(messagingTemplate, output);
         inOrder.verify(messagingTemplate).convertAndSendToUser(

@@ -10,14 +10,12 @@ import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
 import techbit.snow.proxy.service.stream.encoding.BinaryStreamDecoder;
-import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
 import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,8 +25,6 @@ class SnowStreamFactoryTest {
     private ApplicationEventPublisher eventPublisher;
     @Mock
     private PhpSnowConfigConverter configProvider;
-    @Mock
-    private PlainTextStreamEncoder streamEncoder;
     @Mock
     private BinaryStreamDecoder streamDecoder;
     @Mock

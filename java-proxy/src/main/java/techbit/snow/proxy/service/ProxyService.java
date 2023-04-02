@@ -10,7 +10,7 @@ import java.util.Map;
 public interface ProxyService {
 
     void startSession(String sessionId, Map<String, String> confMap)
-            throws IOException, InterruptedException, SnowStream.ConsumerThreadException;
+            throws IOException;
 
     void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.Customizations customs)
             throws IOException, InterruptedException, SnowStream.ConsumerThreadException;

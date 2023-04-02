@@ -2,6 +2,8 @@ package techbit.snow.proxy.service.stream.encoding;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+import techbit.snow.proxy.dto.SnowAnimationBackground;
+import techbit.snow.proxy.dto.SnowAnimationBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
@@ -58,19 +60,13 @@ public class BinaryStreamDecoder implements StreamDecoder {
             flakeShapes[i] = dataStream.readByte();
         }
 
-        // background
-        SnowDataFrame.Background background = decodeBackground(dataStream);
-
-        // basis
-        SnowDataFrame.Basis basis = decodeBasis(dataStream);
-
-        return new SnowDataFrame(frameNum, chunkSize, particlesX, particlesY, flakeShapes, background, basis);
+        return new SnowDataFrame(frameNum, chunkSize, particlesX, particlesY, flakeShapes);
     }
 
-    private SnowDataFrame.Background decodeBackground(DataInputStream dataStream) throws IOException {
+    public SnowAnimationBackground decodeBackground(DataInputStream dataStream) throws IOException {
         byte hasBackground = dataStream.readByte();
         if (hasBackground == 0) {
-            return SnowDataFrame.NO_BACKGROUND;
+            return SnowAnimationBackground.NONE;
         }
 
         final int canvasWidth = dataStream.readInt();
@@ -81,13 +77,13 @@ public class BinaryStreamDecoder implements StreamDecoder {
                 pixels[x][y] = dataStream.readByte();
             }
         }
-        return new SnowDataFrame.Background(canvasWidth, canvasHeight, pixels);
+        return new SnowAnimationBackground(canvasWidth, canvasHeight, pixels);
     }
 
-    private SnowDataFrame.Basis decodeBasis(DataInputStream dataStream) throws IOException {
+    public SnowAnimationBasis decodeBasis(DataInputStream dataStream) throws IOException {
         final int numOfPixels = dataStream.readInt();
         if (numOfPixels == 0) {
-            return SnowDataFrame.NO_BASIS;
+            return SnowAnimationBasis.NONE;
         }
         final int[] x = new int[numOfPixels];
         final int[] y = new int[numOfPixels];
@@ -99,7 +95,7 @@ public class BinaryStreamDecoder implements StreamDecoder {
             pixels[i] = dataStream.readByte();
         }
 
-        return new SnowDataFrame.Basis(numOfPixels, x, y, pixels);
+        return new SnowAnimationBasis(numOfPixels, x, y, pixels);
     }
 
 }

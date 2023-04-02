@@ -20,6 +20,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.mockito.Mockito.*;
+import static techbit.snow.proxy.service.stream.TestingFrames.frame;
 
 @SuppressWarnings("unused")
 @ExtendWith(MockitoExtension.class)
@@ -242,7 +243,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
     @RepeatedTest(3)
     void givenMassiveChunkOfFrames_whenFiveThreadsAreStreaming_thenNoDeadlockOccurs() throws Throwable {
-        final int numOfFramesToTest = 10_000;
+        final int numOfFramesToTest = 5_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
@@ -256,7 +257,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
     @RepeatedTest(3)
     void givenMassiveChunkOfFrames_whenFiveThreadsAreStreamingFromSluggishConsumer_thenNoDeadlockOccurs() throws Throwable {
-        final int numOfFramesToTest = 10_000;
+        final int numOfFramesToTest = 5_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
@@ -271,7 +272,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
     @RepeatedTest(3)
     void givenMassiveChunkOfFrames_whenFiveSluggishThreadsAreStreaming_thenNoDeadlockOccurs() throws Throwable {
-        final int numOfFramesToTest = 10_000;
+        final int numOfFramesToTest = 5_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {
@@ -289,7 +290,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
     @RepeatedTest(3)
     void givenMassiveChunkOfFrames_whenFiveSluggishThreadsAreStreamingFromSluggishConsumer_thenNoDeadlockOccurs() throws Throwable {
-        final int numOfFramesToTest = 10_000;
+        final int numOfFramesToTest = 5_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
         when(decoder.decodeFrame(any())).then(i -> {

@@ -54,7 +54,7 @@ class ProxyControllerTest {
     }
 
     @Test
-    void givenNoCustomConfiguration_whenStartSession_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
+    void givenNoCustomConfiguration_whenStartSession_thenStreamWithEmptyConfigMap() throws IOException {
         Map<?, ?> details = controller.startSession("session-abc", "", request);
 
         verify(streaming).startSession("session-abc", Collections.emptyMap());
@@ -62,7 +62,7 @@ class ProxyControllerTest {
     }
 
     @Test
-    void givenNoCustomConfiguration_whenStartSession_thenProvideDetails() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
+    void givenNoCustomConfiguration_whenStartSession_thenProvideDetails() throws IOException {
         when(streaming.hasSession("session-abc")).thenReturn(true);
         when(streaming.isSessionRunning("session-abc")).thenReturn(true);
 

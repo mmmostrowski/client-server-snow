@@ -1,6 +1,5 @@
 package techbit.snow.proxy.service;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +23,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("ALL")
 @ExtendWith(MockitoExtension.class)
 class ProxyServiceTest {
 
@@ -48,10 +48,12 @@ class ProxyServiceTest {
     @Mock
     private SnowStream.SnowStreamFinishedEvent streamFinishedEvent;
     private ProxyServiceImpl proxyService;
+    private ProxyServiceImpl proxyServiceSpyStreams;
 
     @BeforeEach
     void setup() {
-        proxyService = new ProxyServiceImpl(session, snowFactory, configProvider, streams);
+        proxyService = new ProxyServiceImpl(session, snowFactory, configProvider);
+        proxyServiceSpyStreams = new ProxyServiceImpl(session, snowFactory, configProvider, streams);
     }
 
     @Test
@@ -169,12 +171,13 @@ class ProxyServiceTest {
 
     @Test
     void givenValidSession_whenAskingForDetails_thenProvideThemFromProxyService() {
+
         Map<String, Object> expected = Collections.emptyMap();
         when(session.exists("session-abc")).thenReturn(true);
         when(streams.get("session-abc")).thenReturn(snowStream);
         when(snowStream.configDetails(any())).thenReturn(expected);
 
-        Map<String, Object> details = proxyService.sessionDetails("session-abc");
+        Map<String, Object> details = proxyServiceSpyStreams.sessionDetails("session-abc");
 
         assertSame(expected, details);
     }
@@ -191,7 +194,7 @@ class ProxyServiceTest {
         when(streamFinishedEvent.getSessionId()).thenReturn("session-abc");
         when(streams.get("session-abc")).thenReturn(snowStream);
 
-        proxyService.onApplicationEvent(streamFinishedEvent);
+        proxyServiceSpyStreams.onApplicationEvent(streamFinishedEvent);
 
         verify(snowStream).stop();
     }

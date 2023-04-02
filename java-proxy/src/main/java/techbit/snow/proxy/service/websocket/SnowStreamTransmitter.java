@@ -1,6 +1,7 @@
 package techbit.snow.proxy.service.websocket;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import techbit.snow.proxy.dto.SnowAnimationBackground;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.stream.SnowStream;
@@ -21,17 +22,17 @@ public class SnowStreamTransmitter implements SnowStream.Customizations {
     }
 
     @Override
-    public void onMetadataEncoded(SnowAnimationMetadata metadata) {
+    public void onAnimationInitialized(SnowAnimationMetadata metadata, SnowAnimationBackground background) {
         sendToClient();
     }
 
     @Override
-    public void onFrameEncoded(SnowDataFrame frame) {
+    public void onFrameSent(SnowDataFrame frame) {
         sendToClient();
     }
 
     @Override
-    public boolean isStreamActive() {
+    public boolean isAnimationActive() {
         return isActive;
     }
 

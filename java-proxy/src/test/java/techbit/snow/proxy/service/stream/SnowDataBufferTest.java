@@ -13,10 +13,11 @@ import techbit.snow.proxy.dto.SnowDataFrame;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static techbit.snow.proxy.service.stream.TestingFrames.frame;
 
 @SuppressWarnings("unused")
 @ExtendWith(MockitoExtension.class)
-class SnowDataBufferTest {
+class SnowDataBufferTest implements TestingFrames {
 
     @Mock
     private BlockingBag<Integer, SnowDataFrame> bag;
@@ -270,7 +271,7 @@ class SnowDataBufferTest {
 
         TestFramework.runOnce(new MultithreadedTestCase() {
 
-            void thread1() throws InterruptedException {
+            void thread1() {
                 waitForTick(1);
                 buffer.push(frame(1));
                 waitForTick(2);
@@ -288,8 +289,4 @@ class SnowDataBufferTest {
         }, 10, 100);
     }
 
-    private SnowDataFrame frame(int frameNum) {
-        return new SnowDataFrame(frameNum, 0, null, null, null,
-                SnowDataFrame.NO_BACKGROUND, SnowDataFrame.NO_BASIS);
-    }
 }

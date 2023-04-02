@@ -19,8 +19,9 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static techbit.snow.proxy.service.stream.TestingFrames.frame;
 
-abstract public class SnowStreamBaseTest {
+abstract public class SnowStreamBaseTest implements TestingFrames {
 
     @Mock
     protected NamedPipe pipe;
@@ -63,13 +64,8 @@ abstract public class SnowStreamBaseTest {
 
         lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(new byte[]{}));
 
-        lenient().when(customs.isStreamActive()).thenReturn(true);
+        lenient().when(customs.isAnimationActive()).thenReturn(true);
 
         snowStream = new SnowStream("session-xyz", snowConfig, pipe, phpSnow, buffer, decoder, eventPublisher);
-    }
-
-    protected SnowDataFrame frame(int frameNum) {
-        return new SnowDataFrame(frameNum, 0, null, null, null,
-                SnowDataFrame.NO_BACKGROUND, SnowDataFrame.NO_BASIS);
     }
 }

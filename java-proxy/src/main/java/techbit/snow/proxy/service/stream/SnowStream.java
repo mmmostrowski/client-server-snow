@@ -1,13 +1,14 @@
 package techbit.snow.proxy.service.stream;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import jakarta.annotation.Nullable;
 import lombok.experimental.StandardException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import techbit.snow.proxy.dto.SnowAnimationBackground;
+import techbit.snow.proxy.dto.SnowAnimationBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.exception.IncompatibleConfigException;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
+
 @Log4j2
 @Service
 @Scope(SCOPE_PROTOTYPE)
@@ -37,20 +39,22 @@ public class SnowStream {
     @StandardException
     public static class ConsumerThreadException extends Exception { }
 
+    @SuppressWarnings("ALL")
     public interface Customizations {
-        default void onMetadataEncoded(SnowAnimationMetadata metadata) {}
-        default void onFrameEncoded(SnowDataFrame frame) {}
-        default boolean isStreamActive() { return true; }
+        default void onAnimationInitialized(SnowAnimationMetadata metadata, SnowAnimationBackground background) { }
+        default boolean isAnimationActive() { return true; }
+        default void onAnimationFinished() { }
+        default void onFrameSent(SnowDataFrame frame) { }
     }
-
     public class SnowStreamFinishedEvent extends ApplicationEvent {
+
         public SnowStreamFinishedEvent(Object source) {
             super(source);
         }
-
         public String getSessionId() {
             return sessionId;
         }
+
     }
 
     private final String sessionId;
@@ -64,7 +68,9 @@ public class SnowStream {
     private volatile boolean running = false;
     private volatile boolean destroyed = false;
     private volatile ConsumerThreadException consumerException;
-    private @Nullable SnowAnimationMetadata metadata;
+    private SnowAnimationMetadata metadata;
+    private SnowAnimationBackground background;
+
     private final ExecutorService executor = Executors.newSingleThreadExecutor(
             new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
     );
@@ -107,50 +113,44 @@ public class SnowStream {
         }
 
         log.debug("startConsumingSnowData( {} ) | Opening pipe stream", sessionId);
-        InputStream stream = pipe.inputStream();
+        final InputStream stream = pipe.inputStream();
 
         log.debug("startConsumingSnowData( {} ) | Reading metadata", sessionId);
         metadata = decoder.decodeMetadata(new DataInputStream(stream));
 
-        executor.submit(() -> consumeSnowFromPhpInThread(stream));
+        log.debug("startConsumingSnowData( {} ) | Reading background", sessionId);
+        background = decoder.decodeBackground(new DataInputStream(stream));
+
+        log.debug("startConsumingSnowData( {} ) | Running worker thread", sessionId);
+        executor.submit(() -> consumePhpSnowInAThread(stream));
         running = true;
     }
 
-    public void waitUntilConsumerThreadFinished() throws InterruptedException {
-        if (!running) {
-            return;
-        }
-        consumerGoingDownLock.acquire();
-    }
-
-    public void stop() throws IOException, InterruptedException {
-        if (running) {
-            stopConsumerThread();
-        }
-        phpSnowApp.stop();
-        pipe.destroy();
-        metadata = null;
-        destroyed = true;
-    }
-
-    private void consumeSnowFromPhpInThread(InputStream stream) {
-        try (stream) {
+    private void consumePhpSnowInAThread(InputStream stream) {
+        try (stream; final DataInputStream dataStream = new DataInputStream(stream)) {
             log.debug("consumeSnowFromPipeThread( {} ) | Start pipe", sessionId);
-            try (final DataInputStream dataStream = new DataInputStream(stream)) {
-                while (isActive()) {
-                    final SnowDataFrame frame = decoder.decodeFrame(dataStream);
-                    if (frame == SnowDataFrame.LAST) {
-                        break;
-                    }
-                    log.trace("consumeSnowFromPipeThread( {} ) | Frame {}", sessionId, frame.frameNum());
-                    buffer.push(frame);
+            SnowAnimationBasis currentBasis = SnowAnimationBasis.NONE;
+            while (isActive()) {
+                final SnowDataFrame frame = decoder.decodeFrame(dataStream);
+                if (frame == SnowDataFrame.LAST) {
+                    break;
                 }
-                log.trace("consumeSnowFromPipeThread( {} ) | Last Frame", sessionId);
-                buffer.push(SnowDataFrame.LAST);
-                buffer.waitUntilAllClientsUnregister();
+                final SnowAnimationBasis basis = decoder.decodeBasis(dataStream);
+                if (basis == SnowAnimationBasis.NONE) {
+                    log.trace("consumeSnowFromPipeThread( {} ) | Frame {}",
+                            sessionId, frame.frameNum());
+                } else {
+                    log.trace("consumeSnowFromPipeThread( {} ) | Frame {} ( with basis update )",
+                            sessionId, frame.frameNum());
+                    currentBasis = frame.basis();
+                }
+
+                buffer.push(frame.withBasis(currentBasis));
             }
+            log.trace("consumeSnowFromPipeThread( {} ) | Last Frame", sessionId);
+            buffer.push(SnowDataFrame.LAST);
+            buffer.waitUntilAllClientsUnregister();
             log.trace("consumeSnowFromPipeThread( {} ) | Stop pipe", sessionId);
-//        } catch (InterruptedException ignored) {
         } catch (Throwable e) {
             log.error("consumeSnowFromPipeThread( {} ) | ERROR", sessionId, e);
             consumerException = new ConsumerThreadException(e);
@@ -186,25 +186,32 @@ public class SnowStream {
         try {
             log.debug("streamTo( {} ) | Metadata", sessionId);
             encoder.encodeMetadata(metadata, out);
-            customs.onMetadataEncoded(metadata);
+            encoder.encodeBackground(background, out);
+            customs.onAnimationInitialized(metadata, background);
 
             log.debug("streamTo( {} ) | Reading Frames", sessionId);
+            SnowAnimationBasis currentBasis = SnowAnimationBasis.NONE;
             for (SnowDataFrame frame = buffer.firstFrame(); frame != SnowDataFrame.LAST; frame = buffer.nextFrame(frame)) {
                 log.trace("streamTo( {} ) | Frame {}", sessionId, frame.frameNum());
 
-                if (!customs.isStreamActive()) {
+                if (!customs.isAnimationActive()) {
                     break;
                 }
 
                 encoder.encodeFrame(frame, out);
-                customs.onFrameEncoded(frame);
+                if (frame.basis() == currentBasis) {
+                    encoder.encodeBasis(SnowAnimationBasis.NONE, out);
+                } else {
+                    encoder.encodeBasis(currentBasis = frame.basis(), out);
+                }
+                customs.onFrameSent(frame);
             }
 
             throwConsumerExceptionIfAny();
 
             log.debug("streamTo( {} ) | Last frame", sessionId);
             encoder.encodeFrame(SnowDataFrame.LAST, out);
-            customs.onFrameEncoded(SnowDataFrame.LAST);
+            customs.onAnimationFinished();
         } finally {
             log.debug("streamTo( {} ) | Unregister From Buffer", sessionId);
             buffer.unregisterClient(clientIdentifier);
@@ -216,6 +223,22 @@ public class SnowStream {
             log.debug("streamTo( {} ) | Consumer Exception", sessionId);
             throw consumerException;
         }
+    }
+
+    public void waitUntilConsumerThreadFinished() throws InterruptedException {
+        if (!running) {
+            return;
+        }
+        consumerGoingDownLock.acquire();
+    }
+
+    public void stop() throws IOException, InterruptedException {
+        if (running) {
+            stopConsumerThread();
+        }
+        phpSnowApp.stop();
+        pipe.destroy();
+        destroyed = true;
     }
 
     public void ensureCompatibleWithConfig(PhpSnowConfig config) {
