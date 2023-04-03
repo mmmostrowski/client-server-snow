@@ -37,6 +37,23 @@ public class BinaryStreamDecoder implements StreamDecoder {
         }
     }
 
+    public SnowAnimationBackground decodeBackground(DataInputStream dataStream) throws IOException {
+        byte hasBackground = dataStream.readByte();
+        if (hasBackground == 0) {
+            return SnowAnimationBackground.NONE;
+        }
+
+        final int canvasWidth = dataStream.readInt();
+        final int canvasHeight = dataStream.readInt();
+        final byte[][] pixels = new byte[canvasWidth][canvasHeight];
+        for (int y = 0; y < canvasHeight; ++y) {
+            for (int x = 0; x < canvasWidth; ++x) {
+                pixels[x][y] = dataStream.readByte();
+            }
+        }
+        return new SnowAnimationBackground(canvasWidth, canvasHeight, pixels);
+    }
+
     @Override
     public SnowDataFrame decodeFrame(DataInputStream dataStream) throws IOException {
         // frame num
@@ -61,23 +78,6 @@ public class BinaryStreamDecoder implements StreamDecoder {
         }
 
         return new SnowDataFrame(frameNum, chunkSize, particlesX, particlesY, flakeShapes);
-    }
-
-    public SnowAnimationBackground decodeBackground(DataInputStream dataStream) throws IOException {
-        byte hasBackground = dataStream.readByte();
-        if (hasBackground == 0) {
-            return SnowAnimationBackground.NONE;
-        }
-
-        final int canvasWidth = dataStream.readInt();
-        final int canvasHeight = dataStream.readInt();
-        final byte[][] pixels = new byte[canvasWidth][canvasHeight];
-        for (int y = 0; y < canvasHeight; ++y) {
-            for (int x = 0; x < canvasWidth; ++x) {
-                pixels[x][y] = dataStream.readByte();
-            }
-        }
-        return new SnowAnimationBackground(canvasWidth, canvasHeight, pixels);
     }
 
     public SnowAnimationBasis decodeBasis(DataInputStream dataStream) throws IOException {

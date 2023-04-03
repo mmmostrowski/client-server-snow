@@ -61,6 +61,13 @@ class PlainTextStreamEncoderTest {
     }
 
     @Test
+    void whenEncodingEmptyBackground_thenIsAvailableInOutput() throws IOException {
+        encoder.encodeBackground(SnowAnimationBackground.NONE, out);
+
+        assertTrue(outputContainsToken("Background.NONE"));
+    }
+
+    @Test
     void whenEncodingFrame_thenHumanReadableDataAreInOutput() throws IOException {
         SnowDataFrame frame = new SnowDataFrame(
                 78, 2,
@@ -115,6 +122,12 @@ class PlainTextStreamEncoderTest {
         assertTrue(outputContainsToken("100"));
     }
 
+    @Test
+    void whenEncodingEmptyBasis_thenIsAvailableInOutput() throws IOException {
+        encoder.encodeBasis(SnowAnimationBasis.NONE, out);
+
+        assertTrue(outputContainsToken("Basis.NONE"));
+    }
 
     private boolean outputContainsToken(String token) {
         String[] split = out.toString().split("[^a-zA-Z0-9-.]");

@@ -8,6 +8,9 @@ public record SnowAnimationBackground(int width, int height, byte[][] pixels) {
 
     @Override
     public String toString() {
+        if (this == NONE) {
+            return "Background.NONE";
+        }
         final String pixels = Arrays.stream(this.pixels)
                 .map(Arrays::toString)
                 .collect(Collectors.joining("\n    "));

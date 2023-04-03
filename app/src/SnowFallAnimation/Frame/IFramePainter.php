@@ -9,6 +9,10 @@ interface IFramePainter
 
     public function startAnimation(): void;
 
+    public function startFirstFrame(): void;
+
+    public function endFirstFrame(): void;
+
     public function startFrame(): void;
 
     public function endFrame(): void;

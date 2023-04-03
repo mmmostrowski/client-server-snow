@@ -37,7 +37,10 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
         private readonly int $canvasWidth,
         private readonly int $canvasHeight,
         private readonly ISnowFlakeShape $flakes,
-    ) {        
+    ) {
+        if (getenv("DEBUG_TO_SCREEN")) {
+            $this->debugToScreen = true;
+        }
     }
 
     public function initialize(AnimationContext $context): void
@@ -71,6 +74,29 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
             $this->startupConfig->targetFps(),
         );
     }
+
+	public function startFirstFrame(): void 
+    {
+        $this->backgroundPixels = [];
+	}
+	
+	public function endFirstFrame(): void 
+    {
+        // background
+        if (!$this->backgroundPixels) {
+            $this->fwriteData('C', 0);
+            return;
+        }        
+        $this->fwriteData('C', 1);
+        $this->fwriteData('N', $this->canvasWidth);
+        $this->fwriteData('N', $this->canvasHeight);
+        for ($y = 0; $y < $this->canvasHeight; ++$y) {
+            for ($x = 0; $x < $this->canvasWidth; ++$x) {
+                $this->fwriteData('C', $this->backgroundPixels[$x][$y] ?? 0);
+            }
+        }
+        $this->backgroundPixels = [];
+	}
 
 	public function startFrame(): void 
     {
@@ -127,22 +153,6 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
                 $particle[2], // c
             );
         }
-
-        // background
-        if ($this->backgroundPixels) {
-            $this->fwriteData('C', 1); // hasBackground
-            $this->fwriteData('N', $this->canvasWidth);
-            $this->fwriteData('N', $this->canvasHeight);
-            for ($y = 0; $y < $this->canvasHeight; ++$y) {
-                for ($x = 0; $x < $this->canvasWidth; ++$x) {
-                    $this->fwriteData('C', $this->backgroundPixels[$x][$y] ?? 0);
-                }
-            }
-        } else {
-            $this->fwriteData('C', 0); // hasBackground
-        }
-        $this->backgroundPixels = [];
-
 
         // basis
         $this->fwriteData('N', $this->basisPixelsCount);

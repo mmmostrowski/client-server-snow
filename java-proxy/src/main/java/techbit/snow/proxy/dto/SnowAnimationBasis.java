@@ -20,6 +20,9 @@ public record SnowAnimationBasis(int numOfPixels, int[] x, int[] y, byte[] pixel
 
     @Override
     public String toString() {
+        if (this == NONE) {
+            return "Basis.NONE";
+        }
         return "Basis{" +
                 "numOfPixels=" + numOfPixels +
                 ",\n    x=" + Arrays.toString(x) +

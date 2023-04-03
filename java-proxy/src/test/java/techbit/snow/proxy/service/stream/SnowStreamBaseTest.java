@@ -3,6 +3,7 @@ package techbit.snow.proxy.service.stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
+import techbit.snow.proxy.dto.SnowAnimationBasis;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
@@ -61,6 +62,7 @@ abstract public class SnowStreamBaseTest implements TestingFrames {
         ).iterator();
 
         lenient().when(decoder.decodeFrame(any())).then(i -> inputFrames.next());
+        lenient().when(decoder.decodeBasis(any())).thenReturn(SnowAnimationBasis.NONE);
 
         lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(new byte[]{}));
 

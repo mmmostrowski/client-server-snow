@@ -57,9 +57,11 @@ final class SnowFallAnimation implements IAnimation
         $aliveObjects = $this->objects->allAliveObjects();
         $configurableObjects = $this->objects->allConfigurableObjects();
 
+        $this->painter->startFirstFrame();
         foreach ($visibleObjects as $object) {
             $object->renderFirstFrame();
         }
+        $this->painter->endFirstFrame();
 
         $maxFrames = $this->context->config()->animationDurationInFrames() + 1;
         while (--$maxFrames) {

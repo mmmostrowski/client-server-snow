@@ -114,12 +114,13 @@ public class SnowStream {
 
         log.debug("startConsumingSnowData( {} ) | Opening pipe stream", sessionId);
         final InputStream stream = pipe.inputStream();
+        final DataInputStream dataStream = new DataInputStream(stream);
 
         log.debug("startConsumingSnowData( {} ) | Reading metadata", sessionId);
-        metadata = decoder.decodeMetadata(new DataInputStream(stream));
+        metadata = decoder.decodeMetadata(dataStream);
 
         log.debug("startConsumingSnowData( {} ) | Reading background", sessionId);
-        background = decoder.decodeBackground(new DataInputStream(stream));
+        background = decoder.decodeBackground(dataStream);
 
         log.debug("startConsumingSnowData( {} ) | Running worker thread", sessionId);
         executor.submit(() -> consumePhpSnowInAThread(stream));
@@ -127,8 +128,9 @@ public class SnowStream {
     }
 
     private void consumePhpSnowInAThread(InputStream stream) {
-        try (stream; final DataInputStream dataStream = new DataInputStream(stream)) {
+        try (stream) {
             log.debug("consumeSnowFromPipeThread( {} ) | Start pipe", sessionId);
+            final DataInputStream dataStream = new DataInputStream(stream);
             SnowAnimationBasis currentBasis = SnowAnimationBasis.NONE;
             while (isActive()) {
                 final SnowDataFrame frame = decoder.decodeFrame(dataStream);
@@ -142,7 +144,7 @@ public class SnowStream {
                 } else {
                     log.trace("consumeSnowFromPipeThread( {} ) | Frame {} ( with basis update )",
                             sessionId, frame.frameNum());
-                    currentBasis = frame.basis();
+                    currentBasis = basis;
                 }
 
                 buffer.push(frame.withBasis(currentBasis));
