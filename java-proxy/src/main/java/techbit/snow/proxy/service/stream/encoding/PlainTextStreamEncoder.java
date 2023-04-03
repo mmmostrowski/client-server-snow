@@ -1,8 +1,8 @@
 package techbit.snow.proxy.service.stream.encoding;
 
 import org.springframework.stereotype.Component;
-import techbit.snow.proxy.dto.SnowAnimationBackground;
-import techbit.snow.proxy.dto.SnowAnimationBasis;
+import techbit.snow.proxy.dto.SnowBackground;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
@@ -28,13 +28,13 @@ public class PlainTextStreamEncoder implements StreamEncoder {
     }
 
     @Override
-    public void encodeBackground(SnowAnimationBackground background, OutputStream out) throws IOException {
+    public void encodeBackground(SnowBackground background, OutputStream out) throws IOException {
         out.write(background.toString().getBytes(StandardCharsets.UTF_8));
         out.write(separator);
     }
 
     @Override
-    public void encodeBasis(SnowAnimationBasis basis, OutputStream out) throws IOException {
+    public void encodeBasis(SnowBasis basis, OutputStream out) throws IOException {
         out.write(basis.toString().getBytes(StandardCharsets.UTF_8));
         out.write(separator);
     }

@@ -5,8 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import techbit.snow.proxy.dto.SnowAnimationBackground;
-import techbit.snow.proxy.dto.SnowAnimationBasis;
+import techbit.snow.proxy.dto.SnowBackground;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
@@ -62,10 +62,10 @@ class BinaryStreamDecoderTest {
                 0x0,
         };
 
-        SnowAnimationBackground background = decoder.decodeBackground(
+        SnowBackground background = decoder.decodeBackground(
                 new DataInputStream(new ByteArrayInputStream(binary)));
 
-        assertSame(SnowAnimationBackground.NONE, background);
+        assertSame(SnowBackground.NONE, background);
     }
 
     @Test
@@ -79,7 +79,7 @@ class BinaryStreamDecoderTest {
                 0x7, 0x9,
         };
 
-        SnowAnimationBackground background = decoder.decodeBackground(
+        SnowBackground background = decoder.decodeBackground(
                 new DataInputStream(new ByteArrayInputStream(binary)));
 
         assertEquals(2, background.width());
@@ -120,7 +120,7 @@ class BinaryStreamDecoderTest {
         assertEquals(2.75f, frame.x(1));
         assertEquals(0.0f, frame.y(1));
         assertEquals(4, frame.flakeShape(1));
-        assertSame(SnowAnimationBasis.NONE, frame.basis());
+        assertSame(SnowBasis.NONE, frame.basis());
     }
 
     @Test
@@ -139,10 +139,10 @@ class BinaryStreamDecoderTest {
                 0x0, 0x0, 0x0, 0x0,  // zero basis pixels
         };
 
-        SnowAnimationBasis basis = decoder.decodeBasis(
+        SnowBasis basis = decoder.decodeBasis(
                 new DataInputStream(new ByteArrayInputStream(binary)));
 
-        assertSame(SnowAnimationBasis.NONE, basis);
+        assertSame(SnowBasis.NONE, basis);
     }
 
     @Test
@@ -159,7 +159,7 @@ class BinaryStreamDecoderTest {
                 0x9,                 // pixel 2
         };
 
-        SnowAnimationBasis basis = decoder.decodeBasis(
+        SnowBasis basis = decoder.decodeBasis(
                 new DataInputStream(new ByteArrayInputStream(binary)));
 
         assertEquals(2, basis.numOfPixels());

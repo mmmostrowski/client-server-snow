@@ -40,11 +40,11 @@ public class PhpSnowApp {
             Objects.toString(phpSnowPath),
             "server",
             Objects.toString(sessionId),
-            Objects.toString(config.getWidth()),
-            Objects.toString(config.getHeight()),
-            Objects.toString(config.getFps()),
-            Objects.toString(config.getDuration().getSeconds()),
-            Objects.toString(config.getPresetName())
+            Objects.toString(config.width()),
+            Objects.toString(config.height()),
+            Objects.toString(config.fps()),
+            Objects.toString(config.durationInSeconds()),
+            Objects.toString(config.presetName())
         );
 
         String cmd = String.join(" ", builder.command());

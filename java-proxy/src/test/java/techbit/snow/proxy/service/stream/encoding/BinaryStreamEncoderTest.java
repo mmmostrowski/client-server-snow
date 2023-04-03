@@ -2,8 +2,8 @@ package techbit.snow.proxy.service.stream.encoding;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import techbit.snow.proxy.dto.SnowAnimationBackground;
-import techbit.snow.proxy.dto.SnowAnimationBasis;
+import techbit.snow.proxy.dto.SnowBackground;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
@@ -39,7 +39,7 @@ class BinaryStreamEncoderTest {
 
     @Test
     void whenEncodingBackground_thenBinaryDataAreInOutput() throws IOException {
-        SnowAnimationBackground background = new SnowAnimationBackground(4, 4,
+        SnowBackground background = new SnowBackground(4, 4,
             new byte[][] {
                 new byte[] { 1, 2, 3, 4 },
                 new byte[] { 5, 6, 7, 8 },
@@ -90,7 +90,7 @@ class BinaryStreamEncoderTest {
 
     @Test
     void whenEncodingBasis_thenBinaryDataAreInOutput() throws IOException {
-        SnowAnimationBasis basis = new SnowAnimationBasis(5,
+        SnowBasis basis = new SnowBasis(5,
             new int[] { 1, 2, 3, 4, 5 },
             new int[] { 5, 4, 3, 2, 1 },
             new byte[] { 11, 12, 13, 14, 15 }

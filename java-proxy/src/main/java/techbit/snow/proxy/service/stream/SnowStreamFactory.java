@@ -18,14 +18,10 @@ import java.util.Map;
 @Primary
 public class SnowStreamFactory {
 
-    private final int bufferSizeInFrames;
-
-    private final PhpSnowConfigConverter configProvider;
-
-    private final String applicationPid;
-
     private final Path pipesDir;
-
+    private final String applicationPid;
+    private final int bufferSizeInFrames;
+    private final PhpSnowConfigConverter configProvider;
     private final ApplicationEventPublisher applicationEventPublisher;
 
 

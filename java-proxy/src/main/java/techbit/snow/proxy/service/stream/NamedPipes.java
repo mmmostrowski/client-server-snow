@@ -8,6 +8,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
+
 @Component
 @SuppressWarnings("unused")
 public class NamedPipes {
@@ -15,12 +18,16 @@ public class NamedPipes {
     @PostConstruct
     public void destroyAll() throws IOException {
         final File[] files = pipesDir().toFile().listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (!file.isDirectory() && !file.delete()) {
-                    throw new IOException("Cannot delete pipe file: " + file);
-                }
-            }
+        if (files == null) {
+            return;
+        }
+
+        String problematicFiles = stream(files)
+                .filter((f) -> !f.isDirectory() && !f.delete())
+                .map(File::toString)
+                .collect(joining(", "));
+        if (!problematicFiles.isEmpty()) {
+            throw new IOException("Cannot delete pipe files: " + problematicFiles);
         }
     }
 

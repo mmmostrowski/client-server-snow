@@ -1,7 +1,7 @@
 package techbit.snow.proxy.service.stream.encoding;
 
-import techbit.snow.proxy.dto.SnowAnimationBackground;
-import techbit.snow.proxy.dto.SnowAnimationBasis;
+import techbit.snow.proxy.dto.SnowBackground;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
@@ -12,10 +12,10 @@ public interface StreamEncoder {
 
     void encodeMetadata(SnowAnimationMetadata metadata, OutputStream out) throws IOException;
 
-    void encodeBackground(SnowAnimationBackground background, OutputStream out) throws IOException;
+    void encodeBackground(SnowBackground background, OutputStream out) throws IOException;
 
     void encodeFrame(SnowDataFrame frame, OutputStream out) throws IOException;
 
-    void encodeBasis(SnowAnimationBasis basis, OutputStream out) throws IOException;
+    void encodeBasis(SnowBasis basis, OutputStream out) throws IOException;
 
 }

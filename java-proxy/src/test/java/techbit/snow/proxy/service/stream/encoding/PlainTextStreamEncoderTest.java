@@ -2,8 +2,8 @@ package techbit.snow.proxy.service.stream.encoding;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import techbit.snow.proxy.dto.SnowAnimationBackground;
-import techbit.snow.proxy.dto.SnowAnimationBasis;
+import techbit.snow.proxy.dto.SnowBackground;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
@@ -40,7 +40,7 @@ class PlainTextStreamEncoderTest {
 
     @Test
     void whenEncodingBackground_thenHumanReadableDataAreInOutput() throws IOException {
-        SnowAnimationBackground background = new SnowAnimationBackground(3, 2,
+        SnowBackground background = new SnowBackground(3, 2,
                 new byte[][]{
                         new byte[]{31, 33},
                         new byte[]{41, 44},
@@ -62,7 +62,7 @@ class PlainTextStreamEncoderTest {
 
     @Test
     void whenEncodingEmptyBackground_thenIsAvailableInOutput() throws IOException {
-        encoder.encodeBackground(SnowAnimationBackground.NONE, out);
+        encoder.encodeBackground(SnowBackground.NONE, out);
 
         assertTrue(outputContainsToken("Background.NONE"));
     }
@@ -100,7 +100,7 @@ class PlainTextStreamEncoderTest {
 
     @Test
     void whenEncodingBasis_thenIsAvailableInOutput() throws IOException {
-        SnowAnimationBasis basis = new SnowAnimationBasis(4,
+        SnowBasis basis = new SnowBasis(4,
                 new int[]{9971, 9972, 9973, 9974},
                 new int[]{99711, 99712, 99713, 99714},
                 new byte[]{97, 98, 99, 100}
@@ -124,7 +124,7 @@ class PlainTextStreamEncoderTest {
 
     @Test
     void whenEncodingEmptyBasis_thenIsAvailableInOutput() throws IOException {
-        encoder.encodeBasis(SnowAnimationBasis.NONE, out);
+        encoder.encodeBasis(SnowBasis.NONE, out);
 
         assertTrue(outputContainsToken("Basis.NONE"));
     }

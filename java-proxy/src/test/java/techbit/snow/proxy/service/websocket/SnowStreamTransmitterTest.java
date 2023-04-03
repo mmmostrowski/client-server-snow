@@ -8,7 +8,7 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import techbit.snow.proxy.dto.SnowAnimationBackground;
+import techbit.snow.proxy.dto.SnowBackground;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
@@ -26,7 +26,7 @@ class SnowStreamTransmitterTest {
     @Mock
     private SnowAnimationMetadata metadata;
     @Mock
-    private SnowAnimationBackground background;
+    private SnowBackground background;
     @Mock
     private SnowDataFrame snowDataFrame;
     private byte[] byteArray;
@@ -41,20 +41,20 @@ class SnowStreamTransmitterTest {
 
     @Test
     void whenBrandNewTransmitter_thenHasActiveStream() {
-        Assertions.assertTrue(transmitter.isAnimationActive());
+        Assertions.assertTrue(transmitter.continueStreaming());
     }
 
     @Test
     void whenTransmitterDeactivated_thenHasInactiveStream() {
         transmitter.deactivate();
-        Assertions.assertFalse(transmitter.isAnimationActive());
+        Assertions.assertFalse(transmitter.continueStreaming());
     }
 
     @Test
     void whenMetadataEncodedIntoOutputStream_thenFlushItToWebsocketMessage() {
         when(output.toByteArray()).thenReturn(byteArray);
 
-        transmitter.onAnimationInitialized(metadata, background);
+        transmitter.onStreamStart(metadata, background);
 
         InOrder inOrder = inOrder(messagingTemplate, output);
         inOrder.verify(messagingTemplate).convertAndSendToUser(
@@ -66,7 +66,7 @@ class SnowStreamTransmitterTest {
     void whenSnowDataFrameEncodedIntoOutputStream_thenFlushItToWebsocketMessage() {
         when(output.toByteArray()).thenReturn(byteArray);
 
-        transmitter.onFrameSent(snowDataFrame);
+        transmitter.onFrameStreamed(snowDataFrame);
 
         InOrder inOrder = inOrder(messagingTemplate, output);
         inOrder.verify(messagingTemplate).convertAndSendToUser(

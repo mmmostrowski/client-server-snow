@@ -57,9 +57,7 @@ public class BlockingBag<K, V> {
     }
 
     public void removeAll() {
-        for (final K key : locks.keySet()) {
-            remove(key);
-        }
+        locks.keySet().forEach(this::remove);
     }
 
     private Object lockFor(@Nonnull K key) {

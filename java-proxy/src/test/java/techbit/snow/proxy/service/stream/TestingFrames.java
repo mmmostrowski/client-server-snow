@@ -1,14 +1,14 @@
 package techbit.snow.proxy.service.stream;
 
 import com.google.common.collect.Maps;
-import techbit.snow.proxy.dto.SnowAnimationBasis;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.util.Map;
 
 public interface TestingFrames {
 
-    Map<Integer, SnowAnimationBasis> basisInstances = Maps.newConcurrentMap();
+    Map<Integer, SnowBasis> basisInstances = Maps.newConcurrentMap();
 
     static SnowDataFrame frame(int frameNum) {
         return new SnowDataFrame(frameNum, 0, null, null, null);
@@ -18,8 +18,8 @@ public interface TestingFrames {
         return new SnowDataFrame(frameNum, 0, null, null, null, basis(basisId));
     }
 
-    static SnowAnimationBasis basis(int instanceId) {
-        return basisInstances.computeIfAbsent(instanceId, (k) -> new SnowAnimationBasis(
+    static SnowBasis basis(int instanceId) {
+        return basisInstances.computeIfAbsent(instanceId, (k) -> new SnowBasis(
                 0, null, null, null
         ));
     }

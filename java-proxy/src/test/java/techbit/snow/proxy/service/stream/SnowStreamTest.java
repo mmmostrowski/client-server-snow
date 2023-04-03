@@ -6,7 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import techbit.snow.proxy.dto.SnowAnimationBasis;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.exception.IncompatibleConfigException;
@@ -170,7 +170,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.streamTo(outputStream, encoder, customs);
 
-        verify(customs).onAnimationInitialized(any(), any());
+        verify(customs).onStreamStart(any(), any());
     }
 
     @Test
@@ -182,9 +182,8 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.streamTo(outputStream, encoder, customs);
 
-        verify(customs).onAnimationFinished();
+        verify(customs).onStreamStop();
     }
-
 
     @Test
     void givenCustomizations_whenStream_thenOnFrameEncodedHookInvoked() throws ConsumerThreadException, IOException, InterruptedException {
@@ -196,8 +195,8 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.streamTo(outputStream, encoder, customs);
 
-        verify(customs).onFrameSent(frame(1));
-        verify(customs).onFrameSent(frame(2));
+        verify(customs).onFrameStreamed(frame(1));
+        verify(customs).onFrameStreamed(frame(2));
     }
 
     @Test
@@ -209,14 +208,14 @@ class SnowStreamTest extends SnowStreamBaseTest {
         when(buffer.nextFrame(frame(3))).thenReturn(SnowDataFrame.LAST);
 
         final AtomicInteger c = new AtomicInteger();
-        when(customs.isAnimationActive()).then((i) -> c.incrementAndGet() < 3);
+        when(customs.continueStreaming()).then((i) -> c.incrementAndGet() < 3);
 
         snowStream.startConsumingSnowData();
         snowStream.streamTo(outputStream, encoder, customs);
 
-        verify(customs).onFrameSent(frame(1));
-        verify(customs).onFrameSent(frame(2));
-        verify(customs, never()).onFrameSent(frame(3));
+        verify(customs).onFrameStreamed(frame(1));
+        verify(customs).onFrameStreamed(frame(2));
+        verify(customs, never()).onFrameStreamed(frame(3));
     }
 
     @Test
@@ -298,14 +297,14 @@ class SnowStreamTest extends SnowStreamBaseTest {
         InOrder inOrder = inOrder(encoder);
 
         inOrder.verify(encoder).encodeBasis(basis( 1), outputStream);
-        inOrder.verify(encoder).encodeBasis(SnowAnimationBasis.NONE, outputStream);
+        inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
         inOrder.verify(encoder).encodeBasis(basis( 2), outputStream);
-        inOrder.verify(encoder).encodeBasis(SnowAnimationBasis.NONE, outputStream);
-        inOrder.verify(encoder).encodeBasis(SnowAnimationBasis.NONE, outputStream);
+        inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
+        inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
         inOrder.verify(encoder).encodeBasis(basis( 3), outputStream);
-        inOrder.verify(encoder).encodeBasis(SnowAnimationBasis.NONE, outputStream);
-        inOrder.verify(encoder).encodeBasis(SnowAnimationBasis.NONE, outputStream);
-        inOrder.verify(encoder).encodeBasis(SnowAnimationBasis.NONE, outputStream);
+        inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
+        inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
+        inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
     }
 
     @Test

@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 class SnowDataFrameTest {
 
     @Mock
-    private SnowAnimationBasis basis;
+    private SnowBasis basis;
 
     @Test
     void givenLastFrame_whenAttachingBasis_thenBasisIsIgnoredAndReferenceToLastFrameIsReturned() {

@@ -41,46 +41,46 @@ class PhpSnowConfigConverterTest {
     void givenEmptyConfigMap_whenConvertFromMap_thenReturnsConfigObjectWithDefaults() {
         PhpSnowConfig config = coverter.fromMap(Collections.emptyMap());
 
-        assertEquals(Duration.ofMinutes(3), config.getDuration());
-        assertEquals("somePreset", config.getPresetName());
-        assertEquals(101, config.getWidth());
-        assertEquals(53, config.getHeight());
-        assertEquals(23, config.getFps());
+        assertEquals(Duration.ofMinutes(3), config.duration());
+        assertEquals("somePreset", config.presetName());
+        assertEquals(101, config.width());
+        assertEquals(53, config.height());
+        assertEquals(23, config.fps());
     }
 
     @Test
     void givenPresetName_whenConvertFromMap_thenReturnsValidConfigObject() {
         PhpSnowConfig config = coverter.fromMap(Map.of("presetName", "redefinedPresetName"));
 
-        assertEquals("redefinedPresetName", config.getPresetName());
+        assertEquals("redefinedPresetName", config.presetName());
     }
 
     @Test
     void givenFps_whenConvertFromMap_thenReturnsValidConfigObject() {
         PhpSnowConfig config = coverter.fromMap(Map.of("fps", "13"));
 
-        assertEquals(13, config.getFps());
+        assertEquals(13, config.fps());
     }
 
     @Test
     void givenWidth_whenConvertFromMap_thenReturnsValidConfigObject() {
         PhpSnowConfig config = coverter.fromMap(Map.of("width", "113"));
 
-        assertEquals(113, config.getWidth());
+        assertEquals(113, config.width());
     }
 
     @Test
     void givenHeight_whenConvertFromMap_thenReturnsValidConfigObject() {
         PhpSnowConfig config = coverter.fromMap(Map.of("height", "73"));
 
-        assertEquals(73, config.getHeight());
+        assertEquals(73, config.height());
     }
 
     @Test
     void givenduration_whenConvertFromMap_thenReturnsValidConfigObject() {
         PhpSnowConfig config = coverter.fromMap(Map.of("duration", "30"));
 
-        assertEquals(Duration.ofSeconds(30), config.getDuration());
+        assertEquals(Duration.ofSeconds(30), config.duration());
     }
 
     @Test
@@ -121,11 +121,11 @@ class PhpSnowConfigConverterTest {
                 "duration", "5940"
         ));
 
-        assertEquals("redefinedPresetName", config.getPresetName());
-        assertEquals(113, config.getWidth());
-        assertEquals(73, config.getHeight());
-        assertEquals(Duration.ofMinutes(99), config.getDuration());
-        assertEquals(13, config.getFps());
+        assertEquals("redefinedPresetName", config.presetName());
+        assertEquals(113, config.width());
+        assertEquals(73, config.height());
+        assertEquals(Duration.ofMinutes(99), config.duration());
+        assertEquals(13, config.fps());
     }
 
     @Test

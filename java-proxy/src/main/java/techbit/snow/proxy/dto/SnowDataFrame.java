@@ -7,17 +7,17 @@ public record SnowDataFrame(
         int frameNum,
         int chunkSize,
         float[] x, float[] y, byte[] flakeShapes,
-        SnowAnimationBasis basis
+        SnowBasis basis
 ) {
 
     public static final SnowDataFrame LAST = new SnowDataFrame(
-            -1, 0, new float[] {}, new float[] {}, new byte[] {}, SnowAnimationBasis.NONE);
+            -1, 0, new float[] {}, new float[] {}, new byte[] {}, SnowBasis.NONE);
 
     public SnowDataFrame(int frameNum, int chunkSize, float[] x, float[] y, byte[] flakeShapes) {
-        this(frameNum, chunkSize, x, y, flakeShapes, SnowAnimationBasis.NONE);
+        this(frameNum, chunkSize, x, y, flakeShapes, SnowBasis.NONE);
     }
 
-    public SnowDataFrame withBasis(SnowAnimationBasis basis) {
+    public SnowDataFrame withBasis(SnowBasis basis) {
         if (this == LAST) {
             return LAST;
         }

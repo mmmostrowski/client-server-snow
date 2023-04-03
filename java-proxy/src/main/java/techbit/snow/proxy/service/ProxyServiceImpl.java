@@ -24,9 +24,9 @@ import java.util.Map;
 @Primary
 public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowStream.SnowStreamFinishedEvent> {
 
-    private final Map<String, SnowStream> streams;
     private final PhpSnowConfigConverter configConverter;
     private final SnowStreamFactory snowStreamProvider;
+    private final Map<String, SnowStream> streams;
     private final SessionService session;
 
     @Autowired
@@ -56,7 +56,7 @@ public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowS
     }
 
     @Override
-    public void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.Customizations customs)
+    public void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.SnowDataClient customs)
             throws IOException, InterruptedException, ConsumerThreadException
     {
         snowStream(sessionId, Collections.emptyMap()).streamTo(out, encoder, customs);
@@ -86,7 +86,6 @@ public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowS
         if (!session.exists(sessionId)) {
             throw new InvalidSessionException("Unknown snow streaming session:" + sessionId);
         }
-
         final SnowStream stream = streams.get(sessionId);
         return stream.configDetails(configConverter);
     }

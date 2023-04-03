@@ -44,7 +44,7 @@ class ProxyServiceTest {
     @Mock
     private PhpSnowConfigConverter configProvider;
     @Mock
-    private SnowStream.Customizations customizations;
+    private SnowStream.SnowDataClient snowDataClient;
     @Mock
     private SnowStream.SnowStreamFinishedEvent streamFinishedEvent;
     private ProxyServiceImpl proxyService;
@@ -98,12 +98,12 @@ class ProxyServiceTest {
     void givenCustomizations_whenStream_thenStreamToANewStream() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.create(eq("session-abc"), eq(Collections.emptyMap()))).thenReturn(snowStream);
 
-        proxyService.streamSessionTo("session-abc", out, streamEncoder, customizations);
+        proxyService.streamSessionTo("session-abc", out, streamEncoder, snowDataClient);
 
         verify(session).create("session-abc");
         verify(snowStream).startPhpApp();
         verify(snowStream).startConsumingSnowData();
-        verify(snowStream).streamTo(out, streamEncoder, customizations);
+        verify(snowStream).streamTo(out, streamEncoder, snowDataClient);
     }
 
     @Test

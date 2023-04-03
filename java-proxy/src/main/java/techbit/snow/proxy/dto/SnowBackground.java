@@ -3,8 +3,8 @@ package techbit.snow.proxy.dto;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public record SnowAnimationBackground(int width, int height, byte[][] pixels) {
-    public static final SnowAnimationBackground NONE = new SnowAnimationBackground(0, 0, new byte[][] {});
+public record SnowBackground(int width, int height, byte[][] pixels) {
+    public static final SnowBackground NONE = new SnowBackground(0, 0, new byte[][] {});
 
     @Override
     public String toString() {

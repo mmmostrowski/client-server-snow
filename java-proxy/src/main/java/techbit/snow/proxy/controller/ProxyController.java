@@ -15,6 +15,7 @@ import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
 import java.io.IOException;
+import java.net.http.HttpRequest;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,7 +83,7 @@ public class ProxyController {
 
         return Map.of(
             "sessionId", sessionId,
-            "stopped", "ok"
+            "running", "ok"
         );
     }
 
@@ -98,8 +99,8 @@ public class ProxyController {
                 "sessionId", sessionId,
                 "exists", streaming.hasSession(sessionId),
                 "running", streaming.isSessionRunning(sessionId),
-                "streamTextUrl", urlOf(request, "/text/" + sessionId),
-                "streamWebsocketsStompBrokerUrl", urlOf(request, "/ws/"),
+                "streamTextUrl", urlTo(request, "/text/" + sessionId),
+                "streamWebsocketsStompBrokerUrl", urlTo(request, "/ws/"),
                 "streamWebsocketsUrl", "/app/stream/" + sessionId
         ));
 
@@ -132,8 +133,7 @@ public class ProxyController {
         return confMap;
     }
 
-    private static String urlOf(HttpServletRequest request, String s) {
-        return request.getScheme() + "://" + request.getServerName() + ':' + request.getServerPort()
-                + s;
+    private String urlTo(HttpServletRequest request, String location) {
+        return request.getScheme() + "://" + request.getServerName() + ':' + request.getServerPort() + location;
     }
 }

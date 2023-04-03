@@ -2,8 +2,8 @@ package techbit.snow.proxy.service.stream.encoding;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
-import techbit.snow.proxy.dto.SnowAnimationBackground;
-import techbit.snow.proxy.dto.SnowAnimationBasis;
+import techbit.snow.proxy.dto.SnowBackground;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
@@ -37,10 +37,10 @@ public class BinaryStreamDecoder implements StreamDecoder {
         }
     }
 
-    public SnowAnimationBackground decodeBackground(DataInputStream dataStream) throws IOException {
+    public SnowBackground decodeBackground(DataInputStream dataStream) throws IOException {
         byte hasBackground = dataStream.readByte();
         if (hasBackground == 0) {
-            return SnowAnimationBackground.NONE;
+            return SnowBackground.NONE;
         }
 
         final int canvasWidth = dataStream.readInt();
@@ -51,7 +51,7 @@ public class BinaryStreamDecoder implements StreamDecoder {
                 pixels[x][y] = dataStream.readByte();
             }
         }
-        return new SnowAnimationBackground(canvasWidth, canvasHeight, pixels);
+        return new SnowBackground(canvasWidth, canvasHeight, pixels);
     }
 
     @Override
@@ -80,10 +80,10 @@ public class BinaryStreamDecoder implements StreamDecoder {
         return new SnowDataFrame(frameNum, chunkSize, particlesX, particlesY, flakeShapes);
     }
 
-    public SnowAnimationBasis decodeBasis(DataInputStream dataStream) throws IOException {
+    public SnowBasis decodeBasis(DataInputStream dataStream) throws IOException {
         final int numOfPixels = dataStream.readInt();
         if (numOfPixels == 0) {
-            return SnowAnimationBasis.NONE;
+            return SnowBasis.NONE;
         }
         final int[] x = new int[numOfPixels];
         final int[] y = new int[numOfPixels];
@@ -95,7 +95,7 @@ public class BinaryStreamDecoder implements StreamDecoder {
             pixels[i] = dataStream.readByte();
         }
 
-        return new SnowAnimationBasis(numOfPixels, x, y, pixels);
+        return new SnowBasis(numOfPixels, x, y, pixels);
     }
 
 }

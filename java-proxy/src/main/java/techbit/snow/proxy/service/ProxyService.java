@@ -12,7 +12,7 @@ public interface ProxyService {
     void startSession(String sessionId, Map<String, String> confMap)
             throws IOException;
 
-    void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.Customizations customs)
+    void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.SnowDataClient customs)
             throws IOException, InterruptedException, SnowStream.ConsumerThreadException;
 
     void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, Map<String, String> confMap)

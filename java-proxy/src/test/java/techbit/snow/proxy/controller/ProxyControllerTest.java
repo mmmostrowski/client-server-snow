@@ -162,7 +162,7 @@ class ProxyControllerTest {
 
         assertEquals(Map.of(
                 "sessionId", "session-abc",
-                "stopped", "ok"
+                "running", "ok"
         ), response);
     }
 

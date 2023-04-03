@@ -1,8 +1,8 @@
 package techbit.snow.proxy.service.stream.encoding;
 
 import org.springframework.stereotype.Component;
-import techbit.snow.proxy.dto.SnowAnimationBackground;
-import techbit.snow.proxy.dto.SnowAnimationBasis;
+import techbit.snow.proxy.dto.SnowBackground;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
@@ -15,7 +15,7 @@ public class BinaryStreamEncoder implements StreamEncoder {
 
     @Override
     public void encodeMetadata(SnowAnimationMetadata metadata, OutputStream out) throws IOException {
-        DataOutputStream data = new DataOutputStream(out);
+        final DataOutputStream data = new DataOutputStream(out);
 
         data.writeInt(metadata.width());
         data.writeInt(metadata.height());
@@ -23,23 +23,24 @@ public class BinaryStreamEncoder implements StreamEncoder {
     }
 
     @Override
-    public void encodeBackground(SnowAnimationBackground background, OutputStream out) throws IOException {
-        DataOutputStream data = new DataOutputStream(out);
+    public void encodeBackground(SnowBackground background, OutputStream out) throws IOException {
+        final DataOutputStream data = new DataOutputStream(out);
 
         data.writeInt(background.width());
-        if (background.width() > 0) {
-            data.writeInt(background.height());
+        if (background.width() <= 0) {
+            return;
+        }
+        data.writeInt(background.height());
 
-            final byte[][] pixels = background.pixels();
-            for (int x = 0; x < background.width(); ++x) {
-                out.write(pixels[x]);
-            }
+        final byte[][] pixels = background.pixels();
+        for (int x = 0; x < background.width(); ++x) {
+            out.write(pixels[x]);
         }
     }
 
     @Override
     public void encodeFrame(SnowDataFrame frame, OutputStream out) throws IOException {
-        DataOutputStream data = new DataOutputStream(out);
+        final DataOutputStream data = new DataOutputStream(out);
 
         data.writeInt(frame.frameNum());
         data.writeInt(frame.chunkSize());
@@ -52,8 +53,8 @@ public class BinaryStreamEncoder implements StreamEncoder {
     }
 
     @Override
-    public void encodeBasis(SnowAnimationBasis basis, OutputStream out) throws IOException {
-        DataOutputStream data = new DataOutputStream(out);
+    public void encodeBasis(SnowBasis basis, OutputStream out) throws IOException {
+        final DataOutputStream data = new DataOutputStream(out);
 
         data.writeInt(basis.numOfPixels());
         for (int i = 0; i < basis.numOfPixels(); ++i) {

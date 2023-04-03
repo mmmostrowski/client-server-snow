@@ -7,8 +7,8 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import techbit.snow.proxy.dto.SnowAnimationBackground;
-import techbit.snow.proxy.dto.SnowAnimationBasis;
+import techbit.snow.proxy.dto.SnowBackground;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.exception.IncompatibleConfigException;
@@ -39,38 +39,36 @@ public class SnowStream {
     @StandardException
     public static class ConsumerThreadException extends Exception { }
 
-    @SuppressWarnings("ALL")
-    public interface Customizations {
-        default void onAnimationInitialized(SnowAnimationMetadata metadata, SnowAnimationBackground background) { }
-        default boolean isAnimationActive() { return true; }
-        default void onAnimationFinished() { }
-        default void onFrameSent(SnowDataFrame frame) { }
+    public interface SnowDataClient {
+        default Object identifier() { return Thread.currentThread(); }
+        default boolean continueStreaming() { return true; }
+        default void onStreamStart(SnowAnimationMetadata metadata, SnowBackground background) { }
+        default void onFrameStreamed(SnowDataFrame frame) { }
+        default void onStreamStop() { }
     }
-    public class SnowStreamFinishedEvent extends ApplicationEvent {
 
+    public class SnowStreamFinishedEvent extends ApplicationEvent {
         public SnowStreamFinishedEvent(Object source) {
             super(source);
         }
         public String getSessionId() {
             return sessionId;
         }
-
     }
 
+    private final NamedPipe pipe;
     private final String sessionId;
     private final PhpSnowApp phpSnowApp;
-    private final PhpSnowConfig phpSnowConfig;
     private final SnowDataBuffer buffer;
-    private final NamedPipe pipe;
     private final StreamDecoder decoder;
+    private final PhpSnowConfig phpSnowConfig;
     private final Semaphore consumerGoingDownLock = new Semaphore(0);
     private final ApplicationEventPublisher applicationEventPublisher;
-    private volatile boolean running = false;
-    private volatile boolean destroyed = false;
     private volatile ConsumerThreadException consumerException;
+    private volatile boolean destroyed = false;
+    private volatile boolean running = false;
     private SnowAnimationMetadata metadata;
-    private SnowAnimationBackground background;
-
+    private SnowBackground background;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(
             new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
     );
@@ -131,14 +129,14 @@ public class SnowStream {
         try (stream) {
             log.debug("consumeSnowFromPipeThread( {} ) | Start pipe", sessionId);
             final DataInputStream dataStream = new DataInputStream(stream);
-            SnowAnimationBasis currentBasis = SnowAnimationBasis.NONE;
+            SnowBasis currentBasis = SnowBasis.NONE;
             while (isActive()) {
                 final SnowDataFrame frame = decoder.decodeFrame(dataStream);
                 if (frame == SnowDataFrame.LAST) {
                     break;
                 }
-                final SnowAnimationBasis basis = decoder.decodeBasis(dataStream);
-                if (basis == SnowAnimationBasis.NONE) {
+                final SnowBasis basis = decoder.decodeBasis(dataStream);
+                if (basis == SnowBasis.NONE) {
                     log.trace("consumeSnowFromPipeThread( {} ) | Frame {}",
                             sessionId, frame.frameNum());
                 } else {
@@ -163,13 +161,7 @@ public class SnowStream {
         }
     }
 
-    public void streamTo(OutputStream out, StreamEncoder encoder)
-            throws IOException, InterruptedException, ConsumerThreadException
-    {
-        streamTo(out, encoder, new Customizations() {} );
-    }
-
-    public void streamTo(OutputStream out, StreamEncoder encoder, Customizations customs)
+    public void streamTo(OutputStream out, StreamEncoder encoder, SnowDataClient client)
             throws IOException, InterruptedException, ConsumerThreadException
     {
         throwConsumerExceptionIfAny();
@@ -180,44 +172,48 @@ public class SnowStream {
 
         log.debug("streamTo( {} ) | Start ({})", sessionId, phpSnowConfig);
 
-        final Object clientIdentifier = Thread.currentThread();
-
         log.debug("streamTo( {} ) | Register To Buffer", sessionId);
-        buffer.registerClient(clientIdentifier);
+        buffer.registerClient(client.identifier());
 
         try {
             log.debug("streamTo( {} ) | Metadata", sessionId);
             encoder.encodeMetadata(metadata, out);
             encoder.encodeBackground(background, out);
-            customs.onAnimationInitialized(metadata, background);
+            client.onStreamStart(metadata, background);
 
             log.debug("streamTo( {} ) | Reading Frames", sessionId);
-            SnowAnimationBasis currentBasis = SnowAnimationBasis.NONE;
+            SnowBasis currentBasis = SnowBasis.NONE;
             for (SnowDataFrame frame = buffer.firstFrame(); frame != SnowDataFrame.LAST; frame = buffer.nextFrame(frame)) {
                 log.trace("streamTo( {} ) | Frame {}", sessionId, frame.frameNum());
 
-                if (!customs.isAnimationActive()) {
+                if (!client.continueStreaming()) {
                     break;
                 }
 
                 encoder.encodeFrame(frame, out);
                 if (frame.basis() == currentBasis) {
-                    encoder.encodeBasis(SnowAnimationBasis.NONE, out);
+                    encoder.encodeBasis(SnowBasis.NONE, out);
                 } else {
                     encoder.encodeBasis(currentBasis = frame.basis(), out);
                 }
-                customs.onFrameSent(frame);
+                client.onFrameStreamed(frame);
             }
 
             throwConsumerExceptionIfAny();
 
             log.debug("streamTo( {} ) | Last frame", sessionId);
             encoder.encodeFrame(SnowDataFrame.LAST, out);
-            customs.onAnimationFinished();
+            client.onStreamStop();
         } finally {
             log.debug("streamTo( {} ) | Unregister From Buffer", sessionId);
-            buffer.unregisterClient(clientIdentifier);
+            buffer.unregisterClient(client.identifier());
         }
+    }
+
+    public void streamTo(OutputStream out, StreamEncoder encoder)
+            throws IOException, InterruptedException, ConsumerThreadException
+    {
+        streamTo(out, encoder, new SnowDataClient() {} );
     }
 
     private void throwConsumerExceptionIfAny() throws ConsumerThreadException {
