@@ -1,9 +1,9 @@
 package techbit.snow.proxy.service.stream.encoding;
 
 import org.springframework.stereotype.Component;
+import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowBackground;
 import techbit.snow.proxy.dto.SnowBasis;
-import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.io.IOException;

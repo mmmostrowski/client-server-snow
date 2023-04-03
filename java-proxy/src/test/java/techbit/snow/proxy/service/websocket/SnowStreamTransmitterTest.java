@@ -8,8 +8,8 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import techbit.snow.proxy.dto.SnowBackground;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
+import techbit.snow.proxy.dto.SnowBackground;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.io.ByteArrayOutputStream;

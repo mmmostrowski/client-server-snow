@@ -2,9 +2,9 @@ package techbit.snow.proxy.service.stream.encoding;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowBackground;
 import techbit.snow.proxy.dto.SnowBasis;
-import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.io.ByteArrayOutputStream;

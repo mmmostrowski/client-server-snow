@@ -14,28 +14,32 @@ import techbit.snow.proxy.service.stream.encoding.BinaryStreamDecoder;
 import java.nio.file.Path;
 import java.util.Map;
 
-@Component
 @Primary
+@Component
 public class SnowStreamFactory {
 
     private final Path pipesDir;
     private final String applicationPid;
     private final int bufferSizeInFrames;
+    private final String bootstrapLocation;
     private final PhpSnowConfigConverter configProvider;
     private final ApplicationEventPublisher applicationEventPublisher;
 
 
     public SnowStreamFactory(
-            @Autowired Path pipesDir,
             @Value("${phpsnow.buffer-size-in-frames}") int bufferSizeInFrames,
-            @Autowired String applicationPid,
-            @Autowired PhpSnowConfigConverter configProvider,
-            @Autowired ApplicationEventPublisher applicationEventPublisher) {
-        this.bufferSizeInFrames = bufferSizeInFrames;
-        this.configProvider = configProvider;
-        this.applicationPid = applicationPid;
-        this.pipesDir = pipesDir;
+            @Value("${phpsnow.bootstrap}") String bootstrapLocation,
+            ApplicationEventPublisher applicationEventPublisher,
+            PhpSnowConfigConverter configProvider,
+            String applicationPid,
+            Path pipesDir
+    ) {
         this.applicationEventPublisher = applicationEventPublisher;
+        this.bufferSizeInFrames = bufferSizeInFrames;
+        this.bootstrapLocation = bootstrapLocation;
+        this.applicationPid = applicationPid;
+        this.configProvider = configProvider;
+        this.pipesDir = pipesDir;
     }
 
     public SnowStream create(String sessionId, Map<String, String> config) {
@@ -65,20 +69,20 @@ public class SnowStreamFactory {
         );
     }
 
-    BinaryStreamDecoder createBinaryStreamDecoder() {
-        return new BinaryStreamDecoder();
+    PhpSnowApp createPhpSnowApp(String sessionId, PhpSnowConfig phpSnowConfig, String applicationPid, ProcessBuilder processBuilder) {
+        return new PhpSnowApp(sessionId, phpSnowConfig, applicationPid, processBuilder, bootstrapLocation);
     }
 
     SnowDataBuffer createSnowDataBuffer(int maxNumOfFrames, BlockingBag<Integer, SnowDataFrame> frames) {
         return new SnowDataBuffer(maxNumOfFrames, frames);
     }
 
-    PhpSnowApp createPhpSnowApp(String sessionId, PhpSnowConfig phpSnowConfig, String applicationPid, ProcessBuilder processBuilder) {
-        return new PhpSnowApp(sessionId, phpSnowConfig, applicationPid, processBuilder);
-    }
-
     NamedPipe createPipe(String sessionId, Path pipesDir) {
         return new NamedPipe(sessionId, pipesDir);
+    }
+
+    BinaryStreamDecoder createBinaryStreamDecoder() {
+        return new BinaryStreamDecoder();
     }
 
 }

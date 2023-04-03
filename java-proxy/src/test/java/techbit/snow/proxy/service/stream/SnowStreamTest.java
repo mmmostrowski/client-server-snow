@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.exception.IncompatibleConfigException;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
@@ -15,10 +15,8 @@ import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -103,12 +101,9 @@ class SnowStreamTest extends SnowStreamBaseTest {
 
     @Test
     void whenAskingForDetails_thenProvidingThemFromSnowStream() {
-        Map<String, Object> expected = Collections.emptyMap();
-        when(converter.toMap(snowConfig)).thenReturn(expected);
+        PhpSnowConfig details = snowStream.config();
 
-        Map<String, Object> details = snowStream.configDetails(converter);
-
-        Assertions.assertEquals(expected, details);
+        Assertions.assertEquals(snowConfig, details);
     }
 
     @Test

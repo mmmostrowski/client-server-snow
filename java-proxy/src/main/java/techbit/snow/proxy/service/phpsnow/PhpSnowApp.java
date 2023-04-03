@@ -1,51 +1,50 @@
 package techbit.snow.proxy.service.phpsnow;
 
-import com.google.common.io.Files;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Objects;
 
-import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
+import static com.google.common.io.Files.simplifyPath;
 
 @Log4j2
-@Service
-@Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class PhpSnowApp {
 
     private final String sessionId;
-
     private final PhpSnowConfig config;
-
     private final String applicationPid;
-
     private final ProcessBuilder builder;
-
+    private final String bootstrapLocation;
     private @Nullable Process process;
 
     public void start() throws IOException {
         stop();
-
-        final Path phpSnowPath = Path.of(Files.simplifyPath(System.getProperty("user.dir") + "/../run"));
-
-        builder.environment().put("SCRIPT_OWNER_PID", applicationPid);
-        builder.command(
-            Objects.toString(phpSnowPath),
-            "server",
-            Objects.toString(sessionId),
-            Objects.toString(config.width()),
-            Objects.toString(config.height()),
-            Objects.toString(config.fps()),
-            Objects.toString(config.durationInSeconds()),
-            Objects.toString(config.presetName())
+        startProcess(
+                Path.of(simplifyPath(currentDir() + "/" + bootstrapLocation)),
+                "server",
+                sessionId,
+                config.width(),
+                config.height(),
+                config.fps(),
+                config.durationInSeconds(),
+                config.presetName()
         );
+    }
+
+    private void startProcess(Object... args) throws IOException {
+        final String[] command = Arrays.stream(args)
+                .map(Objects::toString)
+                .toArray(String[]::new);
+
+        builder.command(command);
+        builder.environment().put("SCRIPT_OWNER_PID", applicationPid);
 
         String cmd = String.join(" ", builder.command());
         log.debug("start( {} ) | Starting process: {}", sessionId, cmd);
@@ -75,5 +74,9 @@ public class PhpSnowApp {
     @SneakyThrows
     private void waitAMoment()  {
         Thread.sleep(300);
+    }
+
+    private static String currentDir() {
+        return new File("").getAbsolutePath();
     }
 }

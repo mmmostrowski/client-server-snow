@@ -46,7 +46,12 @@ class SnowStreamFactoryTest {
     @BeforeEach
     void setup() {
         factory = spy(new SnowStreamFactory(
-                pipesDir, 12, "131", configProvider, eventPublisher));
+                12,
+                "somewhere",
+                eventPublisher,
+                configProvider,
+                "131",
+                pipesDir));
     }
 
     @Test

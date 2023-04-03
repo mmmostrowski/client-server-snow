@@ -32,7 +32,8 @@ class PhpSnowAppTest {
 
     @BeforeEach
     void setup() {
-        phpSnowApp = new PhpSnowApp("session-abc", config, "98765", builder);
+        phpSnowApp = new PhpSnowApp(
+                "session-abc", config, "98765", builder, "/location/some");
     }
 
     @Test
@@ -40,7 +41,7 @@ class PhpSnowAppTest {
         phpSnowApp.start();
 
         verify(builder).command(
-                argThat(s -> s.endsWith("/run")),
+                argThat(s -> s.endsWith("/some")),
                 eq("server"),
                 eq("session-abc"),
                 eq("135"),

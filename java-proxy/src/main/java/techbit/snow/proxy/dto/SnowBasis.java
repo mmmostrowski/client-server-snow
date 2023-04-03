@@ -25,8 +25,8 @@ public record SnowBasis(int numOfPixels, int[] x, int[] y, byte[] pixels) {
         }
         return "Basis{" +
                 "numOfPixels=" + numOfPixels +
-                ",\n    x=" + Arrays.toString(x) +
-                ",\n    y=" + Arrays.toString(y) +
+                ",\n    particlesX=" + Arrays.toString(x) +
+                ",\n    particlesY=" + Arrays.toString(y) +
                 ",\n    pixels=" + Arrays.toString(pixels) +
                 '}';
     }

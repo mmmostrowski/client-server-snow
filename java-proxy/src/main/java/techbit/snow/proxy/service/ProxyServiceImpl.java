@@ -51,22 +51,22 @@ public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowS
     }
 
     @Override
-    public void startSession(String sessionId, Map<String, String> confMap) throws IOException {
-        snowStream(sessionId, confMap);
+    public void startSession(String sessionId, Map<String, String> config) throws IOException {
+        snowStream(sessionId, config);
     }
 
     @Override
-    public void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.SnowDataClient customs)
+    public void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, Map<String, String> config)
             throws IOException, InterruptedException, ConsumerThreadException
     {
-        snowStream(sessionId, Collections.emptyMap()).streamTo(out, encoder, customs);
+        snowStream(sessionId, config).streamTo(out, encoder);
     }
 
     @Override
-    public void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, Map<String, String> confMap)
+    public void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.SnowDataClient client)
             throws IOException, InterruptedException, ConsumerThreadException
     {
-        snowStream(sessionId, confMap).streamTo(out, encoder);
+        snowStream(sessionId, Collections.emptyMap()).streamTo(out, encoder, client);
     }
 
     @Override
@@ -87,20 +87,20 @@ public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowS
             throw new InvalidSessionException("Unknown snow streaming session:" + sessionId);
         }
         final SnowStream stream = streams.get(sessionId);
-        return stream.configDetails(configConverter);
+        return configConverter.toMap(stream.config());
     }
 
-    private synchronized SnowStream snowStream(String sessionId, Map<String, String> confMap) throws IOException {
+    private synchronized SnowStream snowStream(String sessionId, Map<String, String> config) throws IOException {
         if (session.exists(sessionId)) {
             log.debug("snowStream( {} ) | Returning existing stream", sessionId);
             final SnowStream stream = streams.get(sessionId);
-            if (!confMap.isEmpty()) {
-                stream.ensureCompatibleWithConfig(configConverter.fromMap(confMap));
+            if (!config.isEmpty()) {
+                stream.ensureCompatibleWithConfig(configConverter.fromMap(config));
             }
             return stream;
         }
-        log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, confMap);
-        final SnowStream snow = snowStreamProvider.create(sessionId, confMap);
+        log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, config);
+        final SnowStream snow = snowStreamProvider.create(sessionId, config);
         snow.startPhpApp();
         snow.startConsumingSnowData();
         streams.put(sessionId, snow);

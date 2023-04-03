@@ -9,20 +9,21 @@ import java.util.Map;
 
 public interface ProxyService {
 
-    void startSession(String sessionId, Map<String, String> confMap)
+    void startSession(String sessionId, Map<String, String> config)
             throws IOException;
 
-    void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.SnowDataClient customs)
+    void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, Map<String, String> config)
             throws IOException, InterruptedException, SnowStream.ConsumerThreadException;
 
-    void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, Map<String, String> confMap)
+    void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.SnowDataClient client)
             throws IOException, InterruptedException, SnowStream.ConsumerThreadException;
 
-    void stopSession(String sessionId) throws IOException, InterruptedException;
-
-    Map<String, Object> sessionDetails(String sessionId);
+    void stopSession(String sessionId)
+            throws IOException, InterruptedException;
 
     boolean hasSession(String sessionId);
+
+    Map<String, Object> sessionDetails(String sessionId);
 
     boolean isSessionRunning(String sessionId);
 

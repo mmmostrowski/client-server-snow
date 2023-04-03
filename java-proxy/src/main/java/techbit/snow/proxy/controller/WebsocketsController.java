@@ -20,6 +20,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
+
 @Controller
 public class WebsocketsController implements ApplicationListener<SessionDisconnectEvent> {
 
@@ -42,7 +44,8 @@ public class WebsocketsController implements ApplicationListener<SessionDisconne
 
         final ByteArrayOutputStream output = new ByteArrayOutputStream();
         final SnowStreamTransmitter transmitter = createTransmitter(clientId, output);
-        transmitters.put((String)headers.get("simpSessionId"), transmitter);
+
+        transmitters.put(requireNonNull((String) headers.get("simpSessionId")), transmitter);
 
         streaming.streamSessionTo(sessionId, output, new BinaryStreamEncoder(), transmitter);
     }

@@ -6,7 +6,9 @@ import java.util.Objects;
 public record SnowDataFrame(
         int frameNum,
         int chunkSize,
-        float[] x, float[] y, byte[] flakeShapes,
+        float[] particlesX,
+        float[] particlesY,
+        byte[] flakeShapes,
         SnowBasis basis
 ) {
 
@@ -24,14 +26,14 @@ public record SnowDataFrame(
         if (Objects.equals(basis, basis())) {
             return this;
         }
-        return new SnowDataFrame(frameNum, chunkSize, x, y, flakeShapes, basis);
+        return new SnowDataFrame(frameNum, chunkSize, particlesX, particlesY, flakeShapes, basis);
     }
 
     public float x(int idx) {
-        return x[idx];
+        return particlesX[idx];
     }
     public float y(int idx) {
-        return y[idx];
+        return particlesY[idx];
     }
     public byte flakeShape(int idx) {
         return flakeShapes[idx];
@@ -42,8 +44,8 @@ public record SnowDataFrame(
         return "SnowDataFrame{\n" +
                 "  frameNum=" + frameNum +
                 ", chunkSize=" + chunkSize +
-                ", x=" + Arrays.toString(x) +
-                ", y=" + Arrays.toString(y) +
+                ", particlesX=" + Arrays.toString(particlesX) +
+                ", particlesY=" + Arrays.toString(particlesY) +
                 ", flakeShapes=" + Arrays.toString(flakeShapes) +
                 "\n}";
     }

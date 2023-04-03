@@ -17,8 +17,8 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
 
-@Component
 @Primary
+@Component
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class PhpSnowConfigConverter {
 
@@ -42,15 +42,14 @@ public class PhpSnowConfigConverter {
             @Value("${phpsnow.default.height}") int height,
             @Value("#{ ${phpsnow.default.animation-duration} * 1000 }") Duration duration,
             @Value("${phpsnow.default.fps}") int fps,
-            @Autowired Validator validator
+            Validator validator
     ) {
         this.presetName = presetName;
         this.width = width;
+        this.validator = validator;
         this.height = height;
         this.duration = duration;
         this.fps = fps;
-        this.validator = validator;
-
         this.mapper = new ObjectMapper();
         this.mapper.registerModule(new JavaTimeModule());
         this.defaults = mapper.convertValue(this, new TypeReference<>() {});
@@ -67,9 +66,7 @@ public class PhpSnowConfigConverter {
     private Map<String, Object> mapMergedWithDefaults(Map<String, String> config) {
         final Map<String, Object> result = Maps.newHashMap(defaults);
         result.putAll(config);
-        if (config.containsKey("duration")) {
-            result.put("duration", "PT" + config.get("duration") + "S");
-        }
+        result.computeIfPresent("duration", (k, v) -> "PT" + v + "S");
         return result;
     }
 
@@ -79,10 +76,10 @@ public class PhpSnowConfigConverter {
 
     private PhpSnowConfig validatedConfigOf(PhpSnowConfig snowConfig) {
         final Set<ConstraintViolation<PhpSnowConfig>> issues = validator.validate(snowConfig);
-        if (!issues.isEmpty()) {
-            throw new ConstraintViolationException(issues);
+        if (issues.isEmpty()) {
+            return snowConfig;
         }
-        return snowConfig;
+        throw new ConstraintViolationException(issues);
     }
 
 }

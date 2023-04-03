@@ -5,9 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowBackground;
 import techbit.snow.proxy.dto.SnowBasis;
-import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.io.ByteArrayInputStream;
@@ -97,12 +97,12 @@ class BinaryStreamDecoderTest {
                 0x0, 0x0, 0x0, 0x1,   // frame num
                 0x0, 0x0, 0x0, 0x2,   // chunk size
                 // chunk 0
-                0x0, 0x0, 0x0, 0x0,   // frame1.x
-                0x40, 0x20, 0x0, 0x0, // frame1.y
+                0x0, 0x0, 0x0, 0x0,   // frame1.particlesX
+                0x40, 0x20, 0x0, 0x0, // frame1.particlesY
                 0x3,                  // frame.flakeShape
                 // chunk 1
-                0x40, 0x30, 0x0, 0x0, // frame2.x
-                0x0, 0x0, 0x0, 0x0,   // frame2.y
+                0x40, 0x30, 0x0, 0x0, // frame2.particlesX
+                0x0, 0x0, 0x0, 0x0,   // frame2.particlesY
                 0x4,                  // frame.flakeShape
         };
 
@@ -111,8 +111,8 @@ class BinaryStreamDecoderTest {
 
         assertEquals(1, frame.frameNum());
         assertEquals(2, frame.chunkSize());
-        assertEquals(2, frame.x().length);
-        assertEquals(2, frame.y().length);
+        assertEquals(2, frame.particlesX().length);
+        assertEquals(2, frame.particlesY().length);
         assertEquals(2, frame.flakeShapes().length);
         assertEquals(0.0f, frame.x(0));
         assertEquals(2.5f, frame.y(0));

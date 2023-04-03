@@ -4,7 +4,6 @@ import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -25,7 +24,7 @@ public class ErrorHandler implements ErrorController {
 
     private final boolean canShowStacktrace;
 
-    public ErrorHandler(@Autowired boolean isDeveloperMode) {
+    public ErrorHandler(boolean isDeveloperMode) {
         this.canShowStacktrace = isDeveloperMode;
     }
 

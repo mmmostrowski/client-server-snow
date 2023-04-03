@@ -7,14 +7,13 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowBackground;
 import techbit.snow.proxy.dto.SnowBasis;
-import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.exception.IncompatibleConfigException;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
-import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
 import techbit.snow.proxy.service.stream.encoding.StreamDecoder;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 
@@ -22,7 +21,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -40,14 +38,15 @@ public class SnowStream {
     public static class ConsumerThreadException extends Exception { }
 
     public interface SnowDataClient {
+
         default Object identifier() { return Thread.currentThread(); }
         default boolean continueStreaming() { return true; }
         default void onStreamStart(SnowAnimationMetadata metadata, SnowBackground background) { }
         default void onFrameStreamed(SnowDataFrame frame) { }
         default void onStreamStop() { }
     }
-
     public class SnowStreamFinishedEvent extends ApplicationEvent {
+
         public SnowStreamFinishedEvent(Object source) {
             super(source);
         }
@@ -55,8 +54,8 @@ public class SnowStream {
             return sessionId;
         }
     }
-
     private final NamedPipe pipe;
+
     private final String sessionId;
     private final PhpSnowApp phpSnowApp;
     private final SnowDataBuffer buffer;
@@ -72,7 +71,6 @@ public class SnowStream {
     private final ExecutorService executor = Executors.newSingleThreadExecutor(
             new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
     );
-
 
     public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
                       NamedPipe pipe, PhpSnowApp phpSnowApp, SnowDataBuffer buffer,
@@ -239,14 +237,14 @@ public class SnowStream {
         destroyed = true;
     }
 
+    public PhpSnowConfig config() {
+        return phpSnowConfig;
+    }
+
     public void ensureCompatibleWithConfig(PhpSnowConfig config) {
         if (!phpSnowConfig.equals(config)) {
             throw new IncompatibleConfigException("You cannot change config when animation is running.");
         }
-    }
-
-    public Map<String, Object> configDetails(PhpSnowConfigConverter configConverter) {
-        return configConverter.toMap(phpSnowConfig);
     }
 
     private void stopConsumerThread() throws InterruptedException {

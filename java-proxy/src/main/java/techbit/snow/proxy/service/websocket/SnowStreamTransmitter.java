@@ -1,8 +1,8 @@
 package techbit.snow.proxy.service.websocket;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import techbit.snow.proxy.dto.SnowBackground;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
+import techbit.snow.proxy.dto.SnowBackground;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.stream.SnowStream;
 
@@ -10,10 +10,10 @@ import java.io.ByteArrayOutputStream;
 
 public class SnowStreamTransmitter implements SnowStream.SnowDataClient {
 
-    private final String clientId;
     private final SimpMessagingTemplate messagingTemplate;
     private final ByteArrayOutputStream output;
     private boolean isActive = true;
+    private final String clientId;
 
     public SnowStreamTransmitter(String clientId, SimpMessagingTemplate messagingTemplate, ByteArrayOutputStream output) {
         this.clientId = clientId;

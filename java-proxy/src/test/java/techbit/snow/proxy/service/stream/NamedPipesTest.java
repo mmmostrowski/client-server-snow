@@ -38,8 +38,8 @@ class NamedPipesTest {
 
     @Test
     void whenDestroyingAllPipes_thenFolderWithPipesMustBePurged() throws IOException {
-        Files.createFile(folder.resolve("x"));
-        Files.createFile(folder.resolve("y"));
+        Files.createFile(folder.resolve("particlesX"));
+        Files.createFile(folder.resolve("particlesY"));
         Files.createFile(folder.resolve("z"));
 
         namedPipes.destroyAll();
@@ -51,8 +51,8 @@ class NamedPipesTest {
 
     @Test
     void whenCannotDestroyAnyOfPipes_thenThrowException() throws IOException {
-        Files.createFile(folder.resolve("x"));
-        Files.createFile(folder.resolve("y"));
+        Files.createFile(folder.resolve("particlesX"));
+        Files.createFile(folder.resolve("particlesY"));
         Files.createFile(folder.resolve("z"));
         Assertions.assertTrue(folder.toFile().setWritable(false));
 

@@ -5,19 +5,13 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
-import lombok.Generated;
 import lombok.extern.jackson.Jacksonized;
-import org.springframework.context.annotation.Scope;
 import techbit.snow.proxy.validation.MinDuration;
 
 import java.time.Duration;
 
-import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
-
 @Builder
-@Generated
 @Jacksonized
-@Scope(SCOPE_PROTOTYPE)
 public record PhpSnowConfig (
 
     @Nonnull

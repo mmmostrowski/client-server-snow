@@ -15,7 +15,6 @@ import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
 
 import java.io.IOException;
-import java.net.http.HttpRequest;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +35,8 @@ public class ProxyController {
 
     @GetMapping({ "/", "/start", "/start/", "/text", "/text/", "/stop", "/stop/", "/details/", "/details" })
     public void insufficientParams() {
-        throw new InvalidRequestException("Invalid url! Url Should follow pattern: http://domain.com/<action>/<session-id>");
+        throw new InvalidRequestException(
+                "Invalid url! Url Should follow pattern: http://domain.com/<action>/<session-id>");
     }
 
     @GetMapping("/start/{sessionId}/{*configuration}")
