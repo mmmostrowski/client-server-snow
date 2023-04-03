@@ -48,7 +48,9 @@ public class PhpSnowApp {
 
         String cmd = String.join(" ", builder.command());
         log.debug("start( {} ) | Starting process: {}", sessionId, cmd);
+
         process = builder.start();
+
         waitAMoment();
         if (!process.isAlive() && process.exitValue() > 0) {
             String stdErr = new String(process.getErrorStream().readAllBytes());

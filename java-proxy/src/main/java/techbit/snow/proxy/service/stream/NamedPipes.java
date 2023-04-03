@@ -23,7 +23,7 @@ public class NamedPipes {
         }
 
         String problematicFiles = stream(files)
-                .filter((f) -> !f.isDirectory() && !f.delete())
+                .filter(f -> !f.isDirectory() && !f.delete())
                 .map(File::toString)
                 .collect(joining(", "));
         if (!problematicFiles.isEmpty()) {

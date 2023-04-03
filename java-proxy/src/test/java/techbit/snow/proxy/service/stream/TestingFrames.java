@@ -19,7 +19,7 @@ public interface TestingFrames {
     }
 
     static SnowBasis basis(int instanceId) {
-        return basisInstances.computeIfAbsent(instanceId, (k) -> new SnowBasis(
+        return basisInstances.computeIfAbsent(instanceId, k -> new SnowBasis(
                 0, null, null, null
         ));
     }

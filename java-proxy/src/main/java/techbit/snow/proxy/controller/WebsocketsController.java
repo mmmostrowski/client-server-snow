@@ -43,7 +43,7 @@ public class WebsocketsController implements ApplicationListener<SessionDisconne
         }
 
         final ByteArrayOutputStream output = new ByteArrayOutputStream();
-        final SnowStreamTransmitter transmitter = createTransmitter(clientId, output);
+        final SnowStreamTransmitter transmitter = transmitFromOutputToClient(clientId, output);
 
         transmitters.put(requireNonNull((String) headers.get("simpSessionId")), transmitter);
 
@@ -61,7 +61,7 @@ public class WebsocketsController implements ApplicationListener<SessionDisconne
         transmitters.remove(simpSessionId);
     }
 
-    SnowStreamTransmitter createTransmitter(String clientId, ByteArrayOutputStream output) {
+    SnowStreamTransmitter transmitFromOutputToClient(String clientId, ByteArrayOutputStream output) {
         return new SnowStreamTransmitter(clientId, messagingTemplate, output);
     }
 

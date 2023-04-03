@@ -47,7 +47,7 @@ class WebsocketsControllerTest {
     @Test
     void givenValidSession_whenStream_thenDelegateToProxyService() throws SnowStream.ConsumerThreadException, IOException, InterruptedException {
         when(proxyService.hasSession("session-id")).thenReturn(true);
-        when(controller.createTransmitter(eq("client-id"), any(ByteArrayOutputStream.class))).thenReturn(transmitter);
+        when(controller.transmitFromOutputToClient(eq("client-id"), any(ByteArrayOutputStream.class))).thenReturn(transmitter);
 
         controller.stream("client-id", "session-id", headers);
 
@@ -74,7 +74,7 @@ class WebsocketsControllerTest {
     void givenValidSession_whenSessionDisconnectEventOccurs_thenTransmitterIsDeactivated() throws SnowStream.ConsumerThreadException, IOException, InterruptedException {
         when(proxyService.hasSession("session-id")).thenReturn(true);
         when(sessionDisconnectEvent.getSessionId()).thenReturn("simp-session");
-        when(controller.createTransmitter(eq("client-id"), any(ByteArrayOutputStream.class))).thenReturn(transmitter);
+        when(controller.transmitFromOutputToClient(eq("client-id"), any(ByteArrayOutputStream.class))).thenReturn(transmitter);
 
         controller.stream("client-id", "session-id", headers);
         controller.onApplicationEvent(sessionDisconnectEvent);

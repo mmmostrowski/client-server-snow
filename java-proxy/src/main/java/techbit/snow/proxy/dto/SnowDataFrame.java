@@ -1,7 +1,6 @@
 package techbit.snow.proxy.dto;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 public record SnowDataFrame(
         int frameNum,
@@ -15,6 +14,7 @@ public record SnowDataFrame(
     public static final SnowDataFrame LAST = new SnowDataFrame(
             -1, 0, new float[] {}, new float[] {}, new byte[] {}, SnowBasis.NONE);
 
+
     public SnowDataFrame(int frameNum, int chunkSize, float[] x, float[] y, byte[] flakeShapes) {
         this(frameNum, chunkSize, x, y, flakeShapes, SnowBasis.NONE);
     }
@@ -23,7 +23,7 @@ public record SnowDataFrame(
         if (this == LAST) {
             return LAST;
         }
-        if (Objects.equals(basis, basis())) {
+        if (basis().equals(basis)) {
             return this;
         }
         return new SnowDataFrame(frameNum, chunkSize, particlesX, particlesY, flakeShapes, basis);
