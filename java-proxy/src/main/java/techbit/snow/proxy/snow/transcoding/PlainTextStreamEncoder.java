@@ -11,7 +11,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 @Component
-public class PlainTextStreamEncoder implements StreamEncoder {
+public final class PlainTextStreamEncoder implements StreamEncoder {
 
     private final byte[] separator = "\n\n".getBytes(StandardCharsets.UTF_8);
 

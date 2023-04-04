@@ -16,7 +16,7 @@ import static com.google.common.io.Files.simplifyPath;
 
 @Log4j2
 @RequiredArgsConstructor
-public class PhpSnowApp {
+public final class PhpSnowApp {
 
     private final String sessionId;
     private final PhpSnowConfig config;

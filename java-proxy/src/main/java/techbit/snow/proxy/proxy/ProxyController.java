@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 @Log4j2
 @RestController
 @CrossOrigin({ "http://127.0.0.1:3000", "http://127.0.0.1:8181" })
-public class ProxyController {
+public final class ProxyController {
 
     private final ProxyService streaming;
     private final PlainTextStreamEncoder textStreamEncoder;

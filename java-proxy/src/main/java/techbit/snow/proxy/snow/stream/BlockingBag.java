@@ -14,7 +14,7 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @Component
 @Scope(SCOPE_PROTOTYPE)
 @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
-public class BlockingBag<K, V> {
+public final class BlockingBag<K, V> {
 
     @StandardException
     public static class ItemNoLongerExistsException extends Exception {}

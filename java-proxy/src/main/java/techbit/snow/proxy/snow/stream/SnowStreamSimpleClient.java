@@ -9,31 +9,31 @@ import techbit.snow.proxy.snow.transcoding.StreamEncoder;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class SnowStreamSimpleClient implements SnowStreamClient {
+public final class SnowStreamSimpleClient implements SnowStreamClient {
 
     private final StreamEncoder encoder;
-    private final OutputStream out;
+    private final OutputStream output;
 
-    public SnowStreamSimpleClient(StreamEncoder encoder, OutputStream out) {
+    public SnowStreamSimpleClient(StreamEncoder encoder, OutputStream output) {
         this.encoder = encoder;
-        this.out = out;
+        this.output = output;
     }
 
     @Override
     public void startStreaming(SnowAnimationMetadata metadata, SnowBackground background) throws IOException {
-        encoder.encodeMetadata(metadata, out);
-        encoder.encodeBackground(background, out);
+        encoder.encodeMetadata(metadata, output);
+        encoder.encodeBackground(background, output);
     }
 
     @Override
     public void streamFrame(SnowDataFrame frame, SnowBasis basis) throws IOException {
-        encoder.encodeFrame(frame, out);
-        encoder.encodeBasis(basis, out);
+        encoder.encodeFrame(frame, output);
+        encoder.encodeBasis(basis, output);
     }
 
     @Override
     public void stopStreaming() throws IOException {
-        encoder.encodeFrame(SnowDataFrame.LAST, out);
+        encoder.encodeFrame(SnowDataFrame.LAST, output);
     }
 
 }

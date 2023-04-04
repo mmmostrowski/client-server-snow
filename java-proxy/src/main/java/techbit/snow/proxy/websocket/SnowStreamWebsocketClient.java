@@ -5,47 +5,50 @@ import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowBackground;
 import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowDataFrame;
-import techbit.snow.proxy.snow.stream.SnowStreamSimpleClient;
+import techbit.snow.proxy.snow.stream.SnowStreamClient;
 import techbit.snow.proxy.snow.transcoding.StreamEncoder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class SnowStreamWebsocketTransmitter extends SnowStreamSimpleClient {
+public final class SnowStreamWebsocketClient implements SnowStreamClient {
 
     private final String clientId;
-    private final ByteArrayOutputStream output;
     private boolean isActive = true;
+    private final StreamEncoder encoder;
+    private final ByteArrayOutputStream output;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public SnowStreamWebsocketTransmitter(String clientId, SimpMessagingTemplate messagingTemplate, StreamEncoder encoder) {
+    public SnowStreamWebsocketClient(String clientId, SimpMessagingTemplate messagingTemplate, StreamEncoder encoder) {
         this(clientId, messagingTemplate, encoder, new ByteArrayOutputStream());
     }
 
-    SnowStreamWebsocketTransmitter(String clientId, SimpMessagingTemplate messagingTemplate, StreamEncoder encoder,
-                                           ByteArrayOutputStream output)
+    SnowStreamWebsocketClient(String clientId, SimpMessagingTemplate messagingTemplate, StreamEncoder encoder,
+                              ByteArrayOutputStream output)
     {
-        super(encoder, output);
         this.clientId = clientId;
         this.messagingTemplate = messagingTemplate;
         this.output = output;
+        this.encoder = encoder;
     }
 
     @Override
     public void startStreaming(SnowAnimationMetadata metadata, SnowBackground background) throws IOException {
-        super.startStreaming(metadata, background);
+        encoder.encodeMetadata(metadata, output);
+        encoder.encodeBackground(background, output);
         sendToWebsocketClient();
     }
 
     @Override
     public void streamFrame(SnowDataFrame frame, SnowBasis basis) throws IOException {
-        super.streamFrame(frame, basis);
+        encoder.encodeFrame(frame, output);
+        encoder.encodeBasis(basis, output);
         sendToWebsocketClient();
     }
 
     @Override
     public void stopStreaming() throws IOException {
-        super.stopStreaming();
+        encoder.encodeFrame(SnowDataFrame.LAST, output);
         isActive = false;
     }
 

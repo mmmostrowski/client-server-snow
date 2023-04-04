@@ -16,7 +16,7 @@ import java.util.Map;
 
 @Primary
 @Component
-public class SnowStreamFactory {
+public final class SnowStreamFactory {
 
     private final Path pipesDir;
     private final String applicationPid;

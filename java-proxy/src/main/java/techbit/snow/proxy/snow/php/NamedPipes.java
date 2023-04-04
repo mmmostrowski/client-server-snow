@@ -13,7 +13,7 @@ import static java.util.stream.Collectors.joining;
 
 @Component
 @SuppressWarnings("unused")
-public class NamedPipes {
+public final class NamedPipes {
 
     @PostConstruct
     public void destroyAll() throws IOException {

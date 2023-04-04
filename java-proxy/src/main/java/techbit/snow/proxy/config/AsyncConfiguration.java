@@ -15,7 +15,7 @@ import java.time.Duration;
 @EnableAsync
 @Configuration
 @SuppressWarnings("NullableProblems")
-public class AsyncConfiguration implements AsyncConfigurer {
+public final class AsyncConfiguration implements AsyncConfigurer {
 
     private final Duration timeout;
     private final int threadMaxPoolSize;

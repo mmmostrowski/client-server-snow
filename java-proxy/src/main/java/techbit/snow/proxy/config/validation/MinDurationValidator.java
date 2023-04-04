@@ -5,7 +5,7 @@ import jakarta.validation.ConstraintValidatorContext;
 
 import java.time.Duration;
 
-public class MinDurationValidator implements ConstraintValidator<MinDuration, Duration> {
+public final class MinDurationValidator implements ConstraintValidator<MinDuration, Duration> {
 
     private long value;
 

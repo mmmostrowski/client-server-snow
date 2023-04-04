@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 @Component
-public class BinaryStreamEncoder implements StreamEncoder {
+public final class BinaryStreamEncoder implements StreamEncoder {
 
     @Override
     public void encodeMetadata(SnowAnimationMetadata metadata, OutputStream out) throws IOException {

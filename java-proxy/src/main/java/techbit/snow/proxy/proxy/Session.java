@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 @Service
-public class Session {
+public final class Session {
 
     private final Pattern sessionIdValidator = Pattern.compile("^[a-z0-9-]+$");
     private final Set<String> sessions = new HashSet<>();

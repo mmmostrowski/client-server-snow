@@ -22,7 +22,7 @@ import java.util.Map;
 
 @Log4j2
 @Service
-public class ProxyService implements ApplicationListener<SnowStream.SnowStreamFinishedEvent> {
+public final class ProxyService implements ApplicationListener<SnowStream.SnowStreamFinishedEvent> {
 
     private final PhpSnowConfigConverter configConverter;
     private final SnowStreamFactory snowStreamProvider;

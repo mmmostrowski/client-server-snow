@@ -11,7 +11,7 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 
 @Component
 @Scope(SCOPE_PROTOTYPE)
-public class SnowDataBuffer {
+public final class SnowDataBuffer {
 
     private volatile int lastValidFrameNum = Integer.MAX_VALUE;
     private final BlockingBag<Integer, SnowDataFrame> frames;

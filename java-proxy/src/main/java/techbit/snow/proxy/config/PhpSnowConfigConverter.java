@@ -19,7 +19,7 @@ import java.util.Set;
 @Primary
 @Component
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
-public class PhpSnowConfigConverter {
+public final class PhpSnowConfigConverter {
 
     @JsonProperty
     private final String presetName;

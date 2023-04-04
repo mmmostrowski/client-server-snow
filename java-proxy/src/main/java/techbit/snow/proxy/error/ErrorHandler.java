@@ -19,7 +19,7 @@ import java.util.Map;
 @RestController
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class ErrorHandler implements ErrorController {
+public final class ErrorHandler implements ErrorController {
 
     private final boolean canShowStacktrace;
 

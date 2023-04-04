@@ -21,7 +21,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SnowStreamWebsocketTransmitterTest {
+class SnowStreamWebsocketClientTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
     @Mock
@@ -35,13 +35,13 @@ class SnowStreamWebsocketTransmitterTest {
     @Mock
     private StreamEncoder encoder;
     private byte[] byteArray;
-    private SnowStreamWebsocketTransmitter transmitter;
+    private SnowStreamWebsocketClient transmitter;
 
     @BeforeEach
     void setup() {
         byteArray = new byte[] { 1, 2, 3 };
 
-        transmitter = new SnowStreamWebsocketTransmitter("client-id", messagingTemplate, encoder, output);
+        transmitter = new SnowStreamWebsocketClient("client-id", messagingTemplate, encoder, output);
     }
 
     @Test

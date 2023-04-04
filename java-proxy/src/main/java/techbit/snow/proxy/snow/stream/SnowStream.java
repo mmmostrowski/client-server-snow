@@ -31,7 +31,7 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @Log4j2
 @Service
 @Scope(SCOPE_PROTOTYPE)
-public class SnowStream {
+public final class SnowStream {
 
     @StandardException
     public static class ConsumerThreadException extends Exception { }

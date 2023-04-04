@@ -12,7 +12,7 @@ import java.io.IOException;
 
 @Primary
 @Component
-public class BinaryStreamDecoder implements StreamDecoder {
+public final class BinaryStreamDecoder implements StreamDecoder {
 
     public static final String GREETING_MARKER = "hello-php-snow";
 

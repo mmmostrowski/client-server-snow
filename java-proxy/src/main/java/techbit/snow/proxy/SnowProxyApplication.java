@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 @SpringBootApplication
 @SuppressWarnings("unused")
-public class SnowProxyApplication {
+public final class SnowProxyApplication {
 
 	private final String developerMode;
 
