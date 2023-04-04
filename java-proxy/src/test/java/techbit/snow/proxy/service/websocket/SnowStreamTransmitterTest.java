@@ -10,15 +10,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import techbit.snow.proxy.dto.SnowAnimationMetadata;
 import techbit.snow.proxy.dto.SnowBackground;
+import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SnowStreamTransmitterTest {
+class SnowStreamWebsocketTransmitterTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
     @Mock
@@ -29,14 +32,16 @@ class SnowStreamTransmitterTest {
     private SnowBackground background;
     @Mock
     private SnowDataFrame snowDataFrame;
+    @Mock
+    private StreamEncoder encoder;
     private byte[] byteArray;
-    private SnowStreamTransmitter transmitter;
+    private SnowStreamWebsocketTransmitter transmitter;
 
     @BeforeEach
     void setup() {
         byteArray = new byte[] { 1, 2, 3 };
 
-        transmitter = new SnowStreamTransmitter("client-id", messagingTemplate, output);
+        transmitter = new SnowStreamWebsocketTransmitter("client-id", messagingTemplate, encoder, output);
     }
 
     @Test
@@ -51,10 +56,16 @@ class SnowStreamTransmitterTest {
     }
 
     @Test
-    void whenMetadataEncodedIntoOutputStream_thenFlushItToWebsocketMessage() {
+    void whenStreamingEnded_thenHasInactiveStream() throws IOException {
+        transmitter.stopStreaming();
+        Assertions.assertFalse(transmitter.continueStreaming());
+    }
+
+    @Test
+    void whenMetadataEncodedIntoOutputStream_thenFlushItToWebsocketMessage() throws IOException {
         when(output.toByteArray()).thenReturn(byteArray);
 
-        transmitter.onStreamStart(metadata, background);
+        transmitter.startStreaming(metadata, background);
 
         InOrder inOrder = inOrder(messagingTemplate, output);
         inOrder.verify(messagingTemplate).convertAndSendToUser(
@@ -63,10 +74,10 @@ class SnowStreamTransmitterTest {
     }
 
     @Test
-    void whenSnowDataFrameEncodedIntoOutputStream_thenFlushItToWebsocketMessage() {
+    void whenSnowDataFrameEncodedIntoOutputStream_thenFlushItToWebsocketMessage() throws IOException {
         when(output.toByteArray()).thenReturn(byteArray);
 
-        transmitter.onFrameStreamed(snowDataFrame);
+        transmitter.streamFrame(snowDataFrame, SnowBasis.NONE);
 
         InOrder inOrder = inOrder(messagingTemplate, output);
         inOrder.verify(messagingTemplate).convertAndSendToUser(

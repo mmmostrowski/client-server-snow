@@ -1,4 +1,4 @@
-package techbit.snow.proxy.service.stream;
+package techbit.snow.proxy.service.stream.snow;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.experimental.StandardException;
@@ -14,13 +14,12 @@ import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.exception.IncompatibleConfigException;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
+import techbit.snow.proxy.service.stream.NamedPipe;
 import techbit.snow.proxy.service.stream.encoding.StreamDecoder;
-import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -37,14 +36,6 @@ public class SnowStream {
     @StandardException
     public static class ConsumerThreadException extends Exception { }
 
-    public interface SnowDataClient {
-
-        default Object identifier() { return Thread.currentThread(); }
-        default boolean continueStreaming() { return true; }
-        default void onStreamStart(SnowAnimationMetadata metadata, SnowBackground background) { }
-        default void onFrameStreamed(SnowDataFrame frame) { }
-        default void onStreamStop() { }
-    }
     public class SnowStreamFinishedEvent extends ApplicationEvent {
 
         public SnowStreamFinishedEvent(Object source) {
@@ -54,6 +45,7 @@ public class SnowStream {
             return sessionId;
         }
     }
+
     private final NamedPipe pipe;
 
     private final String sessionId;
@@ -159,7 +151,7 @@ public class SnowStream {
         }
     }
 
-    public void streamTo(OutputStream out, StreamEncoder encoder, SnowDataClient client)
+    public void streamTo(SnowStreamClient client)
             throws IOException, InterruptedException, ConsumerThreadException
     {
         throwConsumerExceptionIfAny();
@@ -175,9 +167,7 @@ public class SnowStream {
 
         try {
             log.debug("streamTo( {} ) | Metadata", sessionId);
-            encoder.encodeMetadata(metadata, out);
-            encoder.encodeBackground(background, out);
-            client.onStreamStart(metadata, background);
+            client.startStreaming(metadata, background);
 
             log.debug("streamTo( {} ) | Reading Frames", sessionId);
             SnowBasis currentBasis = SnowBasis.NONE;
@@ -188,30 +178,21 @@ public class SnowStream {
                     break;
                 }
 
-                encoder.encodeFrame(frame, out);
                 if (frame.basis() == currentBasis) {
-                    encoder.encodeBasis(SnowBasis.NONE, out);
+                    client.streamFrame(frame, SnowBasis.NONE);
                 } else {
-                    encoder.encodeBasis(currentBasis = frame.basis(), out);
+                    client.streamFrame(frame, currentBasis = frame.basis());
                 }
-                client.onFrameStreamed(frame);
             }
 
             throwConsumerExceptionIfAny();
 
             log.debug("streamTo( {} ) | Last frame", sessionId);
-            encoder.encodeFrame(SnowDataFrame.LAST, out);
-            client.onStreamStop();
+            client.stopStreaming();
         } finally {
             log.debug("streamTo( {} ) | Unregister From Buffer", sessionId);
             buffer.unregisterClient(client.identifier());
         }
-    }
-
-    public void streamTo(OutputStream out, StreamEncoder encoder)
-            throws IOException, InterruptedException, ConsumerThreadException
-    {
-        streamTo(out, encoder, new SnowDataClient() {} );
     }
 
     private void throwConsumerExceptionIfAny() throws ConsumerThreadException {

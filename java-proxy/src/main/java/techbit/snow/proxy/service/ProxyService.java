@@ -1,7 +1,8 @@
 package techbit.snow.proxy.service;
 
-import techbit.snow.proxy.service.stream.SnowStream;
+import techbit.snow.proxy.service.stream.snow.SnowStream;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
+import techbit.snow.proxy.service.stream.snow.SnowStreamClient;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,7 +16,7 @@ public interface ProxyService {
     void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, Map<String, String> config)
             throws IOException, InterruptedException, SnowStream.ConsumerThreadException;
 
-    void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.SnowDataClient client)
+    void streamSessionTo(String sessionId, SnowStreamClient client)
             throws IOException, InterruptedException, SnowStream.ConsumerThreadException;
 
     void stopSession(String sessionId)

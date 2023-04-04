@@ -10,8 +10,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import techbit.snow.proxy.exception.InvalidRequestException;
 import techbit.snow.proxy.service.ProxyServiceImpl;
-import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
 import techbit.snow.proxy.service.stream.encoding.PlainTextStreamEncoder;
+import techbit.snow.proxy.service.stream.snow.SnowStream;
+import techbit.snow.proxy.service.stream.snow.SnowStream.ConsumerThreadException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -162,7 +163,7 @@ class ProxyControllerTest {
 
         assertEquals(Map.of(
                 "sessionId", "session-abc",
-                "running", "ok"
+                "running", false
         ), response);
     }
 

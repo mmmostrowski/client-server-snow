@@ -1,4 +1,4 @@
-package techbit.snow.proxy.service.stream;
+package techbit.snow.proxy.service.stream.snow;
 
 import edu.umd.cs.mtc.MultithreadedTestCase;
 import edu.umd.cs.mtc.TestFramework;
@@ -7,13 +7,17 @@ import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import techbit.snow.proxy.dto.SnowDataFrame;
-import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
+import techbit.snow.proxy.service.stream.BlockingBag;
+import techbit.snow.proxy.service.stream.TestingFrames;
+import techbit.snow.proxy.service.stream.snow.SnowStream.ConsumerThreadException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
@@ -90,8 +94,9 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
                 readyToStream.acquire();
 
                 final ByteArrayOutputStream outputStream = mock(ByteArrayOutputStream.class);
+                final SnowStreamSimpleClient client = new SnowStreamSimpleClient(encoder, outputStream);
 
-                snowStream.streamTo(outputStream, encoder);
+                snowStream.streamTo(client);
 
                 verify(encoder, times(5)).encodeFrame(any(), eq(outputStream));
                 verify(encoder, times(1)).encodeMetadata(any(), eq(outputStream));
@@ -116,7 +121,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
             void thread2() throws IOException, InterruptedException, ConsumerThreadException {
                 readyToStream.acquire();
                 Assertions.assertTrue(snowStream.isActive());
-                snowStream.streamTo(outputStream, encoder);
+                snowStream.streamTo(client);
             }
 
             void thread3() throws IOException, InterruptedException {
@@ -226,8 +231,9 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
                 readyToStream.acquire();
 
                 final ByteArrayOutputStream outputStream = mock(ByteArrayOutputStream.class);
+                final SnowStreamSimpleClient client = new SnowStreamSimpleClient(encoder, outputStream);
 
-                snowStream.streamTo(outputStream, encoder);
+                snowStream.streamTo(client);
 
                 InOrder inOrder = inOrder(encoder);
 
@@ -344,10 +350,9 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
                 readyToStream.acquire();
 
-                snowStream.streamTo(outputStream, encoder);
+                snowStream.streamTo(client);
             }
         }, 10, 30);
     }
-
 
 }

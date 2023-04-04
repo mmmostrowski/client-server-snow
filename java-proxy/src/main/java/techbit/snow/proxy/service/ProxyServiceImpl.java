@@ -9,10 +9,12 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import techbit.snow.proxy.exception.InvalidSessionException;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
-import techbit.snow.proxy.service.stream.SnowStream;
-import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
-import techbit.snow.proxy.service.stream.SnowStreamFactory;
+import techbit.snow.proxy.service.stream.snow.SnowStream;
+import techbit.snow.proxy.service.stream.snow.SnowStream.ConsumerThreadException;
+import techbit.snow.proxy.service.stream.snow.SnowStreamClient;
+import techbit.snow.proxy.service.stream.snow.SnowStreamFactory;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
+import techbit.snow.proxy.service.stream.snow.SnowStreamSimpleClient;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -59,14 +61,14 @@ public class ProxyServiceImpl implements ProxyService, ApplicationListener<SnowS
     public void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, Map<String, String> config)
             throws IOException, InterruptedException, ConsumerThreadException
     {
-        snowStream(sessionId, config).streamTo(out, encoder);
+        snowStream(sessionId, config).streamTo(new SnowStreamSimpleClient(encoder, out));
     }
 
     @Override
-    public void streamSessionTo(String sessionId, OutputStream out, StreamEncoder encoder, SnowStream.SnowDataClient client)
+    public void streamSessionTo(String sessionId, SnowStreamClient client)
             throws IOException, InterruptedException, ConsumerThreadException
     {
-        snowStream(sessionId, Collections.emptyMap()).streamTo(out, encoder, client);
+        snowStream(sessionId, Collections.emptyMap()).streamTo(client);
     }
 
     @Override

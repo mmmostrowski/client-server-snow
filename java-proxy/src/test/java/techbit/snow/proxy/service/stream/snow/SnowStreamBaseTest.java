@@ -1,13 +1,17 @@
-package techbit.snow.proxy.service.stream;
+package techbit.snow.proxy.service.stream.snow;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.context.ApplicationEventPublisher;
 import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
+import techbit.snow.proxy.service.stream.NamedPipe;
+import techbit.snow.proxy.service.stream.TestingFrames;
 import techbit.snow.proxy.service.stream.encoding.StreamDecoder;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
 
@@ -20,9 +24,10 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
-import static techbit.snow.proxy.service.stream.TestingFrames.frame;
+import static org.mockito.Mockito.spy;
+import static techbit.snow.proxy.service.stream.TestingFrames.*;
 
-abstract public class SnowStreamBaseTest implements TestingFrames {
+abstract public class SnowStreamBaseTest {
 
     @Mock
     protected NamedPipe pipe;
@@ -36,8 +41,7 @@ abstract public class SnowStreamBaseTest implements TestingFrames {
     protected OutputStream outputStream;
     @Mock
     protected PhpSnowConfigConverter converter;
-    @Mock
-    protected SnowStream.SnowDataClient customs;
+    protected SnowStreamSimpleClient client;
     @Mock
     protected ApplicationEventPublisher eventPublisher;
     protected final SnowDataBuffer buffer;
@@ -53,6 +57,8 @@ abstract public class SnowStreamBaseTest implements TestingFrames {
         snowConfig = new PhpSnowConfig(
                 "testingPreset", 87, 76, Duration.ofMinutes(11), 21);
 
+        client = spy(new SnowStreamSimpleClient(encoder, outputStream));
+
         final Iterator<SnowDataFrame> inputFrames = List.of(
                 frame(1),
                 frame(2),
@@ -66,7 +72,7 @@ abstract public class SnowStreamBaseTest implements TestingFrames {
 
         lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(new byte[]{}));
 
-        lenient().when(customs.continueStreaming()).thenReturn(true);
+//        lenient().when(client.continueStreaming()).thenReturn(true);
 
         snowStream = new SnowStream("session-xyz", snowConfig, pipe, phpSnow, buffer, decoder, eventPublisher);
     }

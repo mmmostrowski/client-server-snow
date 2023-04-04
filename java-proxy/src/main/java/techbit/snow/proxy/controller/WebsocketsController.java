@@ -12,11 +12,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import techbit.snow.proxy.exception.InvalidSessionException;
 import techbit.snow.proxy.service.ProxyService;
-import techbit.snow.proxy.service.stream.SnowStream;
+import techbit.snow.proxy.service.stream.snow.SnowStream;
 import techbit.snow.proxy.service.stream.encoding.BinaryStreamEncoder;
-import techbit.snow.proxy.service.websocket.SnowStreamTransmitter;
+import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
+import techbit.snow.proxy.service.websocket.SnowStreamWebsocketTransmitter;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
@@ -27,7 +27,7 @@ public class WebsocketsController implements ApplicationListener<SessionDisconne
 
     private final ProxyService streaming;
     private final SimpMessagingTemplate messagingTemplate;
-    private final Map<String, SnowStreamTransmitter> transmitters = Maps.newConcurrentMap();
+    private final Map<String, SnowStreamWebsocketTransmitter> transmitters = Maps.newConcurrentMap();
 
     public WebsocketsController(SimpMessagingTemplate messagingTemplate, ProxyService streaming) {
         this.messagingTemplate = messagingTemplate;
@@ -42,12 +42,11 @@ public class WebsocketsController implements ApplicationListener<SessionDisconne
             throw new InvalidSessionException("Please start session first. Unknown session: " + sessionId);
         }
 
-        final ByteArrayOutputStream output = new ByteArrayOutputStream();
-        final SnowStreamTransmitter transmitter = transmitFromOutputToClient(clientId, output);
+        final SnowStreamWebsocketTransmitter transmitter = createTransmitter(clientId, new BinaryStreamEncoder());
 
         transmitters.put(requireNonNull((String) headers.get("simpSessionId")), transmitter);
 
-        streaming.streamSessionTo(sessionId, output, new BinaryStreamEncoder(), transmitter);
+        streaming.streamSessionTo(sessionId, transmitter);
     }
 
     @Override
@@ -61,8 +60,8 @@ public class WebsocketsController implements ApplicationListener<SessionDisconne
         transmitters.remove(simpSessionId);
     }
 
-    SnowStreamTransmitter transmitFromOutputToClient(String clientId, ByteArrayOutputStream output) {
-        return new SnowStreamTransmitter(clientId, messagingTemplate, output);
+    SnowStreamWebsocketTransmitter createTransmitter(String clientId, StreamEncoder encoder) {
+        return new SnowStreamWebsocketTransmitter(clientId, messagingTemplate, encoder);
     }
 
 }

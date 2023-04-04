@@ -1,9 +1,10 @@
-package techbit.snow.proxy.service.stream;
+package techbit.snow.proxy.service.stream.snow;
 
 import com.google.common.collect.Sets;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.service.stream.BlockingBag;
 
 import java.util.Set;
 

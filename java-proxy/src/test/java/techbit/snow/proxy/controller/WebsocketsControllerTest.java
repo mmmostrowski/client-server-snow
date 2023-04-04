@@ -11,9 +11,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import techbit.snow.proxy.exception.InvalidSessionException;
 import techbit.snow.proxy.service.ProxyService;
-import techbit.snow.proxy.service.stream.SnowStream;
 import techbit.snow.proxy.service.stream.encoding.BinaryStreamEncoder;
-import techbit.snow.proxy.service.websocket.SnowStreamTransmitter;
+import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
+import techbit.snow.proxy.service.stream.snow.SnowStream;
+import techbit.snow.proxy.service.websocket.SnowStreamWebsocketTransmitter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,7 +30,7 @@ class WebsocketsControllerTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
     @Mock
-    private SnowStreamTransmitter transmitter;
+    private SnowStreamWebsocketTransmitter transmitter;
     @Mock
     private ProxyService proxyService;
     private MessageHeaders headers;
@@ -47,14 +48,12 @@ class WebsocketsControllerTest {
     @Test
     void givenValidSession_whenStream_thenDelegateToProxyService() throws SnowStream.ConsumerThreadException, IOException, InterruptedException {
         when(proxyService.hasSession("session-id")).thenReturn(true);
-        when(controller.transmitFromOutputToClient(eq("client-id"), any(ByteArrayOutputStream.class))).thenReturn(transmitter);
+        when(controller.createTransmitter(eq("client-id"), any(BinaryStreamEncoder.class))).thenReturn(transmitter);
 
         controller.stream("client-id", "session-id", headers);
 
         verify(proxyService).streamSessionTo(
                 eq("session-id"),
-                any(),
-                any(BinaryStreamEncoder.class),
                 eq(transmitter)
         );
     }
@@ -74,7 +73,7 @@ class WebsocketsControllerTest {
     void givenValidSession_whenSessionDisconnectEventOccurs_thenTransmitterIsDeactivated() throws SnowStream.ConsumerThreadException, IOException, InterruptedException {
         when(proxyService.hasSession("session-id")).thenReturn(true);
         when(sessionDisconnectEvent.getSessionId()).thenReturn("simp-session");
-        when(controller.transmitFromOutputToClient(eq("client-id"), any(ByteArrayOutputStream.class))).thenReturn(transmitter);
+        when(controller.createTransmitter(eq("client-id"), any(StreamEncoder.class))).thenReturn(transmitter);
 
         controller.stream("client-id", "session-id", headers);
         controller.onApplicationEvent(sessionDisconnectEvent);

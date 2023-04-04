@@ -1,14 +1,16 @@
-package techbit.snow.proxy.service.stream;
+package techbit.snow.proxy.service.stream.snow;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import techbit.snow.proxy.service.phpsnow.PhpSnowApp;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
+import techbit.snow.proxy.service.stream.NamedPipe;
 import techbit.snow.proxy.service.stream.encoding.BinaryStreamDecoder;
 
 import java.nio.file.Path;
@@ -45,7 +47,7 @@ class SnowStreamFactoryTest {
 
     @BeforeEach
     void setup() {
-        factory = spy(new SnowStreamFactory(
+        factory = Mockito.spy(new SnowStreamFactory(
                 12,
                 "somewhere",
                 eventPublisher,

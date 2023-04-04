@@ -10,10 +10,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import techbit.snow.proxy.exception.InvalidSessionException;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfigConverter;
-import techbit.snow.proxy.service.stream.SnowStream;
-import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
-import techbit.snow.proxy.service.stream.SnowStreamFactory;
 import techbit.snow.proxy.service.stream.encoding.StreamEncoder;
+import techbit.snow.proxy.service.stream.snow.SnowStream;
+import techbit.snow.proxy.service.stream.snow.SnowStream.ConsumerThreadException;
+import techbit.snow.proxy.service.stream.snow.SnowStreamClient;
+import techbit.snow.proxy.service.stream.snow.SnowStreamFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -47,7 +48,7 @@ class ProxyServiceTest {
     @Mock
     private PhpSnowConfigConverter configProvider;
     @Mock
-    private SnowStream.SnowDataClient snowDataClient;
+    private SnowStreamClient snowDataClient;
     @Mock
     private SnowStream.SnowStreamFinishedEvent streamFinishedEvent;
     private ProxyServiceImpl proxyService;
@@ -81,7 +82,7 @@ class ProxyServiceTest {
         verify(session).create("session-abc");
         verify(snowStream).startPhpApp();
         verify(snowStream).startConsumingSnowData();
-        verify(snowStream).streamTo(out, streamEncoder);
+        verify(snowStream).streamTo(any(SnowStreamClient.class));
     }
 
     @Test
@@ -94,19 +95,19 @@ class ProxyServiceTest {
         when(session.exists("session-abc")).thenReturn(true);
         proxyService.streamSessionTo("session-abc", out, streamEncoder, configMap);
 
-        verify(snowStream, times(2)).streamTo(out, streamEncoder);
+        verify(snowStream, times(2)).streamTo(any(SnowStreamClient.class));
     }
 
     @Test
-    void givenCustomizations_whenStream_thenStreamToANewStream() throws IOException, InterruptedException, ConsumerThreadException {
+    void givenCustomClient_whenStream_thenStreamToANewStream() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.create(eq("session-abc"), eq(Collections.emptyMap()))).thenReturn(snowStream);
 
-        proxyService.streamSessionTo("session-abc", out, streamEncoder, snowDataClient);
+        proxyService.streamSessionTo("session-abc", snowDataClient);
 
         verify(session).create("session-abc");
         verify(snowStream).startPhpApp();
         verify(snowStream).startConsumingSnowData();
-        verify(snowStream).streamTo(out, streamEncoder, snowDataClient);
+        verify(snowStream).streamTo(snowDataClient);
     }
 
     @Test

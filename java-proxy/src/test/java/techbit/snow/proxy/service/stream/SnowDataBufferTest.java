@@ -10,6 +10,7 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.service.stream.snow.SnowDataBuffer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -17,7 +18,7 @@ import static techbit.snow.proxy.service.stream.TestingFrames.frame;
 
 @SuppressWarnings("unused")
 @ExtendWith(MockitoExtension.class)
-class SnowDataBufferTest implements TestingFrames {
+class SnowDataBufferTest {
 
     @Mock
     private BlockingBag<Integer, SnowDataFrame> bag;

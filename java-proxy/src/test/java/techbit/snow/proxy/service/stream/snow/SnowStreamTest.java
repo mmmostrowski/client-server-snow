@@ -1,4 +1,4 @@
-package techbit.snow.proxy.service.stream;
+package techbit.snow.proxy.service.stream.snow;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,8 @@ import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.exception.IncompatibleConfigException;
 import techbit.snow.proxy.service.phpsnow.PhpSnowConfig;
-import techbit.snow.proxy.service.stream.SnowStream.ConsumerThreadException;
+import techbit.snow.proxy.service.stream.TestingFrames;
+import techbit.snow.proxy.service.stream.snow.SnowStream.ConsumerThreadException;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -113,7 +114,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
 
     @Test
     void givenNoPhpStart_whenStartStreamingToClient_thenThrowException() {
-        assertThrows(IOException.class, () -> snowStream.streamTo(outputStream, encoder));
+        assertThrows(IOException.class, () -> snowStream.streamTo(client));
     }
 
     @Test
@@ -154,48 +155,48 @@ class SnowStreamTest extends SnowStreamBaseTest {
     @Test
     void whenSnowStreamFinishedEventIsEmitted_thenItProvidesSessionId() {
         SnowStream.SnowStreamFinishedEvent event = snowStream.createSnowStreamFinishedEvent();
-        Assertions.assertEquals("session-xyz", event.getSessionId());
+        assertEquals("session-xyz", event.getSessionId());
     }
 
     @Test
-    void givenCustomizations_whenStream_thenInitializationHookIsInvoked() throws ConsumerThreadException, IOException, InterruptedException {
+    void givenCustomClient_whenStream_thenInitializationHookIsInvoked() throws ConsumerThreadException, IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
         when(buffer.firstFrame()).thenReturn(SnowDataFrame.LAST);
 
         snowStream.startConsumingSnowData();
-        snowStream.streamTo(outputStream, encoder, customs);
+        snowStream.streamTo(client);
 
-        verify(customs).onStreamStart(any(), any());
+        verify(client).startStreaming(any(), any());
     }
 
     @Test
-    void givenCustomizations_whenStream_thenFinishHookIsInvoked() throws ConsumerThreadException, IOException, InterruptedException {
+    void givenCustomClient_whenStream_thenFinishHookIsInvoked() throws ConsumerThreadException, IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
         when(buffer.firstFrame()).thenReturn(frame(1));
         when(buffer.nextFrame(frame(1))).thenReturn(SnowDataFrame.LAST);
 
         snowStream.startConsumingSnowData();
-        snowStream.streamTo(outputStream, encoder, customs);
+        snowStream.streamTo(client);
 
-        verify(customs).onStreamStop();
+        verify(client).stopStreaming();
     }
 
     @Test
-    void givenCustomizations_whenStream_thenOnFrameEncodedHookInvoked() throws ConsumerThreadException, IOException, InterruptedException {
+    void givenCustomClient_whenStream_thenOnFrameEncodedHookInvoked() throws ConsumerThreadException, IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
         when(buffer.firstFrame()).thenReturn(frame(1));
         when(buffer.nextFrame(frame(1))).thenReturn(frame(2));
         when(buffer.nextFrame(frame(2))).thenReturn(SnowDataFrame.LAST);
 
         snowStream.startConsumingSnowData();
-        snowStream.streamTo(outputStream, encoder, customs);
+        snowStream.streamTo(client);
 
-        verify(customs).onFrameStreamed(frame(1));
-        verify(customs).onFrameStreamed(frame(2));
+        verify(client).streamFrame(frame(1), SnowBasis.NONE);
+        verify(client).streamFrame(frame(2), SnowBasis.NONE);
     }
 
     @Test
-    void givenCustomizations_whenStreamIsDeactivated_thenFrameLoopBreaks() throws ConsumerThreadException, IOException, InterruptedException {
+    void givenCustomClient_whenStreamIsDeactivated_thenFrameLoopBreaks() throws ConsumerThreadException, IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
         when(buffer.firstFrame()).thenReturn(frame(1));
         when(buffer.nextFrame(frame(1))).thenReturn(frame(2));
@@ -203,14 +204,14 @@ class SnowStreamTest extends SnowStreamBaseTest {
         when(buffer.nextFrame(frame(3))).thenReturn(SnowDataFrame.LAST);
 
         final AtomicInteger c = new AtomicInteger();
-        when(customs.continueStreaming()).then((i) -> c.incrementAndGet() < 3);
+        when(client.continueStreaming()).then((i) -> c.incrementAndGet() < 3);
 
         snowStream.startConsumingSnowData();
-        snowStream.streamTo(outputStream, encoder, customs);
+        snowStream.streamTo(client);
 
-        verify(customs).onFrameStreamed(frame(1));
-        verify(customs).onFrameStreamed(frame(2));
-        verify(customs, never()).onFrameStreamed(frame(3));
+        verify(client).streamFrame(frame(1), SnowBasis.NONE);
+        verify(client).streamFrame(frame(2), SnowBasis.NONE);
+        verify(client, never()).streamFrame(frame(3), SnowBasis.NONE);
     }
 
     @Test
@@ -235,7 +236,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         when(phpSnow.isAlive()).thenReturn(true);
 
         snowStream.startConsumingSnowData();
-        snowStream.streamTo(outputStream, encoder);
+        snowStream.streamTo(client);
 
         verify(encoder, times(1)).encodeMetadata(metadata, outputStream);
     }
@@ -250,7 +251,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         when(buffer.nextFrame(frame(4))).thenReturn(SnowDataFrame.LAST);
 
         snowStream.startConsumingSnowData();
-        snowStream.streamTo(outputStream, encoder);
+        snowStream.streamTo(client);
 
         InOrder inOrder = inOrder(encoder);
 
@@ -287,7 +288,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
 
 
         snowStream.startConsumingSnowData();
-        snowStream.streamTo(outputStream, encoder);
+        snowStream.streamTo(client);
 
         InOrder inOrder = inOrder(encoder);
 
@@ -416,7 +417,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.waitUntilConsumerThreadFinished();
 
-        Throwable thrownException = assertThrows(ConsumerThreadException.class, () -> snowStream.streamTo(outputStream, encoder));
+        Throwable thrownException = assertThrows(ConsumerThreadException.class, () -> snowStream.streamTo(client));
         assertSame(customException, thrownException.getCause());
     }
 
