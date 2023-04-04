@@ -58,13 +58,15 @@ RUN mkdir -p /data/ \
 ;
 
 USER devbox
-
 RUN composer install \
     && cp -rf /snow/app/vendor/ /data/app-vendor/ \
 ;
 
+USER root
 COPY /java-proxy/ /snow/java-proxy/
+RUN chown devbox:devbox -R /snow/
 
+USER devbox
 
 RUN if [[ "${PHP_SNOW_APP_MODE}" == "production" ]]; then \
         gradle bootJar --project-dir /snow/java-proxy/ \

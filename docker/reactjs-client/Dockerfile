@@ -10,6 +10,7 @@ RUN apk update \
     && echo "export PS1='\u@\h:\w\$ '" >> /etc/profile \
 ;
 
+COPY /reactjs-client/app.js /snow/reactjs-client/app.js
 COPY /reactjs-client/src/ /snow/reactjs-client/src/
 COPY /reactjs-client/public/ /snow/reactjs-client/public/
 COPY /reactjs-client/package.json /snow/reactjs-client/package.json
