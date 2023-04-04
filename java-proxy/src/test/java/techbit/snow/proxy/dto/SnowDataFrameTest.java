@@ -6,7 +6,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static techbit.snow.proxy.service.stream.TestingFrames.*;
+import static techbit.snow.proxy.snow.stream.TestingFrames.*;
 
 @ExtendWith( MockitoExtension.class)
 class SnowDataFrameTest {
