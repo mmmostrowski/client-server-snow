@@ -127,6 +127,23 @@ class SnowStreamTest extends SnowStreamBaseTest {
     }
 
     @Test
+    void whenStopTakesTooLong_thenStreamIsShutdownAnyway() throws IOException, InterruptedException {
+        when(phpSnow.isAlive()).thenReturn(true);
+
+        doAnswer(i -> {
+            synchronized (this) {
+                wait(); // forever
+                return null;
+            }
+        }).when(buffer).push(SnowDataFrame.LAST);
+
+        snowStream.startConsumingSnowData();
+        snowStream.stop();
+
+        verify(buffer, atLeastOnce()).destroy();
+    }
+
+    @Test
     void whenStop_thenIsNotActive() throws IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
 

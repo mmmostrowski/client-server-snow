@@ -83,22 +83,25 @@ public class SnowDataBuffer {
     }
 
     private SnowDataFrame nextFrameAfter(int frameNum) throws InterruptedException {
-        if (destroyed || frameNum >= lastValidFrameNum) {
+        final int nextFrameNum = frameNum + 1;
+
+        if (destroyed || nextFrameNum > lastValidFrameNum) {
             return SnowDataFrame.LAST;
         }
+
         waitForContent();
         try{
             synchronized(framesLock) {
-                if (frameNum + 1 < tailFrameNum) {
+                if (isBehind(nextFrameNum)) {
                     return frames.take(tailFrameNum);
                 }
             }
 
             final SnowDataFrame result;
             synchronized (removeFramesLock) {
-                result = frameNum + 1 < tailFrameNum
+                result = isBehind(nextFrameNum)
                         ? frames.take(tailFrameNum)
-                        : frames.take(frameNum + 1);
+                        : frames.take(nextFrameNum);
             }
             return result;
         } catch (BlockingBag.ItemNoLongerExistsException e) {
@@ -152,4 +155,9 @@ public class SnowDataBuffer {
             noMoreClientsLock.wait();
         }
     }
+
+    boolean isBehind(int frameNum) {
+        return frameNum < tailFrameNum;
+    }
+
 }

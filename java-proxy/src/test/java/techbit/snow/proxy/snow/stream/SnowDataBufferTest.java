@@ -185,8 +185,26 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void whenDeadFrameGiven_thenSkipToNextAlive() throws Exception {
+    void givenDeadFrame_whenAskingForNextFrame_thenSkipToNextAlive() throws Exception {
         when(bag.take(3)).thenReturn(frame(3));
+
+        buffer.push(frame(1));
+        buffer.push(frame(2));
+        buffer.push(frame(3));
+        buffer.push(frame(4));
+
+        SnowDataFrame deadFrame = frame(1);
+        SnowDataFrame nextFrame = buffer.nextFrame(deadFrame);
+
+        assertEquals(3, nextFrame.frameNum());
+    }
+
+    @Test
+    void givenAliveFrame_whenBecomingDeadDuringAskingForNextFrame_thenSkipToNextAlive() throws Exception {
+        buffer = spy(buffer);
+        when(bag.take(3)).thenReturn(frame(3));
+
+        when(buffer.isBehind(2)).thenReturn(false, true);
 
         buffer.push(frame(1));
         buffer.push(frame(2));
