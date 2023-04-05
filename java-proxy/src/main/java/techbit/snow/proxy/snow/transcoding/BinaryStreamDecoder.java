@@ -2,10 +2,7 @@ package techbit.snow.proxy.snow.transcoding;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
-import techbit.snow.proxy.dto.SnowAnimationMetadata;
-import techbit.snow.proxy.dto.SnowBackground;
-import techbit.snow.proxy.dto.SnowBasis;
-import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.dto.*;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -19,14 +16,15 @@ public final class BinaryStreamDecoder implements StreamDecoder {
     private int framesCounter;
 
     @Override
-    public SnowAnimationMetadata decodeMetadata(DataInputStream dataStream) throws IOException {
+    public SnowAnimationMetadata decodeMetadata(DataInputStream dataStream, ServerMetadata serverMetadata) throws IOException {
         readHelloMarker(dataStream);
 
         final int width = dataStream.readInt();
         final int height = dataStream.readInt();
         final int fps = dataStream.readInt();
+        final int bufferSizeInFrames = serverMetadata.bufferSizeInFrames(fps);
 
-        return new SnowAnimationMetadata(width, height, fps);
+        return new SnowAnimationMetadata(width, height, fps, bufferSizeInFrames);
     }
 
     private void readHelloMarker(DataInputStream inputStream) throws IOException {

@@ -9,6 +9,7 @@ import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
@@ -27,12 +28,17 @@ class BinaryStreamEncoderTest {
     @Test
     void whenEncodingMetadata_thenBinaryDataAreInOutput() throws IOException {
         SnowAnimationMetadata metadata = new SnowAnimationMetadata(
-                99, 101, 15
+                99, 101, 15, 73
         );
 
         encoder.encodeMetadata(metadata, out);
 
-        byte[] expected = new byte[] { 0, 0, 0, 99, 0, 0, 0, 101, 0, 0, 0, 15 };
+        byte[] expected = new byte[] {
+                0, 0, 0, 99,
+                0, 0, 0, 101,
+                0, 0, 0, 15,
+                0, 0, 0, 73,
+        };
 
         assertArrayEquals(expected, out.toByteArray());
     }

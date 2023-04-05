@@ -8,10 +8,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import techbit.snow.proxy.config.PhpSnowConfig;
-import techbit.snow.proxy.dto.SnowAnimationMetadata;
-import techbit.snow.proxy.dto.SnowBackground;
-import techbit.snow.proxy.dto.SnowBasis;
-import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.dto.*;
 import techbit.snow.proxy.error.IncompatibleConfigException;
 import techbit.snow.proxy.snow.php.NamedPipe;
 import techbit.snow.proxy.snow.php.PhpSnowApp;
@@ -41,6 +38,7 @@ public final class SnowStream {
         public SnowStreamFinishedEvent(Object source) {
             super(source);
         }
+
         public String getSessionId() {
             return sessionId;
         }
@@ -52,6 +50,7 @@ public final class SnowStream {
     private final PhpSnowApp phpSnowApp;
     private final SnowDataBuffer buffer;
     private final StreamDecoder decoder;
+    private final ServerMetadata serverMetadata;
     private final PhpSnowConfig phpSnowConfig;
     private final Semaphore consumerGoingDownLock = new Semaphore(0);
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -65,15 +64,16 @@ public final class SnowStream {
     );
 
     public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
-                      NamedPipe pipe, PhpSnowApp phpSnowApp, SnowDataBuffer buffer,
-                      StreamDecoder decoder, ApplicationEventPublisher applicationEventPublisher
+                      ServerMetadata serverMetadata, NamedPipe pipe, PhpSnowApp phpSnowApp,
+                      SnowDataBuffer buffer, StreamDecoder decoder, ApplicationEventPublisher applicationEventPublisher
     ) {
         this.sessionId = sessionId;
-        this.phpSnowConfig = phpSnowConfig;
         this.pipe = pipe;
-        this.phpSnowApp = phpSnowApp;
         this.buffer = buffer;
         this.decoder = decoder;
+        this.phpSnowApp = phpSnowApp;
+        this.phpSnowConfig = phpSnowConfig;
+        this.serverMetadata = serverMetadata;
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
@@ -105,7 +105,7 @@ public final class SnowStream {
         final DataInputStream dataStream = new DataInputStream(stream);
 
         log.debug("startConsumingSnowData( {} ) | Reading metadata", sessionId);
-        metadata = decoder.decodeMetadata(dataStream);
+        metadata = decoder.decodeMetadata(dataStream, serverMetadata);
 
         log.debug("startConsumingSnowData( {} ) | Reading background", sessionId);
         background = decoder.decodeBackground(dataStream);

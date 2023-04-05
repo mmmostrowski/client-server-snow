@@ -28,7 +28,7 @@ class PlainTextStreamEncoderTest {
     @Test
     void whenEncodingMetadata_thenHumanReadableDataAreInOutput() throws IOException {
         SnowAnimationMetadata metadata = new SnowAnimationMetadata(
-                99, 101, 15
+                99, 101, 15, 777
         );
 
         encoder.encodeMetadata(metadata, out);
@@ -36,6 +36,7 @@ class PlainTextStreamEncoderTest {
         assertTrue(outputContainsToken("99"));
         assertTrue(outputContainsToken("101"));
         assertTrue(outputContainsToken("15"));
+        assertTrue(outputContainsToken("777"));
     }
 
     @Test

@@ -7,3 +7,4 @@ export type SnowDataFrame = {
     flakeShapes: Uint8Array,
 }
 
+export default SnowDataFrame;

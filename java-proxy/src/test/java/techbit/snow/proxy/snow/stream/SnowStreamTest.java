@@ -247,7 +247,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
     @Test
     void whenInputDataIsStreamed_thenMetadataIsStreamedToOutput() throws IOException, InterruptedException, ConsumerThreadException {
         SnowAnimationMetadata metadata = mock(SnowAnimationMetadata.class);
-        when(decoder.decodeMetadata(any())).thenReturn(metadata);
+        when(decoder.decodeMetadata(any(), any())).thenReturn(metadata);
         when(buffer.firstFrame()).thenReturn(SnowDataFrame.LAST);
         when(phpSnow.isAlive()).thenReturn(true);
 

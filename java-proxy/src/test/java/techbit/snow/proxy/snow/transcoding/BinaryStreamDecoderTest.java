@@ -5,14 +5,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import techbit.snow.proxy.dto.SnowAnimationMetadata;
-import techbit.snow.proxy.dto.SnowBackground;
-import techbit.snow.proxy.dto.SnowBasis;
-import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.dto.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class BinaryStreamDecoderTest {
 
     private BinaryStreamDecoder decoder;
+    private DataInputStream inputStream;
 
     @BeforeEach
     void setup() {
@@ -36,12 +35,15 @@ class BinaryStreamDecoderTest {
                 0x1, 0x0, 0x0, 0x0,  // fps
         };
 
+        inputStream = new DataInputStream(new ByteArrayInputStream(binary));
         SnowAnimationMetadata metadata = decoder.decodeMetadata(
-                new DataInputStream(new ByteArrayInputStream(binary)));
+                inputStream,
+                new ServerMetadata(Duration.ofSeconds(3)));
 
         assertEquals(127, metadata.width());
         assertEquals(65536, metadata.height());
         assertEquals(16777216, metadata.fps());
+        assertEquals(50331648, metadata.bufferSizeInFrames());
     }
 
     @Test
@@ -53,7 +55,8 @@ class BinaryStreamDecoderTest {
         };
 
         assertThrows(IllegalStateException.class, () -> decoder.decodeMetadata(
-                new DataInputStream(new ByteArrayInputStream(binary))));
+                new DataInputStream(new ByteArrayInputStream(binary)),
+                new ServerMetadata(Duration.ofSeconds(8))));
     }
 
     @Test

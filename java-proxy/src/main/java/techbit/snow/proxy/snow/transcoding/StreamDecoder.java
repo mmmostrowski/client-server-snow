@@ -1,16 +1,13 @@
 package techbit.snow.proxy.snow.transcoding;
 
-import techbit.snow.proxy.dto.SnowAnimationMetadata;
-import techbit.snow.proxy.dto.SnowBackground;
-import techbit.snow.proxy.dto.SnowBasis;
-import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.dto.*;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 
 public interface StreamDecoder {
 
-    SnowAnimationMetadata decodeMetadata(DataInputStream dataStream) throws IOException;
+    SnowAnimationMetadata decodeMetadata(DataInputStream dataStream, ServerMetadata serverMetadata) throws IOException;
 
     SnowBackground decodeBackground(DataInputStream dataInputStream) throws IOException;
 

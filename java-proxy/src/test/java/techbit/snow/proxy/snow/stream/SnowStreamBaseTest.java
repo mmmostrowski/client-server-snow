@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
 import techbit.snow.proxy.config.PhpSnowConfig;
+import techbit.snow.proxy.dto.ServerMetadata;
 import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.snow.php.NamedPipe;
@@ -39,6 +40,7 @@ abstract public class SnowStreamBaseTest {
     protected ApplicationEventPublisher eventPublisher;
     protected SnowStreamSimpleClient client;
     protected final SnowDataBuffer buffer;
+    protected ServerMetadata serverMetadata;
     protected PhpSnowConfig snowConfig;
     protected SnowStream snowStream;
 
@@ -48,6 +50,7 @@ abstract public class SnowStreamBaseTest {
 
     @BeforeEach
     void setup() throws IOException {
+        serverMetadata = new ServerMetadata(Duration.ofSeconds(7));
         snowConfig = new PhpSnowConfig(
                 "testingPreset", 87, 76, Duration.ofMinutes(11), 21);
 
@@ -65,6 +68,8 @@ abstract public class SnowStreamBaseTest {
         lenient().when(decoder.decodeBasis(any())).thenReturn(SnowBasis.NONE);
         lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(new byte[]{}));
 
-        snowStream = new SnowStream("session-xyz", snowConfig, pipe, phpSnow, buffer, decoder, eventPublisher);
+        snowStream = new SnowStream("session-xyz", snowConfig,
+                serverMetadata,
+                pipe, phpSnow, buffer, decoder, eventPublisher);
     }
 }

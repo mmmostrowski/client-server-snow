@@ -20,6 +20,7 @@ public final class BinaryStreamEncoder implements StreamEncoder {
         data.writeInt(metadata.width());
         data.writeInt(metadata.height());
         data.writeInt(metadata.fps());
+        data.writeInt(metadata.bufferSizeInFrames());
     }
 
     @Override
