@@ -97,7 +97,7 @@ export default class FirstComponent extends React.Component <{}, MyState> {
         ptr += 9;
      }
 
-     console.log(frameNum);
+     console.log("frameNum", frameNum);
 //      console.log(frameNum, chunkSize, x, y, flakes);
   }
 

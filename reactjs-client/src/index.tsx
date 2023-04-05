@@ -1,12 +1,13 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import FirstComponent from './components/FirstComponent'
-import UserComponent from './components/UserComponent'
+import SnowAnimation from './components/SnowAnimation'
+
 
 ReactDOM.render(
     <div>
-      <h1>Snow</h1>
-      <FirstComponent/>
+      <h1>Snow Animation</h1>
+      <SnowAnimation sessionId="session-xyz" presetName="massiveSnow" fps={33} />
     </div>,
     document.getElementById("root")
 );
