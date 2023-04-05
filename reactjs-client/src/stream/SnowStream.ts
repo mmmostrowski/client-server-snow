@@ -12,17 +12,23 @@ export interface SnowStreamProps {
 }
 
 export default class SnowStream extends React.Component<SnowStreamProps, {}>{
+    private decoder: SnowDecoder = new SnowDecoder();
     private stompClient: Client|null = null;
     private isFirstFrame: boolean = true;
-    private decoder: SnowDecoder = new SnowDecoder();
+    private isActive: boolean = false;
 
-    startSession() {
-        this.isFirstFrame = true;
+    public startSession() {
+        if (this.isActive) {
+            return;
+        }
 
         let paramsQuery = "/fps/" + this.props.fps
             + "/width/" + this.props.width
             + "/height/" + this.props.height
             + "/presetName/" + this.props.presetName;
+
+        this.isFirstFrame = true;
+        this.isActive = true;
 
         fetch('http://127.0.0.1:8080/start/' + this.props.sessionId + paramsQuery)
              .then((response) => response.json())
@@ -38,7 +44,9 @@ export default class SnowStream extends React.Component<SnowStreamProps, {}>{
              });
     }
 
-    stopSession() {
+    public stopSession() {
+        this.isActive = false;
+        this.stopConsumingWebsocket();
         fetch('http://127.0.0.1:8080/stop/' + this.props.sessionId)
              .then((response) => response.json())
              .then((data) => data.running)
@@ -62,7 +70,7 @@ export default class SnowStream extends React.Component<SnowStreamProps, {}>{
                 destination: '/app/stream/' + this.props.sessionId,
                 body: clientId
             });
-            client.subscribe('/user/' + clientId + '/user/stream/', this.handleMessage.bind(this));
+            client.subscribe('/user/stream/', this.handleMessage.bind(this));
           },
         });
         client.activate();
@@ -78,44 +86,35 @@ export default class SnowStream extends React.Component<SnowStreamProps, {}>{
     }
 
     private handleMessage(message: any) {
+        console.log(message);
+        return;
+
         const data = new DataView(message.binaryBody.buffer);
         if (this.isFirstFrame) {
             this.isFirstFrame = false;
             this.handleSnowMetadata(data);
+            this.handleSnowBackground(data);
         } else {
             this.handleSnowDataFrame(data);
         }
     }
 
     private handleSnowMetadata(data : DataView) {
+        let metadata = this.decoder.decodeMetadata(data);
+        console.log(metadata);
     }
 
-    private handleSnowDataFrame(data : DataView): SnowDataFrame {
-        let frameNum = data.getInt32(0, false);
-        let chunkSize = data.getUint32(4, false);
-        let x = new Float32Array(chunkSize);
-        let y = new Float32Array(chunkSize);
-        let flakes = new Uint8Array(chunkSize);
-        let ptr = 8;
-        console.log("chunkSize", chunkSize);
-        for (var i = 0; i < chunkSize; ++i) {
-            x[i] = data.getFloat32(ptr, false);
-            y[i] = data.getFloat32(ptr + 4, false);
-            flakes[i] = data.getUint8(ptr + 8);
-            ptr += 9;
-        }
-        console.log("frameNum", frameNum);
-
-        return {
-            frameNum: frameNum,
-            chunkSize: chunkSize,
-            particlesX: x,
-            particlesY: y,
-            flakeShapes: flakes,
-        };
+    private handleSnowBackground(data : DataView) {
+        let background = this.decoder.decodeBackground(data);
+        console.log(background);
     }
 
-    generateMyUniqueSessionId(): string {
+    private handleSnowDataFrame(data : DataView) {
+        let snowFrame = this.decoder.decodeDataFrame(data);
+        console.log("frameNum", snowFrame.frameNum, "chunkSize", snowFrame.chunkSize);
+    }
+
+    private generateMyUniqueSessionId(): string {
         return Math.random().toString(36).slice(2)
             + Math.random().toString(36).slice(2)
             + Math.random().toString(36).slice(2);

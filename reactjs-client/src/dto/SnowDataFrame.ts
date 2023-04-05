@@ -1,5 +1,5 @@
 
-export type SnowDataFrame = {
+export interface SnowDataFrame {
     frameNum: number,
     chunkSize: number,
     particlesX: Float32Array,

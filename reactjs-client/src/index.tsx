@@ -6,7 +6,7 @@ import SnowAnimation from './components/SnowAnimation'
 ReactDOM.render(
     <div>
       <h1>Snow Animation</h1>
-      <SnowAnimation sessionId="session-xyz" presetName="massiveSnow" fps={3} />
+      <SnowAnimation sessionId="session-xyz" presetName="massiveSnow" fps={1} />
     </div>,
     document.getElementById("root")
 );

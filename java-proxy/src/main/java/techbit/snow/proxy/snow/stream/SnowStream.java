@@ -166,10 +166,10 @@ public final class SnowStream {
         buffer.registerClient(client.identifier());
 
         try {
-            log.debug("streamTo( {} ) | Metadata", sessionId);
+            log.debug("streamTo( {} ) | Metadata & Background", sessionId);
             client.startStreaming(metadata, background);
 
-            log.debug("streamTo( {} ) | Reading Frames", sessionId);
+            log.debug("streamTo( {} ) | Start Streaming Frames", sessionId);
             SnowBasis currentBasis = SnowBasis.NONE;
             for (SnowDataFrame frame = buffer.firstFrame(); frame != SnowDataFrame.LAST; frame = buffer.nextFrame(frame)) {
                 log.trace("streamTo( {} ) | Frame {}", sessionId, frame.frameNum());
