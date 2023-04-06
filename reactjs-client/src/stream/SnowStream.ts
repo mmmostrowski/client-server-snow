@@ -45,7 +45,6 @@ export default class SnowStream extends React.Component<SnowStreamProps, {}>{
     }
 
     public stopSession() {
-        this.isActive = false;
         this.stopConsumingWebsocket();
         fetch('http://127.0.0.1:8080/stop/' + this.props.sessionId)
              .then((response) => response.json())
@@ -54,6 +53,7 @@ export default class SnowStream extends React.Component<SnowStreamProps, {}>{
                 if (running) {
                     throw "Server responded that snow session is still running!"
                 }
+                this.isActive = false;
              })
              .catch((err) => {
                 console.log(err.message);
@@ -61,28 +61,28 @@ export default class SnowStream extends React.Component<SnowStreamProps, {}>{
     }
 
     private startConsumingWebsocket() {
-        let clientId = this.generateMyUniqueSessionId();
-
-        const client = new Client({
+        if (this.stompClient) {
+            return;
+        }
+        this.stompClient = new Client({
           brokerURL: 'ws://127.0.0.1:8080/ws/',
           onConnect: (frame) => {
-            client.publish({
-                destination: '/app/stream/' + this.props.sessionId,
-                body: clientId
+            let userId = frame.headers['user-name'];
+            this.stompClient.subscribe('/user/' + userId + '/stream/', this.handleMessage.bind(this));
+            this.stompClient.publish({
+                destination: '/app/stream/' + this.props.sessionId
             });
-            client.subscribe('/user/stream/', this.handleMessage.bind(this));
           },
         });
-        client.activate();
-
-        this.stompClient = client;
+        this.stompClient.activate();
     }
 
     private stopConsumingWebsocket() {
-        if (this.stompClient) {
-            this.stompClient.deactivate();
-            this.stompClient = null;
+        if (!this.stompClient) {
+            return;
         }
+        this.stompClient.deactivate();
+        this.stompClient = null;
     }
 
     private handleMessage(message: any) {
@@ -112,12 +112,6 @@ export default class SnowStream extends React.Component<SnowStreamProps, {}>{
     private handleSnowDataFrame(data : DataView) {
         let snowFrame = this.decoder.decodeDataFrame(data);
         console.log("frameNum", snowFrame.frameNum, "chunkSize", snowFrame.chunkSize);
-    }
-
-    private generateMyUniqueSessionId(): string {
-        return Math.random().toString(36).slice(2)
-            + Math.random().toString(36).slice(2)
-            + Math.random().toString(36).slice(2);
     }
 
 }

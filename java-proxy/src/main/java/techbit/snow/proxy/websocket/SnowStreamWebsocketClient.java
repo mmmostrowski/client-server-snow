@@ -58,7 +58,7 @@ public final class SnowStreamWebsocketClient implements SnowStreamClient {
     }
 
     private void sendToWebsocketClient() {
-        messagingTemplate.convertAndSendToUser(clientId, "/user/stream/", output.toByteArray());
+        messagingTemplate.convertAndSendToUser(clientId, "/stream/", output.toByteArray());
         output.reset();
     }
 

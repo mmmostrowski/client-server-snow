@@ -13,6 +13,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws/")
+                .setHandshakeHandler(new UserHandshakeHandler())
                 .setAllowedOrigins("http://127.0.0.1:8181");
     }
 
@@ -20,6 +21,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/app");
         registry.enableSimpleBroker("/user/");
         registry.setUserDestinationPrefix("/user/");
+        registry.setPreservePublishOrder(true);
     }
 
 }
