@@ -1,12 +1,13 @@
 import * as React from "react";
 import { useEffect, useRef, useState, forwardRef, useContext, useReducer } from 'react';
 import SnowCanvas from './SnowCanvas'
-import { useSnowSession, useSnowSessionDispatch } from '../snow/SnowSessionProvider'
+import { useSnowSession, useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
 import { validateSnowSessionId } from '../snow/snowSessionValidator'
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 
 interface SnowAnimationProps {
+    sessionIdx: number,
     presetName: string;
     isAnimationRunning: boolean;
     width: number;
@@ -14,10 +15,10 @@ interface SnowAnimationProps {
     fps: number;
 }
 
-export default function SnowAnimation({ width, height, isAnimationRunning } : SnowAnimationProps) {
+export default function SnowAnimation({ sessionIdx, width, height, isAnimationRunning } : SnowAnimationProps) {
     const snowCanvasRef = useRef<SnowCanvas>(null);
-    const { sessionId } = useSnowSession();
-    const dispatch = useSnowSessionDispatch();
+    const { sessionId } = useSnowSession(sessionIdx);
+    const dispatch = useSnowSessionDispatch(sessionIdx);
 
     useEffect(() => {
         snowCanvasRef.current.renderSnowFrame(null);
@@ -35,9 +36,9 @@ export default function SnowAnimation({ width, height, isAnimationRunning } : Sn
                     required
                     error={sessionIdError != null}
                     helperText={sessionIdError}
-                    onChange={(e) => dispatch({
-                        type: 'on-session-id-changed',
-                        newSessionId : e.target.value
+                    onChange={ e => dispatch({
+                        type: 'session-id-changed',
+                        changedSessionId : e.target.value
                     })}
                 />
                 {
