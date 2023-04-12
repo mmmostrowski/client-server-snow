@@ -1,13 +1,10 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
-import SnowAnimation from './components/SnowAnimation'
+import * as ReactDOMClient from 'react-dom/client';
+import App from './App'
+import './index.css'
 
 
-ReactDOM.render(
-    <div>
-      <h1>Snow Animation</h1>
-      <SnowAnimation sessionId="session-xyz" presetName="massiveSnow" fps={1} />
-    </div>,
-    document.getElementById("root")
-);
+const container = document.getElementById('root');
+const root = ReactDOMClient.createRoot(container);
 
+root.render( <App/> );

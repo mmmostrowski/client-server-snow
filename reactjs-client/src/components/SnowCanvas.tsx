@@ -6,19 +6,11 @@ import { SnowDataFrame } from '../dto/SnowDataFrame'
 type SnowCanvasProps = {
     width: number,
     height: number,
+    scaleFactorV: number,
+    scaleFactorH: number,
 }
 
-type SnowCanvasState = {
-     scaleFactorV: number,
-     scaleFactorH: number,
-}
-
-export default class SnowCanvas extends React.Component <SnowCanvasProps, SnowCanvasState> {
-
-    state: SnowCanvasState = {
-        scaleFactorH: 9,
-        scaleFactorV: 20,
-    }
+export default class SnowCanvas extends React.Component<SnowCanvasProps, {}> {
 
     private flakeShapes = new SnowFlakes();
     private canvasRef = React.createRef<HTMLCanvasElement>();
@@ -32,23 +24,6 @@ export default class SnowCanvas extends React.Component <SnowCanvasProps, SnowCa
     componentDidUpdate() {
         this.setupViewport();
         this.renderSnowFrame(this.lastFrame);
-    }
-
-    get canvasWidth() {
-        return this.props.width * this.state.scaleFactorH;
-    }
-
-    get canvasHeight() {
-        return this.props.height * this.state.scaleFactorV;
-    }
-
-    setupViewport() {
-        this.flakeShapes.setupViewport(
-            this.props.width,
-            this.props.height,
-            this.state.scaleFactorH,
-            this.state.scaleFactorV
-        );
     }
 
     renderSnowFrame(frame : SnowDataFrame|null) {
@@ -77,12 +52,29 @@ export default class SnowCanvas extends React.Component <SnowCanvasProps, SnowCa
         }
     }
 
-    viewportX(x : number): number {
-        return x * this.state.scaleFactorH;
+    private get canvasWidth() {
+        return this.props.width * this.props.scaleFactorH;
     }
 
-    viewportY(y : number): number {
-        return y * this.state.scaleFactorV;
+    private get canvasHeight() {
+        return this.props.height * this.props.scaleFactorV;
+    }
+
+    private setupViewport() {
+        this.flakeShapes.setupViewport(
+            this.props.width,
+            this.props.height,
+            this.props.scaleFactorH,
+            this.props.scaleFactorV
+        );
+    }
+
+    private viewportX(x : number): number {
+        return x * this.props.scaleFactorH;
+    }
+
+    private viewportY(y : number): number {
+        return y * this.props.scaleFactorV;
     }
 
     render() {
