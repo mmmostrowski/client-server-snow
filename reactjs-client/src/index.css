@@ -1,11 +1,31 @@
 .snow-animation {
-    background: lightgray;
-    padding: 20px
+    background: #eee;
+    padding: 20px;
 }
 
 .session-id {
     font-size: 20px;
-    padding: 20px
+    padding: 20px;
+}
+
+.MuiButtonBase-root.MuiIconButton-root.tab-delete-button {
+    position: absolute;
+    right: -2px;
+    top: 1px;
+    vertical-align: top;
+    font-size: 13px;
+    color: red;
+    background: #fee;
+    padding: 1px;
+}
+
+.MuiButtonBase-root.add-new-session-button {
+    font-size: 28px;
+    margin: 5px 2px 4px 9px;
+    padding: 0px;
+    border-radius: 6px;
+    min-width: 48px;
+    min-height: 0px;
 }
 
 .session-id span {

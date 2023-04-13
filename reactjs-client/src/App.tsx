@@ -1,11 +1,10 @@
 import * as React from "react";
 import { useState, useRef, forwardRef } from 'react';
+import { useSnowSessions, useSnowSessionsDispatch } from './snow/SnowSessionsProvider'
 import SnowAnimation from './components/SnowAnimation'
-import { SnowSessionsProvider, useSnowSessions, useSnowSessionsDispatch } from './snow/SnowSessionsProvider'
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import ClearIcon from '@mui/icons-material/Clear';
 
@@ -15,7 +14,7 @@ interface AppProps {
 
 export default function App({ maxTabs } : AppProps) {
     const [ currentTab, setCurrentTab ] = useState(0);
-    const createdCount = useRef(0);
+    const createdCount = useRef(1);
     const sessions = useSnowSessions();
     const dispatch = useSnowSessionsDispatch();
 
@@ -25,31 +24,36 @@ export default function App({ maxTabs } : AppProps) {
             return;
         }
 
-        createdCount.current = createdCount.current + 1;
-        dispatch({
+         dispatch({
             type: 'new-session',
-            newSessionId : 'session-' + createdCount.current,
+            newSessionId : 'session-' + createdCount.current++,
         })
     }
 
     function handleDeleteSession(e : any, value : number) {
         e.stopPropagation();
-        if (window.confirm('Are you sure you want to delete session ' + e.target.parentElement.parentElement.innerText + ' ?')) {
+        const sessionId = sessions[value].sessionId;
+        if (window.confirm('Are you sure you want to delete session ' + sessionId + ' ?')) {
+             if (currentTab >= value) {
+                 setCurrentTab(currentTab > 0 ? currentTab - 1 : 0);
+             }
              dispatch({
                  type: 'delete-session',
                  sessionIdx: value
              })
-             if (currentTab >= value) {
-                 setCurrentTab(currentTab > 0 ? currentTab - 1 : 0);
-             }
+        }
+    }
+
+    function handleTabChange(e : any, newTabIdx : number) {
+        if (newTabIdx < maxTabs) {
+            setCurrentTab(newTabIdx)
         }
     }
 
     const TabButton = forwardRef<HTMLDivElement, any>((props, ref) => (
         <span ref={ref}>
             <div role="button" {...props} >
-                <IconButton onClick={(e) => { handleDeleteSession(e, props['data-value'])} }
-                    sx={{ position: 'absolute', right: -7, top: -6, verticalAlign: 'top', fontSize: 13, color: 'red' }} >
+                <IconButton className="tab-delete-button" onClick={(e) => { handleDeleteSession(e, props['data-value'])} }  >
                     <ClearIcon fontSize="inherit" />
                 </IconButton>
                 {props.children}
@@ -61,19 +65,23 @@ export default function App({ maxTabs } : AppProps) {
         <>
             <h1>Snow Animation</h1>
             <Box sx={{ border: 1, borderColor: 'divider' }}>
-              <Tabs value={currentTab} onChange={(e, newValue) => setCurrentTab(newValue)}  >
+                <Tabs value={currentTab} onChange={handleTabChange}  >
                 {
                     sessions.map((s, idx) =>
-                        <Tab label={s.sessionId !== "" ? s.sessionId : '?'} data-value={idx} component={TabButton} /> )
+                        <Tab key={idx}
+                             label={s.sessionId !== "" ? s.sessionId : '?'}
+                             data-value={idx}
+                             component={TabButton} /> )
                 }
-                <Button onClick={handleNewSession} variant="contained" sx={{ fontWeight: 'bold', fontSize: 18 }} >
-                    +
-                </Button>
-              </Tabs>
+                <Tab key="new" label="+" className="add-new-session-button" onClick={handleNewSession}
+                        sx={{  backgroundColor: 'primary.main', color: 'primary.contrastText',
+                               "&:hover": { backgroundColor: 'primary.dark' }  }} />
+                </Tabs>
             </Box>
             {
                 sessions.map((s, idx) =>
                     currentTab === idx && <SnowAnimation
+                        key={idx}
                         sessionIdx={idx}
                         presetName="massiveSnow"
                         fps={1}

@@ -1,9 +1,9 @@
 import * as React from "react";
-import { useEffect, useRef, useState, forwardRef, useContext, useReducer } from 'react';
-import SnowCanvas from './SnowCanvas'
+import { useEffect, useRef } from 'react';
 import { useSnowSession, useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
 import { validateSnowSessionId } from '../snow/snowSessionValidator'
 import Button from '@mui/material/Button';
+import SnowCanvas from './SnowCanvas'
 import TextField from '@mui/material/TextField';
 
 interface SnowAnimationProps {
@@ -19,12 +19,11 @@ export default function SnowAnimation({ sessionIdx, width, height, isAnimationRu
     const snowCanvasRef = useRef<SnowCanvas>(null);
     const { sessionId } = useSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
+    const sessionIdError = validateSnowSessionId(sessionId);
 
     useEffect(() => {
         snowCanvasRef.current.renderSnowFrame(null);
     });
-
-    const sessionIdError = validateSnowSessionId(sessionId);
 
     return (
         <div className="snow-animation" >
