@@ -2,11 +2,15 @@ import * as React from "react";
 import { useState, useRef, forwardRef } from 'react';
 import { useSnowSessions, useSnowSessionsDispatch } from './snow/SnowSessionsProvider'
 import SnowAnimation from './components/SnowAnimation'
+import SnowConfiguration from './components/SnowConfiguration'
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
+import Grid from '@mui/material/Grid';
 import ClearIcon from '@mui/icons-material/Clear';
+import Paper from '@mui/material/Paper';
+
 
 interface AppProps {
     maxTabs : number
@@ -69,7 +73,7 @@ export default function App({ maxTabs } : AppProps) {
                 {
                     sessions.map((s, idx) =>
                         <Tab key={idx}
-                             label={s.sessionId !== "" ? s.sessionId : '?'}
+                             label={s.validatedSessionId}
                              data-value={idx}
                              component={TabButton} /> )
                 }
@@ -80,14 +84,28 @@ export default function App({ maxTabs } : AppProps) {
             </Box>
             {
                 sessions.map((s, idx) =>
-                    currentTab === idx && <SnowAnimation
-                        key={idx}
-                        sessionIdx={idx}
-                        presetName="massiveSnow"
-                        fps={1}
-                        width={180}
-                        height={80}
-                        isAnimationRunning={true} />
+                    currentTab === idx &&
+                    (
+                        <Grid container spacing={1} key={idx}>
+                            <Grid item xs={3}>
+                                <Paper>
+                                    <SnowConfiguration
+                                        key={idx}
+                                        sessionIdx={idx}
+                                     />
+                                </Paper>
+                            </Grid>
+                            <Grid item xs={9}>
+                                <SnowAnimation
+                                    key={idx}
+                                    sessionIdx={idx}
+                                    presetName="massiveSnow"
+                                    fps={1}
+                                    isAnimationRunning={true}
+                                />
+                            </Grid>
+                        </Grid>
+                    )
                 )
             }
         </>

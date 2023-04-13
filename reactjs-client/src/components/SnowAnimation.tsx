@@ -10,16 +10,13 @@ interface SnowAnimationProps {
     sessionIdx: number,
     presetName: string;
     isAnimationRunning: boolean;
-    width: number;
-    height: number;
     fps: number;
 }
 
-export default function SnowAnimation({ sessionIdx, width, height, isAnimationRunning } : SnowAnimationProps) {
+export default function SnowAnimation({ sessionIdx, isAnimationRunning } : SnowAnimationProps) {
     const snowCanvasRef = useRef<SnowCanvas>(null);
-    const { sessionId } = useSnowSession(sessionIdx);
+    const { sessionId, sessionIdError, validatedWidth, validatedHeight } = useSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
-    const sessionIdError = validateSnowSessionId(sessionId);
 
     useEffect(() => {
         snowCanvasRef.current.renderSnowFrame(null);
@@ -31,14 +28,17 @@ export default function SnowAnimation({ sessionIdx, width, height, isAnimationRu
                 <TextField
                     variant="standard"
                     label="Session id"
-                    defaultValue={sessionId}
+                    value={sessionId}
                     required
                     error={sessionIdError != null}
                     helperText={sessionIdError}
                     onChange={ e => dispatch({
-                        type: 'session-id-changed',
-                        changedSessionId : e.target.value
+                        type: 'session-changed',
+                        changes : {
+                            sessionId: e.target.value
+                        }
                     })}
+                    onBlur={() => dispatch({ type: 'commit-session-changes' })}
                 />
                 {
                     isAnimationRunning
@@ -46,7 +46,7 @@ export default function SnowAnimation({ sessionIdx, width, height, isAnimationRu
                         : <Button className="start-button" variant="contained">Start</Button>
                 }
                 </div>
-            <SnowCanvas ref={snowCanvasRef} width={width} height={height} scaleFactorV={5} scaleFactorH={5} />
+            <SnowCanvas ref={snowCanvasRef} width={validatedWidth} height={validatedHeight} scaleFactorV={5} scaleFactorH={5} />
         </div>
     )
 }

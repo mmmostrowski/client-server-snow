@@ -1,11 +1,36 @@
 import * as React from "react";
-import { ReactNode, useContext, createContext, useReducer } from 'react';
+import { useContext, createContext, useReducer } from 'react';
+import { validateSnowSessionId, validateNumberBetween } from './snowSessionValidator';
 
 export const SnowSessionsContext = createContext([]);
 export const SnowSessionsDispatchContext = createContext(null);
 
-interface SnowSession {
+export const snowConstraints = {
+    defaultSessionId: "session-abc",
+
+    minWidth: 40,
+    minHeight: 20,
+    defaultWidth: 180,
+    defaultHeight: 100,
+    maxWidth: 200,
+    maxHeight: 150,
+};
+
+interface SnowSessionDraft {
     sessionId: string,
+    width: string,
+    height: string,
+}
+
+interface SnowSession extends SnowSessionDraft {
+    validatedSessionId: string,
+    sessionIdError: string|null,
+
+    validatedWidth: number,
+    widthError: string|null,
+
+    validatedHeight: number,
+    heightError: string|null,
 }
 
 type SnowSessionDispatchAction =
@@ -19,7 +44,7 @@ interface SnowSessionDispatchAnyAction {
 
 interface SnowSessionDispatchSessionIdChangeAction extends SnowSessionDispatchAnyAction {
     sessionIdx : number,
-    changedSessionId: string,
+    changes: object,
 }
 
 interface SnowSessionDispatchNewSessionAction extends SnowSessionDispatchAnyAction {
@@ -32,9 +57,7 @@ interface SnowSessionDispatchDeleteSessionAction extends SnowSessionDispatchAnyA
 
 export function SnowSessionsProvider({ children } : any) {
     const [ sessions, dispatch ] = useReducer(snowSessionsReducer, [
-        {
-            "sessionId" : "session-abc",
-        },
+        createSession(snowConstraints.defaultSessionId),
     ]);
 
     return (
@@ -66,24 +89,25 @@ export function useSnowSessionDispatch(sessionIdx : number) {
 
 export function snowSessionsReducer(sessions : SnowSession[], action : SnowSessionDispatchAction): SnowSession[] {
     switch(action.type) {
-        case 'session-id-changed':
-            const sessionIdChangeAction = action as SnowSessionDispatchSessionIdChangeAction;
-            const idx = sessionIdChangeAction.sessionIdx;
-            return [
-               ...sessions.slice(0, idx),
-               {
-                   ...sessions[idx],
-                   sessionId : sessionIdChangeAction.changedSessionId,
-               },
-               ...sessions.slice(idx + 1),
-           ];
        case 'new-session':
             const newSessionAction = action as SnowSessionDispatchNewSessionAction;
             return [
                ...sessions,
-               {
-                   sessionId : newSessionAction.newSessionId,
-               },
+               createSession(newSessionAction.newSessionId),
+           ];
+        case 'session-changed':
+            const sessionIdChangeAction = action as SnowSessionDispatchSessionIdChangeAction;
+            const idx = sessionIdChangeAction.sessionIdx;
+            const last = sessions[idx];
+            const changed = {
+                ...last,
+                ...sessionIdChangeAction.changes,
+            }
+            const draft = draftSession(changed, last);
+            return [
+               ...sessions.slice(0, idx),
+                draft,
+               ...sessions.slice(idx + 1),
            ];
        case 'delete-session':
             const deleteSessionAction = action as SnowSessionDispatchDeleteSessionAction;
@@ -91,7 +115,67 @@ export function snowSessionsReducer(sessions : SnowSession[], action : SnowSessi
                ...sessions.slice(0, deleteSessionAction.sessionIdx),
                ...sessions.slice(deleteSessionAction.sessionIdx + 1),
            ];
+       case 'commit-session-changes':
+            return sessions.map(sessionWithAppliedChanges);
     }
 
     throw Error("Unknown action type: " + action.type)
+}
+
+function createSession(initialSessionId : string) : SnowSession {
+    return sessionWithCommittedDraftChanges({
+        sessionId : initialSessionId,
+        width: '' + snowConstraints.defaultWidth,
+        height: '' + snowConstraints.defaultHeight,
+    });
+}
+
+function draftSession(draft : SnowSessionDraft, last : SnowSession) : SnowSession {
+    return {
+        ...last,
+        ...draft,
+        ...( sessionErrors(draft) ),
+    }
+}
+
+function sessionErrors(draft : SnowSessionDraft) {
+    return {
+       sessionIdError: validateSnowSessionId(draft.sessionId),
+       widthError: validateNumberBetween(draft.width, snowConstraints.minWidth, snowConstraints.maxWidth),
+       heightError: validateNumberBetween(draft.height, snowConstraints.minHeight, snowConstraints.maxHeight),
+   };
+}
+
+function sessionWithAppliedChanges(session: SnowSession): SnowSession {
+    const numOfErrors = Object.values(sessionErrors(session))
+         .filter( value => value !== null )
+         .length;
+    if (numOfErrors === 0) {
+        return sessionWithCommittedDraftChanges(session);
+    } else {
+        return sessionWithRevertedDraftChanges(session);
+    }
+}
+
+function sessionWithCommittedDraftChanges(draft: SnowSessionDraft): SnowSession {
+    return {
+        ...draft,
+        ...( sessionErrors(draft) ),
+        validatedSessionId: draft.sessionId,
+        validatedWidth: parseInt(draft.width),
+        validatedHeight: parseInt(draft.height),
+    }
+}
+
+function sessionWithRevertedDraftChanges(session: SnowSession): SnowSession {
+    const revertedSession={
+        ...session,
+        sessionId: session.validatedSessionId,
+        width: '' + session.validatedWidth,
+        height: '' + session.validatedHeight,
+    };
+    return {
+        ...revertedSession,
+        ...( sessionErrors(revertedSession) ),
+    };
 }
