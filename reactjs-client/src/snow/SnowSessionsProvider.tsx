@@ -62,6 +62,8 @@ export interface ValidatedSnowSession extends SnowSession {
 
     validatedFps: number,
     fpsError: string|null,
+
+    isEditable : boolean,
 }
 
 type SnowSessionDispatchAction =
@@ -118,7 +120,7 @@ export function useSnowSessionDispatch(sessionIdx : number) {
     return (props : any) => dispatch({ ...props, sessionIdx: sessionIdx })
 }
 
-export function snowSessionsReducer(sessions : ValidatedSnowSession[], action : SnowSessionDispatchAction): ValidatedSnowSession[] {
+function snowSessionsReducer(sessions : ValidatedSnowSession[], action : SnowSessionDispatchAction): ValidatedSnowSession[] {
     switch(action.type) {
        case 'new-session':
             const newSessionAction = action as SnowSessionDispatchNewSessionAction;
@@ -162,7 +164,7 @@ function createSession(initialSessionId : string) : ValidatedSnowSession {
         fps: '' + snowConstraints.defaultFps,
         animationProgress: 79,
         bufferLevel: 90,
-        status: "playing",
+        status: "stopped",
         errorMsg: "",
     });
 }
@@ -203,6 +205,7 @@ function sessionWithCommittedDraftChanges(draft: SnowSession): ValidatedSnowSess
         validatedWidth: parseInt(draft.width),
         validatedHeight: parseInt(draft.height),
         validatedFps: parseInt(draft.fps),
+        isEditable: draft.status === 'stopped',
     }
 }
 

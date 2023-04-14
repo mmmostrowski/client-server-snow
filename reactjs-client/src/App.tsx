@@ -1,13 +1,12 @@
 import * as React from "react";
-import { useState, useRef, forwardRef } from 'react';
+import { useState, useRef, forwardRef, useEffect } from 'react';
 import { useSnowSessions, useSnowSessionsDispatch } from './snow/SnowSessionsProvider'
 import SnowAnimation from './components/SnowAnimation'
 import SnowConfiguration from './components/SnowConfiguration'
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
-import Grid from '@mui/material/Grid';
 import ClearIcon from '@mui/icons-material/Clear';
 import Paper from '@mui/material/Paper';
 
@@ -18,9 +17,27 @@ interface AppProps {
 
 export default function App({ maxTabs } : AppProps) {
     const [ currentTab, setCurrentTab ] = useState(0);
+    const [ isInitialized, setInitialized ] = useState(false);
     const createdCount = useRef(1);
     const sessions = useSnowSessions();
     const dispatch = useSnowSessionsDispatch();
+    const currentSessionId=sessions[currentTab] !== undefined
+        ? sessions[currentTab].validatedSessionId
+        : undefined;
+
+    useEffect(() => {
+        if (!isInitialized) {
+            setInitialized(true);
+            const initialSessionId = window.location.pathname.substring(1);
+            if (initialSessionId !== "") {
+                // TODO: start session initialSessionId
+            }
+            return;
+        }
+        window.history.pushState({
+            session: currentSessionId,
+        }, "Session: " + currentSessionId, "/" + currentSessionId)
+    }, [ currentSessionId, isInitialized ]);
 
     function handleNewSession() {
         if (sessions.length >= maxTabs) {
@@ -50,7 +67,7 @@ export default function App({ maxTabs } : AppProps) {
 
     function handleTabChange(e : any, newTabIdx : number) {
         if (newTabIdx < maxTabs) {
-            setCurrentTab(newTabIdx)
+            setCurrentTab(newTabIdx);
         }
     }
 
@@ -70,7 +87,7 @@ export default function App({ maxTabs } : AppProps) {
             <div className="snow-animation-header" >
                 <h1>Snow Animation</h1>
                 <Paper elevation={2} sx={{ mt: 1 }} >
-                        <Tabs value={currentTab} onChange={handleTabChange}  >
+                        <Tabs value={sessions.length > 0 ? currentTab : undefined} onChange={handleTabChange}  >
                         {
                             sessions.map((s, idx) =>
                                 <Tab key={idx}
@@ -78,11 +95,17 @@ export default function App({ maxTabs } : AppProps) {
                                      data-value={idx}
                                      component={TabButton}
                                      sx={{ borderRight: 1, borderColor: 'divider' }}
-                                     /> )
+                                     />
+                            )
                         }
-                        <Tab key="new" label="+" className="add-new-session-button" onClick={handleNewSession}
-                                sx={{  backgroundColor: 'primary.main', color: 'primary.contrastText',
-                                       "&:hover": { backgroundColor: 'primary.dark' }  }} />
+                            <Tooltip title="Add new session" >
+                                <Tab key="new" label="+" className="add-new-session-button" onClick={handleNewSession}
+                                    sx={{   height: 40,
+                                            backgroundColor: 'primary.main', color: 'primary.contrastText',
+                                           "&:hover": { backgroundColor: 'primary.dark', color: 'primary.contrastText' },
+                                           "&:selected": { backgroundColor: 'primary.dark', color: 'primary.contrastText' },
+                                        }} />
+                            </Tooltip>
                         </Tabs>
                 </Paper>
             </div>
@@ -104,9 +127,6 @@ export default function App({ maxTabs } : AppProps) {
                                     <SnowAnimation
                                         key={idx}
                                         sessionIdx={idx}
-                                        presetName="massiveSnow"
-                                        fps={1}
-                                        isAnimationRunning={true}
                                     />
                                 </Paper>
                             </div>

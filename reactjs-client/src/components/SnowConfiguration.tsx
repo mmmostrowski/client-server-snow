@@ -13,7 +13,7 @@ interface SnowConfigurationProps {
 
 
 export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps) {
-    const { width, height, fps, widthError, heightError, fpsError, presetName } = useSnowSession(sessionIdx);
+    const { width, height, fps, widthError, heightError, fpsError, presetName, isEditable } = useSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
 
     function handlePresetChange(e : any) {
@@ -61,6 +61,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                     onChange={handlePresetChange}
                     variant="outlined"
                     size="small"
+                    disabled={!isEditable}
                     sx={{ width: 180 }} >
                 {
                     Object.entries(snowConstraints.presets).map(([presetName, presetLabel]) =>
@@ -77,6 +78,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                     onBlur={() => dispatch({ type: 'commit-session-changes' })}
                     inputProps={{ inputMode: 'numeric' }}
                     size="small"
+                    disabled={!isEditable}
                     label="Width"
                     variant="outlined"
                     helperText={widthError != null ? widthError : 'Horizontal canvas size'}
@@ -91,6 +93,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                     onBlur={() => dispatch({ type: 'commit-session-changes' })}
                     inputProps={{ inputMode: 'numeric' }}
                     size="small"
+                    disabled={!isEditable}
                     label="Height"
                     variant="outlined"
                     helperText={heightError != null ? heightError : 'Vertical canvas size'}
@@ -105,6 +108,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                     onBlur={() => dispatch({ type: 'commit-session-changes' })}
                     inputProps={{ inputMode: 'numeric' }}
                     size="small"
+                    disabled={!isEditable}
                     label="Fps"
                     variant="outlined"
                     helperText={fpsError != null ? fpsError : 'Frames per second'}

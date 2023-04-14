@@ -11,15 +11,15 @@ import TextField from '@mui/material/TextField';
 
 interface SnowAnimationProps {
     sessionIdx: number,
-    presetName: string;
-    isAnimationRunning: boolean;
-    fps: number;
 }
 
-export default function SnowAnimation({ sessionIdx, isAnimationRunning } : SnowAnimationProps) {
+export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
     const session = useSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
     const { sessionId, sessionIdError } = session;
+    const status = session.status;
+    const isStartActive = (status === 'stopped' || status === 'error');
+    const isStopActive = status === 'buffering' || status === 'playing';
 
     return (
         <div className="snow-animation" >
@@ -29,6 +29,7 @@ export default function SnowAnimation({ sessionIdx, isAnimationRunning } : SnowA
                     label="Session id"
                     value={sessionId}
                     required
+                    disabled={session.status !== 'stopped'}
                     error={sessionIdError != null}
                     helperText={sessionIdError}
                     onChange={ e => dispatch({
@@ -41,13 +42,13 @@ export default function SnowAnimation({ sessionIdx, isAnimationRunning } : SnowA
                     style={{ minWidth: 70 }}
                 />
 
-                <Button className="stop-button" variant="contained" disabled={!isAnimationRunning}>Stop</Button>
-                <Button className="start-button" variant="contained" disabled={isAnimationRunning}>Start</Button>
+                <Button className="start-button" variant="contained" disabled={!isStartActive}>Start</Button>
+                <Button className="stop-button" variant="contained" disabled={!isStopActive}>Stop</Button>
 
                 <CircularProgressWithLabel sessionIdx={sessionIdx}  />
             </div>
             <SnowCanvas session={session} />
-            <Tooltip title={ 'Animation progress' } >
+            <Tooltip title="Animation progress" >
                 <LinearProgress variant="determinate" value={session.animationProgress} />
             </Tooltip>
         </div>

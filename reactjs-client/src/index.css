@@ -80,6 +80,10 @@ body,
     border-radius: 6px;
     min-width: 48px;
     min-height: 0px;
+    text-align: right;
+    display: block;
+    margin-right: 6px;
+    margin-left: auto;
 }
 
 .session-id span {
@@ -90,11 +94,11 @@ body,
     margin: 5px 0px 30px 20px;
 }
 
-.animation-header button.stop-button {
+.animation-header button.start-button {
     margin-right: 1px
 }
 
-.animation-header button.start-button {
+.animation-header button.stop-button {
     margin-left: 1px
 }
 
