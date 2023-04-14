@@ -8,10 +8,10 @@ export const SnowSessionsDispatchContext = createContext(null);
 export const snowConstraints = {
     defaultSessionId: "session-abc",
 
-//     minWidth: 40,
-//     minHeight: 20,
-//     defaultWidth: 180,
-//     defaultHeight: 50,
+    minWidth: 40,
+    minHeight: 20,
+    defaultWidth: 120,
+    defaultHeight: 60,
     maxWidth: 200,
     maxHeight: 150,
 
@@ -29,29 +29,28 @@ export const snowConstraints = {
         noSnow: "No snow",
     },
 
-
-
-
-
-
-
-    // WYYYYYYYYYYYYYYYYYYYYYYYYYYWAL
-    minWidth: 1,
-    minHeight: 1,
-    defaultWidth: 4,
-    defaultHeight: 3,
-
+    statuses: {
+        stopped: "Stopped",
+        initializing: "Initializing",
+        buffering: "Buffering",
+        playing: "Playing",
+        error: "Error",
+    }
 };
 
-interface SnowSessionDraft {
-    presetName: string,
+interface SnowSession {
     sessionId: string,
+    presetName: string,
     width: string,
     height: string,
     fps: string,
+    animationProgress: number,
+    bufferLevel: number,
+    status: "stopped"|"buffering"|"playing"|"error"|"initializing",
+    errorMsg: string|null,
 }
 
-export interface SnowSession extends SnowSessionDraft {
+export interface ValidatedSnowSession extends SnowSession {
     validatedSessionId: string,
     sessionIdError: string|null,
 
@@ -63,8 +62,6 @@ export interface SnowSession extends SnowSessionDraft {
 
     validatedFps: number,
     fpsError: string|null,
-
-    validatedPresetName: string,
 }
 
 type SnowSessionDispatchAction =
@@ -103,11 +100,11 @@ export function SnowSessionsProvider({ children } : any) {
     );
 }
 
-export function useSnowSessions(): SnowSession[] {
+export function useSnowSessions(): ValidatedSnowSession[] {
     return useContext(SnowSessionsContext);
 }
 
-export function useSnowSession(sessionIdx : number): SnowSession {
+export function useSnowSession(sessionIdx : number): ValidatedSnowSession {
     const sessions = useSnowSessions();
     return sessions[sessionIdx];
 }
@@ -121,7 +118,7 @@ export function useSnowSessionDispatch(sessionIdx : number) {
     return (props : any) => dispatch({ ...props, sessionIdx: sessionIdx })
 }
 
-export function snowSessionsReducer(sessions : SnowSession[], action : SnowSessionDispatchAction): SnowSession[] {
+export function snowSessionsReducer(sessions : ValidatedSnowSession[], action : SnowSessionDispatchAction): ValidatedSnowSession[] {
     switch(action.type) {
        case 'new-session':
             const newSessionAction = action as SnowSessionDispatchNewSessionAction;
@@ -156,17 +153,21 @@ export function snowSessionsReducer(sessions : SnowSession[], action : SnowSessi
     throw Error("Unknown action type: " + action.type)
 }
 
-function createSession(initialSessionId : string) : SnowSession {
+function createSession(initialSessionId : string) : ValidatedSnowSession {
     return sessionWithCommittedDraftChanges({
         sessionId : initialSessionId,
         presetName: snowConstraints.defaultPreset,
         width: '' + snowConstraints.defaultWidth,
         height: '' + snowConstraints.defaultHeight,
         fps: '' + snowConstraints.defaultFps,
+        animationProgress: 79,
+        bufferLevel: 90,
+        status: "playing",
+        errorMsg: "",
     });
 }
 
-function draftSession(draft : SnowSessionDraft, last : SnowSession) : SnowSession {
+function draftSession(draft : SnowSession, last : ValidatedSnowSession) : ValidatedSnowSession {
     return {
         ...last,
         ...draft,
@@ -174,7 +175,7 @@ function draftSession(draft : SnowSessionDraft, last : SnowSession) : SnowSessio
     }
 }
 
-function sessionErrors(draft : SnowSessionDraft) {
+function sessionErrors(draft : SnowSession) {
     return {
        sessionIdError: validateSnowSessionId(draft.sessionId),
        widthError: validateNumberBetween(draft.width, snowConstraints.minWidth, snowConstraints.maxWidth),
@@ -183,7 +184,7 @@ function sessionErrors(draft : SnowSessionDraft) {
    };
 }
 
-function sessionWithAppliedChanges(session: SnowSession): SnowSession {
+function sessionWithAppliedChanges(session: ValidatedSnowSession): ValidatedSnowSession {
     const numOfErrors = Object.values(sessionErrors(session))
          .filter( value => value !== null )
          .length;
@@ -194,11 +195,10 @@ function sessionWithAppliedChanges(session: SnowSession): SnowSession {
     }
 }
 
-function sessionWithCommittedDraftChanges(draft: SnowSessionDraft): SnowSession {
+function sessionWithCommittedDraftChanges(draft: SnowSession): ValidatedSnowSession {
     return {
         ...draft,
         ...( sessionErrors(draft) ),
-        validatedPresetName: draft.presetName,
         validatedSessionId: draft.sessionId,
         validatedWidth: parseInt(draft.width),
         validatedHeight: parseInt(draft.height),
@@ -206,7 +206,7 @@ function sessionWithCommittedDraftChanges(draft: SnowSessionDraft): SnowSession 
     }
 }
 
-function sessionWithRevertedDraftChanges(session: SnowSession): SnowSession {
+function sessionWithRevertedDraftChanges(session: ValidatedSnowSession): ValidatedSnowSession {
     const revertedSession={
         ...session,
         sessionId: session.validatedSessionId,

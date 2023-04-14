@@ -15,10 +15,9 @@ body,
     height: calc(100% - 140px);
 }
 
-.snow-animation-wrapper
-{
+.snow-animation-wrapper {
     height: 100%;
-    min-width: 230px;
+    min-width: 360px;
     min-height: 398px;
 }
 
@@ -88,7 +87,15 @@ body,
 }
 
 .animation-header button {
-    margin: 20px;
+    margin: 5px 0px 30px 20px;
+}
+
+.animation-header button.stop-button {
+    margin-right: 1px
+}
+
+.animation-header button.start-button {
+    margin-left: 1px
 }
 
 .snow-animation canvas {

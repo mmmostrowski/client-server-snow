@@ -1,8 +1,11 @@
 import * as React from "react";
-import { useEffect, useRef } from 'react';
 import { useSnowSession, useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
-import { validateSnowSessionId } from '../snow/snowSessionValidator'
 import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
 import SnowCanvas from './SnowCanvas'
 import TextField from '@mui/material/TextField';
 
@@ -15,8 +18,8 @@ interface SnowAnimationProps {
 
 export default function SnowAnimation({ sessionIdx, isAnimationRunning } : SnowAnimationProps) {
     const session = useSnowSession(sessionIdx);
-    const { sessionId, sessionIdError, validatedWidth, validatedHeight } = session;
     const dispatch = useSnowSessionDispatch(sessionIdx);
+    const { sessionId, sessionIdError } = session;
 
     return (
         <div className="snow-animation" >
@@ -35,15 +38,96 @@ export default function SnowAnimation({ sessionIdx, isAnimationRunning } : SnowA
                         }
                     })}
                     onBlur={() => dispatch({ type: 'commit-session-changes' })}
+                    style={{ minWidth: 70 }}
                 />
-                {
-                    isAnimationRunning
-                        ? <Button className="stop-button" variant="contained">Stop</Button>
-                        : <Button className="start-button" variant="contained">Start</Button>
-                }
-                </div>
+
+                <Button className="stop-button" variant="contained" disabled={!isAnimationRunning}>Stop</Button>
+                <Button className="start-button" variant="contained" disabled={isAnimationRunning}>Start</Button>
+
+                <CircularProgressWithLabel sessionIdx={sessionIdx}  />
+            </div>
             <SnowCanvas session={session} />
+            <Tooltip title={ 'Animation progress' } >
+                <LinearProgress variant="determinate" value={session.animationProgress} />
+            </Tooltip>
         </div>
     )
 }
 
+interface CircularProgressWithLabelProps {
+    sessionIdx: number;
+}
+
+function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelProps) {
+    const { status, errorMsg, bufferLevel } = useSnowSession(sessionIdx);
+    let color : "primary" | "error" | "info" | "success" | "inherit" | "secondary" | "warning" = "primary";
+    let fontWeight
+    let progress
+    let title
+    let insideText
+
+    switch (status) {
+        case "initializing":
+            color = "primary";
+            progress = null;
+            insideText = "Init"
+            title = "Connecting to server..."
+            fontWeight = 'normal'
+            break;
+        case "stopped":
+            color = "inherit";
+            progress = 100
+            insideText = "●"
+            title = "Click START button"
+            break;
+        case "buffering":
+            color = "primary";
+            progress = bufferLevel;
+            insideText = `${Math.round(progress)}%`
+            title = "Buffering..."
+            break;
+        case "playing":
+            color = "success";
+            progress = 100;
+            insideText = '▶'
+            title = "Playing"
+            fontWeight = "bold";
+            break;
+        case "error":
+            color = "error";
+            progress = 100;
+            insideText = "error";
+            title = `Error: ${errorMsg}`;
+            fontWeight = "bold";
+            break;
+    }
+
+    return (
+        <Box sx={{ position: 'relative', display: 'inline-flex', textAlign: "right", marginRight: 0, marginLeft: 'auto', padding: 1 }} >
+            <CircularProgress variant={ progress !== null ? "determinate" : "indeterminate"} color={color} value={progress} />
+            <Tooltip title={title} >
+                <Box sx={{
+                        top: 0,
+                        left: 0,
+                        bottom: 0,
+                        right: 0,
+                        position: 'absolute',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: 56,
+                    }} >
+                    <Typography
+                        fontSize="10px"
+                        variant="caption"
+                        component="div"
+                        color={color}
+                        sx={{ fontWeight: fontWeight }}
+                     >
+                        {insideText}
+                    </Typography>
+                </Box>
+            </Tooltip>
+        </Box>
+    );
+}
