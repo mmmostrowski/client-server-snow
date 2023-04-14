@@ -18,10 +18,11 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
     const dispatch = useSnowSessionDispatch(sessionIdx);
     const { sessionId, sessionIdError } = session;
     const status = session.status;
-    const isStartActive = status === 'stopped' || status === 'error' || status == 'found';
-    const isStopActive = status === 'buffering' || status === 'playing' || status == 'found';
-    const isSessionIdInputActive = status === 'stopped' || status === 'checking' || status == 'found';
+    const isStartActive = status === 'stopped' || status === 'error' || status === 'found';
+    const isStopActive = status === 'buffering' || status === 'playing' || status === 'found';
+    const isSessionIdInputActive = status === 'stopped' || status === 'checking' || status === 'found';
     const startLabel = status === 'found' ? "Attach" : "Start";
+    const animationProgress = status === 'playing' ? session.animationProgress : 0;
 
     return (
         <div className="snow-animation" >
@@ -51,7 +52,7 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
             </div>
             <SnowCanvas session={session} />
             <Tooltip title="Animation progress" >
-                <LinearProgress variant="determinate" value={session.animationProgress} />
+                <LinearProgress variant="determinate" value={animationProgress} />
             </Tooltip>
         </div>
     )
