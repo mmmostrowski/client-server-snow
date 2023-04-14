@@ -13,8 +13,10 @@ interface SnowConfigurationProps {
 
 
 export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps) {
-    const { width, height, fps, widthError, heightError, fpsError, presetName, isEditable } = useSnowSession(sessionIdx);
+    const { width, height, fps, widthError, heightError, fpsError, presetName, status } = useSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
+    const isEditable = status === 'stopped';
+    const isAvailable = status !== 'initializing' && status !== 'checking';
 
     function handlePresetChange(e : any) {
         dispatch({
@@ -57,29 +59,28 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
             <Container className="dupa" sx={{ padding: 2, paddingRight: [ 4, 4, 4 ] }} >
                 <Select
                     id="demo-simple-select-helper"
-                    value={presetName}
+                    value={isAvailable ? presetName : "?"}
                     onChange={handlePresetChange}
                     variant="outlined"
                     size="small"
                     disabled={!isEditable}
                     sx={{ width: 180 }} >
-                {
-                    Object.entries(snowConstraints.presets).map(([presetName, presetLabel]) =>
-                        <MenuItem key={presetName} value={presetName}>{presetLabel}</MenuItem>
-                    )
-                }
+                    { isAvailable && Object.entries(snowConstraints.presets).map(([presetName, presetLabel]) =>
+                            <MenuItem key={presetName} value={presetName}>{presetLabel}</MenuItem>
+                        ) }
+                    { !isAvailable && <MenuItem key="?" value="?">?</MenuItem> }
                 </Select>
                 <FormHelperText sx={{ pl: 2 }} >Animation preset</FormHelperText>
             </Container>
             <Container sx={{ padding: 2 }} >
                 <TextField
-                    value={width}
+                    value={isAvailable ? width : ""}
                     onChange={handleWidthChange}
                     onBlur={() => dispatch({ type: 'commit-session-changes' })}
                     inputProps={{ inputMode: 'numeric' }}
                     size="small"
                     disabled={!isEditable}
-                    label="Width"
+                    label={isAvailable ? "Width" : "?"}
                     variant="outlined"
                     helperText={widthError != null ? widthError : 'Horizontal canvas size'}
                     error={widthError != null}
@@ -88,13 +89,13 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
             </Container>
             <Container sx={{ padding: 2 }} >
                  <TextField
-                    value={height}
+                    value={isAvailable ? height : ""}
                     onChange={handleHeightChange}
                     onBlur={() => dispatch({ type: 'commit-session-changes' })}
                     inputProps={{ inputMode: 'numeric' }}
                     size="small"
                     disabled={!isEditable}
-                    label="Height"
+                    label={isAvailable ? "Height" : "?"}
                     variant="outlined"
                     helperText={heightError != null ? heightError : 'Vertical canvas size'}
                     error={heightError != null}
@@ -103,13 +104,13 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
             </Container>
             <Container sx={{ padding: 2 }} >
                  <TextField
-                    value={fps}
+                    value={isAvailable ? fps : ""}
                     onChange={handleFpsChange}
                     onBlur={() => dispatch({ type: 'commit-session-changes' })}
                     inputProps={{ inputMode: 'numeric' }}
                     size="small"
                     disabled={!isEditable}
-                    label="Fps"
+                    label={isAvailable ? "Fps" : "?"}
                     variant="outlined"
                     helperText={fpsError != null ? fpsError : 'Frames per second'}
                     error={fpsError != null}

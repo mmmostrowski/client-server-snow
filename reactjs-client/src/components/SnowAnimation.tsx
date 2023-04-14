@@ -18,8 +18,10 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
     const dispatch = useSnowSessionDispatch(sessionIdx);
     const { sessionId, sessionIdError } = session;
     const status = session.status;
-    const isStartActive = (status === 'stopped' || status === 'error');
-    const isStopActive = status === 'buffering' || status === 'playing';
+    const isStartActive = status === 'stopped' || status === 'error' || status == 'found';
+    const isStopActive = status === 'buffering' || status === 'playing' || status == 'found';
+    const isSessionIdInputActive = status === 'stopped' || status === 'checking' || status == 'found';
+    const startLabel = status === 'found' ? "Attach" : "Start";
 
     return (
         <div className="snow-animation" >
@@ -29,7 +31,7 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
                     label="Session id"
                     value={sessionId}
                     required
-                    disabled={session.status !== 'stopped'}
+                    disabled={!isSessionIdInputActive}
                     error={sessionIdError != null}
                     helperText={sessionIdError}
                     onChange={ e => dispatch({
@@ -42,7 +44,7 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
                     style={{ minWidth: 70 }}
                 />
 
-                <Button className="start-button" variant="contained" disabled={!isStartActive}>Start</Button>
+                <Button className="start-button" variant="contained" disabled={!isStartActive}>{startLabel}</Button>
                 <Button className="stop-button" variant="contained" disabled={!isStopActive}>Stop</Button>
 
                 <CircularProgressWithLabel sessionIdx={sessionIdx}  />
@@ -68,6 +70,20 @@ function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelPro
     let insideText
 
     switch (status) {
+        case "checking":
+            color = "secondary";
+            progress = null;
+            insideText = ""
+            title = "Checking on server..."
+            fontWeight = 'normal'
+            break;
+        case "found":
+            color = "success";
+            progress = 100;
+            insideText = "exists"
+            title = "Session exists!"
+            fontWeight = 'bold'
+            break;
         case "initializing":
             color = "primary";
             progress = null;

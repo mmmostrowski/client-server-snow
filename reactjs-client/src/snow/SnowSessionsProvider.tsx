@@ -28,14 +28,6 @@ export const snowConstraints = {
         snowy: "Snowy",
         noSnow: "No snow",
     },
-
-    statuses: {
-        stopped: "Stopped",
-        initializing: "Initializing",
-        buffering: "Buffering",
-        playing: "Playing",
-        error: "Error",
-    }
 };
 
 interface SnowSession {
@@ -46,7 +38,7 @@ interface SnowSession {
     fps: string,
     animationProgress: number,
     bufferLevel: number,
-    status: "stopped"|"buffering"|"playing"|"error"|"initializing",
+    status: "stopped"|"buffering"|"playing"|"error"|"initializing"|"checking"|"found",
     errorMsg: string|null,
 }
 
@@ -62,8 +54,6 @@ export interface ValidatedSnowSession extends SnowSession {
 
     validatedFps: number,
     fpsError: string|null,
-
-    isEditable : boolean,
 }
 
 type SnowSessionDispatchAction =
@@ -164,7 +154,7 @@ function createSession(initialSessionId : string) : ValidatedSnowSession {
         fps: '' + snowConstraints.defaultFps,
         animationProgress: 79,
         bufferLevel: 90,
-        status: "stopped",
+        status: "found",
         errorMsg: "",
     });
 }
@@ -205,7 +195,6 @@ function sessionWithCommittedDraftChanges(draft: SnowSession): ValidatedSnowSess
         validatedWidth: parseInt(draft.width),
         validatedHeight: parseInt(draft.height),
         validatedFps: parseInt(draft.fps),
-        isEditable: draft.status === 'stopped',
     }
 }
 
