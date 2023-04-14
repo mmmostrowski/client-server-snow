@@ -1,6 +1,61 @@
+html,
+body,
+#root
+{
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+}
+
+#root {
+    min-width: 245px;
+}
+
+.snow-session-wrapper {
+    height: calc(100% - 140px);
+}
+
+.snow-animation-wrapper
+{
+    height: 100%;
+    min-width: 230px;
+    min-height: 398px;
+}
+
+.animation-header {
+    display: flex;
+    height: 80px;
+}
+
+.snow-animation-canvas-wrapper
+{
+    height: calc(100% - 100px);
+}
+
+.snow-animation-wrapper > .MuiPaper-root {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    width: calc(100% - 15px);
+    height: calc(100% - 15px);
+}
+
+.snow-animation-header {
+    height: 110px;
+    padding-top: 20px;
+}
+
+.snow-animation-header .MuiPaper-root {
+    width: calc(100% - 28px);
+    margin-left: 10px;
+}
+
+.snow-animation-header  h1{
+    margin: 0px 0px 10px 0px;
+}
+
 .snow-animation {
-    background: #eee;
     padding: 20px;
+    height: calc(100% - 20px);
 }
 
 .session-id {
@@ -10,10 +65,10 @@
 
 .MuiButtonBase-root.MuiIconButton-root.tab-delete-button {
     position: absolute;
-    right: -2px;
-    top: 1px;
+    right: 2px;
+    top: 2px;
     vertical-align: top;
-    font-size: 13px;
+    font-size: 10px;
     color: red;
     background: #fee;
     padding: 1px;
@@ -32,14 +87,33 @@
     font-weight: bold;
 }
 
-.animation-header {
-    display: flex;
-}
-
 .animation-header button {
     margin: 20px;
 }
 
 .snow-animation canvas {
     border: 1px solid black;
+}
+
+.snow-session-wrapper {
+    margin-top: 4px;
+}
+
+.snow-configuration-wrapper {
+    display: inline-block;
+    vertical-align: top;
+    width: 216px;
+    padding-left: 10px;
+    margin-bottom: 30px;
+}
+
+.snow-animation-wrapper {
+    display: inline-block;
+    width: calc(100% - 241px);
+    margin-left: 10px;
+    margin-right: 1px
+}
+
+.snow-configuration-wrapper > .MuiPaper-root {
+    margin-top: 0px;
 }

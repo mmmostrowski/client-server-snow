@@ -67,44 +67,50 @@ export default function App({ maxTabs } : AppProps) {
 
     return (
         <>
-            <h1>Snow Animation</h1>
-            <Box sx={{ border: 1, borderColor: 'divider' }}>
-                <Tabs value={currentTab} onChange={handleTabChange}  >
-                {
-                    sessions.map((s, idx) =>
-                        <Tab key={idx}
-                             label={s.validatedSessionId}
-                             data-value={idx}
-                             component={TabButton} /> )
-                }
-                <Tab key="new" label="+" className="add-new-session-button" onClick={handleNewSession}
-                        sx={{  backgroundColor: 'primary.main', color: 'primary.contrastText',
-                               "&:hover": { backgroundColor: 'primary.dark' }  }} />
-                </Tabs>
-            </Box>
+            <div className="snow-animation-header" >
+                <h1>Snow Animation</h1>
+                <Paper elevation={2} sx={{ mt: 1 }} >
+                        <Tabs value={currentTab} onChange={handleTabChange}  >
+                        {
+                            sessions.map((s, idx) =>
+                                <Tab key={idx}
+                                     label={s.validatedSessionId}
+                                     data-value={idx}
+                                     component={TabButton}
+                                     sx={{ borderRight: 1, borderColor: 'divider' }}
+                                     /> )
+                        }
+                        <Tab key="new" label="+" className="add-new-session-button" onClick={handleNewSession}
+                                sx={{  backgroundColor: 'primary.main', color: 'primary.contrastText',
+                                       "&:hover": { backgroundColor: 'primary.dark' }  }} />
+                        </Tabs>
+                </Paper>
+            </div>
             {
                 sessions.map((s, idx) =>
                     currentTab === idx &&
                     (
-                        <Grid container spacing={1} key={idx}>
-                            <Grid item xs={3}>
-                                <Paper>
+                        <div key={s.validatedSessionId} className="snow-session-wrapper" >
+                            <div className="snow-configuration-wrapper" >
+                                <Paper elevation={3} sx={{ mt: 1 }} >
                                     <SnowConfiguration
                                         key={idx}
                                         sessionIdx={idx}
                                      />
                                 </Paper>
-                            </Grid>
-                            <Grid item xs={9}>
-                                <SnowAnimation
-                                    key={idx}
-                                    sessionIdx={idx}
-                                    presetName="massiveSnow"
-                                    fps={1}
-                                    isAnimationRunning={true}
-                                />
-                            </Grid>
-                        </Grid>
+                            </div>
+                            <div className="snow-animation-wrapper" >
+                                <Paper elevation={3} sx={{ marginTop: 1 }} >
+                                    <SnowAnimation
+                                        key={idx}
+                                        sessionIdx={idx}
+                                        presetName="massiveSnow"
+                                        fps={1}
+                                        isAnimationRunning={true}
+                                    />
+                                </Paper>
+                            </div>
+                        </div>
                     )
                 )
             }

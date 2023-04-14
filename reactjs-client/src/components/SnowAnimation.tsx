@@ -14,13 +14,9 @@ interface SnowAnimationProps {
 }
 
 export default function SnowAnimation({ sessionIdx, isAnimationRunning } : SnowAnimationProps) {
-    const snowCanvasRef = useRef<SnowCanvas>(null);
-    const { sessionId, sessionIdError, validatedWidth, validatedHeight } = useSnowSession(sessionIdx);
+    const session = useSnowSession(sessionIdx);
+    const { sessionId, sessionIdError, validatedWidth, validatedHeight } = session;
     const dispatch = useSnowSessionDispatch(sessionIdx);
-
-    useEffect(() => {
-        snowCanvasRef.current.renderSnowFrame(null);
-    });
 
     return (
         <div className="snow-animation" >
@@ -46,7 +42,7 @@ export default function SnowAnimation({ sessionIdx, isAnimationRunning } : SnowA
                         : <Button className="start-button" variant="contained">Start</Button>
                 }
                 </div>
-            <SnowCanvas ref={snowCanvasRef} width={validatedWidth} height={validatedHeight} scaleFactorV={5} scaleFactorH={5} />
+            <SnowCanvas session={session} />
         </div>
     )
 }

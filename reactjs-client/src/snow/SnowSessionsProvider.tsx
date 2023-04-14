@@ -8,21 +8,50 @@ export const SnowSessionsDispatchContext = createContext(null);
 export const snowConstraints = {
     defaultSessionId: "session-abc",
 
-    minWidth: 40,
-    minHeight: 20,
-    defaultWidth: 180,
-    defaultHeight: 100,
+//     minWidth: 40,
+//     minHeight: 20,
+//     defaultWidth: 180,
+//     defaultHeight: 50,
     maxWidth: 200,
     maxHeight: 150,
+
+    minFps: 1,
+    defaultFps: 25,
+    maxFps: 66,
+
+    defaultPreset: "massiveSnow",
+    presets: {
+        classical: "Classical",
+        massiveSnow: "Massive Snow",
+        calm: "Calm",
+        windy: "Windy",
+        snowy: "Snowy",
+        noSnow: "No snow",
+    },
+
+
+
+
+
+
+
+    // WYYYYYYYYYYYYYYYYYYYYYYYYYYWAL
+    minWidth: 1,
+    minHeight: 1,
+    defaultWidth: 4,
+    defaultHeight: 3,
+
 };
 
 interface SnowSessionDraft {
+    presetName: string,
     sessionId: string,
     width: string,
     height: string,
+    fps: string,
 }
 
-interface SnowSession extends SnowSessionDraft {
+export interface SnowSession extends SnowSessionDraft {
     validatedSessionId: string,
     sessionIdError: string|null,
 
@@ -31,6 +60,11 @@ interface SnowSession extends SnowSessionDraft {
 
     validatedHeight: number,
     heightError: string|null,
+
+    validatedFps: number,
+    fpsError: string|null,
+
+    validatedPresetName: string,
 }
 
 type SnowSessionDispatchAction =
@@ -125,8 +159,10 @@ export function snowSessionsReducer(sessions : SnowSession[], action : SnowSessi
 function createSession(initialSessionId : string) : SnowSession {
     return sessionWithCommittedDraftChanges({
         sessionId : initialSessionId,
+        presetName: snowConstraints.defaultPreset,
         width: '' + snowConstraints.defaultWidth,
         height: '' + snowConstraints.defaultHeight,
+        fps: '' + snowConstraints.defaultFps,
     });
 }
 
@@ -143,6 +179,7 @@ function sessionErrors(draft : SnowSessionDraft) {
        sessionIdError: validateSnowSessionId(draft.sessionId),
        widthError: validateNumberBetween(draft.width, snowConstraints.minWidth, snowConstraints.maxWidth),
        heightError: validateNumberBetween(draft.height, snowConstraints.minHeight, snowConstraints.maxHeight),
+       fpsError: validateNumberBetween(draft.fps, snowConstraints.minFps, snowConstraints.maxFps),
    };
 }
 
@@ -161,9 +198,11 @@ function sessionWithCommittedDraftChanges(draft: SnowSessionDraft): SnowSession 
     return {
         ...draft,
         ...( sessionErrors(draft) ),
+        validatedPresetName: draft.presetName,
         validatedSessionId: draft.sessionId,
         validatedWidth: parseInt(draft.width),
         validatedHeight: parseInt(draft.height),
+        validatedFps: parseInt(draft.fps),
     }
 }
 
@@ -173,6 +212,7 @@ function sessionWithRevertedDraftChanges(session: SnowSession): SnowSession {
         sessionId: session.validatedSessionId,
         width: '' + session.validatedWidth,
         height: '' + session.validatedHeight,
+        fps: '' + session.validatedFps,
     };
     return {
         ...revertedSession,

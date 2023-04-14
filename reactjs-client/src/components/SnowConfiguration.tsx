@@ -1,7 +1,11 @@
 import * as React from "react";
 import TextField from '@mui/material/TextField';
 import Container from '@mui/material/Container';
-import { useSnowSession, useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import FormHelperText from '@mui/material/FormHelperText';
+
+import { snowConstraints, useSnowSession, useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
 
 interface SnowConfigurationProps {
     sessionIdx: number
@@ -9,8 +13,17 @@ interface SnowConfigurationProps {
 
 
 export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps) {
-    const { sessionId, width, height, widthError, heightError } = useSnowSession(sessionIdx);
+    const { width, height, fps, widthError, heightError, fpsError, presetName } = useSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
+
+    function handlePresetChange(e : any) {
+        dispatch({
+            type: 'session-changed',
+            changes: {
+                presetName: e.target.value
+            }
+        });
+    }
 
     function handleWidthChange(e : any) {
         dispatch({
@@ -30,8 +43,33 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
         });
     }
 
+    function handleFpsChange(e : any) {
+        dispatch({
+            type: 'session-changed',
+            changes: {
+                fps: e.target.value
+            }
+        });
+    }
+
     return (
         <>
+            <Container className="dupa" sx={{ padding: 2, paddingRight: [ 4, 4, 4 ] }} >
+                <Select
+                    id="demo-simple-select-helper"
+                    value={presetName}
+                    onChange={handlePresetChange}
+                    variant="outlined"
+                    size="small"
+                    sx={{ width: 180 }} >
+                {
+                    Object.entries(snowConstraints.presets).map(([presetName, presetLabel]) =>
+                        <MenuItem key={presetName} value={presetName}>{presetLabel}</MenuItem>
+                    )
+                }
+                </Select>
+                <FormHelperText sx={{ pl: 2 }} >Animation preset</FormHelperText>
+            </Container>
             <Container sx={{ padding: 2 }} >
                 <TextField
                     value={width}
@@ -43,6 +81,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                     variant="outlined"
                     helperText={widthError != null ? widthError : 'Horizontal canvas size'}
                     error={widthError != null}
+                    sx={{ width: 180 }}
                 />
             </Container>
             <Container sx={{ padding: 2 }} >
@@ -56,6 +95,21 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                     variant="outlined"
                     helperText={heightError != null ? heightError : 'Vertical canvas size'}
                     error={heightError != null}
+                    sx={{ width: 180 }}
+                />
+            </Container>
+            <Container sx={{ padding: 2 }} >
+                 <TextField
+                    value={fps}
+                    onChange={handleFpsChange}
+                    onBlur={() => dispatch({ type: 'commit-session-changes' })}
+                    inputProps={{ inputMode: 'numeric' }}
+                    size="small"
+                    label="Fps"
+                    variant="outlined"
+                    helperText={fpsError != null ? fpsError : 'Frames per second'}
+                    error={fpsError != null}
+                    sx={{ width: 180 }}
                 />
             </Container>
           </>
