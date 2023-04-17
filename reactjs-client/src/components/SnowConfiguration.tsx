@@ -5,7 +5,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
 
-import { snowConstraints, useSnowSession, useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
+import { snowConstraints, useDelayedSnowSession, useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
 
 interface SnowConfigurationProps {
     sessionIdx: number
@@ -13,10 +13,21 @@ interface SnowConfigurationProps {
 
 
 export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps) {
-    const { width, height, fps, widthError, heightError, fpsError, presetName, status } = useSnowSession(sessionIdx);
+    let { status,
+          width: userWidth,
+          height: userHeight,
+          fps: userFps,
+          presetName: userPresetName,
+          widthError, heightError, fpsError,
+          foundWidth, foundHeight, foundFps, foundPresetName } = useDelayedSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
     const isEditable = status === 'stopped';
-    const isAvailable = status !== 'initializing' && status !== 'checking';
+    const isAvailable = status !== 'initializing' && status !== 'checking' && status !== 'error';
+
+    const width = status === 'found' ? foundWidth : userWidth;
+    const height = status === 'found' ? foundHeight : userHeight;
+    const fps = status === 'found' ? foundFps : userFps;
+    const presetName = status === 'found' ? foundPresetName : userPresetName;
 
     function handlePresetChange(e : any) {
         dispatch({
@@ -56,7 +67,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
 
     return (
         <>
-            <Container className="dupa" sx={{ padding: 2, paddingRight: [ 4, 4, 4 ] }} >
+            <Container sx={{ padding: 2, paddingRight: [ 4, 4, 4 ] }} >
                 <Select
                     id="demo-simple-select-helper"
                     value={isAvailable ? presetName : "?"}
@@ -76,7 +87,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                 <TextField
                     value={isAvailable ? width : ""}
                     onChange={handleWidthChange}
-                    onBlur={() => dispatch({ type: 'commit-session-changes' })}
+                    onBlur={() => dispatch({ type: 'accept-or-reject-session-changes' })}
                     inputProps={{ inputMode: 'numeric' }}
                     size="small"
                     disabled={!isEditable}
@@ -91,7 +102,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                  <TextField
                     value={isAvailable ? height : ""}
                     onChange={handleHeightChange}
-                    onBlur={() => dispatch({ type: 'commit-session-changes' })}
+                    onBlur={() => dispatch({ type: 'accept-or-reject-session-changes' })}
                     inputProps={{ inputMode: 'numeric' }}
                     size="small"
                     disabled={!isEditable}
@@ -106,7 +117,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                  <TextField
                     value={isAvailable ? fps : ""}
                     onChange={handleFpsChange}
-                    onBlur={() => dispatch({ type: 'commit-session-changes' })}
+                    onBlur={() => dispatch({ type: 'accept-or-reject-session-changes' })}
                     inputProps={{ inputMode: 'numeric' }}
                     size="small"
                     disabled={!isEditable}

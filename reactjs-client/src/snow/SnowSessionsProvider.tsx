@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useContext, createContext, useReducer } from 'react';
+import { useContext, createContext, useReducer, useState, useEffect } from 'react';
 import { validateSnowSessionId, validateNumberBetween } from './snowSessionValidator';
 
 export const SnowSessionsContext = createContext([]);
@@ -40,6 +40,11 @@ interface SnowSession {
     bufferLevel: number,
     status: "stopped"|"buffering"|"playing"|"error"|"initializing"|"checking"|"found",
     errorMsg: string|null,
+
+    foundPresetName: string|null,
+    foundWidth: number|null,
+    foundHeight: number|null,
+    foundFps: number|null,
 }
 
 export interface ValidatedSnowSession extends SnowSession {
@@ -110,6 +115,22 @@ export function useSnowSessionDispatch(sessionIdx : number) {
     return (props : any) => dispatch({ ...props, sessionIdx: sessionIdx })
 }
 
+export function useDelayedSnowSession(sessionIdx: number, delayMs : number = 130) {
+    const targetSession = useSnowSession(sessionIdx);
+    const [ session, setSession ] = useState(targetSession);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setSession(targetSession);
+        }, delayMs);
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [ targetSession ]);
+
+    return session;
+}
+
 function snowSessionsReducer(sessions : ValidatedSnowSession[], action : SnowSessionDispatchAction): ValidatedSnowSession[] {
     switch(action.type) {
        case 'new-session':
@@ -138,7 +159,7 @@ function snowSessionsReducer(sessions : ValidatedSnowSession[], action : SnowSes
                ...sessions.slice(0, deleteSessionAction.sessionIdx),
                ...sessions.slice(deleteSessionAction.sessionIdx + 1),
            ];
-       case 'commit-session-changes':
+       case 'accept-or-reject-session-changes':
             return sessions.map(sessionWithAppliedChanges);
     }
 
@@ -154,8 +175,13 @@ function createSession(initialSessionId : string) : ValidatedSnowSession {
         fps: '' + snowConstraints.defaultFps,
         animationProgress: 79,
         bufferLevel: 90,
-        status: "found",
+        status: "stopped",
         errorMsg: "",
+
+        foundPresetName: null,
+        foundWidth: null,
+        foundHeight: null,
+        foundFps: null,
     });
 }
 

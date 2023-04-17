@@ -1,5 +1,7 @@
 import * as React from "react";
-import { useSnowSession, useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
+import { useEffect, useState, useMemo, useRef } from "react";
+import { useSnowSession, useSnowSessionDispatch, useDelayedSnowSession } from '../snow/SnowSessionsProvider'
+import { fetchSnowDataDetails } from '../stream/snowEndpoint'
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Tooltip from '@mui/material/Tooltip';
@@ -17,38 +19,144 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
     const session = useSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
     const { sessionId, sessionIdError } = session;
+    const { status : delayedStatus } = useDelayedSnowSession(sessionIdx);
+    const [ refreshCounter, setRefreshCounter ] = useState(0);
     const status = session.status;
-    const isStartActive = status === 'stopped' || status === 'error' || status === 'found';
-    const isStopActive = status === 'buffering' || status === 'playing' || status === 'found';
-    const isSessionIdInputActive = status === 'stopped' || status === 'checking' || status === 'found';
-    const startLabel = status === 'found' ? "Attach" : "Start";
+    const isStartActive = delayedStatus === 'stopped' || delayedStatus === 'error' || delayedStatus === 'found';
+    const isStopActive = delayedStatus === 'buffering' || delayedStatus === 'playing' || delayedStatus === 'found';
+    const isSessionIdInputActive = status === 'stopped' || status === 'checking' || status === 'found' || status == 'error';
+    const startLabel = delayedStatus === 'found' ? "Attach" : "Start";
     const animationProgress = status === 'playing' ? session.animationProgress : 0;
+    const hasSessionIdError = sessionIdError !== null
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            if (isSessionIdInputActive) {
+                setRefreshCounter(refreshCounter + 1);
+            }
+        }, 1000);
+        return () => {
+            clearTimeout(handler);
+        };
+    });
+
+    let ignored = false;
+    useEffect(() => {
+        if (ignored) {
+            return;
+        }
+
+        if (hasSessionIdError) {
+            dispatch({
+                type : 'session-changed',
+                sessionIdx: sessionIdx,
+                changes: {
+                    status: 'error',
+                    errorMsg: 'Invalid session id',
+                },
+            });
+            return
+        }
+
+        dispatch({
+            type : 'session-changed',
+            sessionIdx: sessionIdx,
+            changes: {
+                status: 'checking',
+            },
+        });
+
+        fetchSnowDataDetails(sessionId)
+            .then((data) => {
+                if (data.running) {
+                    dispatch({
+                        type : 'session-changed',
+                        sessionIdx: sessionIdx,
+                        changes: {
+                            status: 'found',
+                            foundWidth: data.width,
+                            foundHeight: data.height,
+                            foundFps: data.fps,
+                            foundPresetName: data.presetName,
+                        },
+                    });
+                } else {
+                    dispatch({
+                        type : 'session-changed',
+                        sessionIdx: sessionIdx,
+                        changes: {
+                            status: 'stopped',
+                        },
+                    });
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                dispatch({
+                    type : 'session-changed',
+                    sessionIdx: sessionIdx,
+                    changes: {
+                        status: 'error',
+                        errorMsg: error.message,
+                    },
+                });
+            });
+        return () => { ignored = true };
+    }, [ sessionId, sessionIdx, sessionIdError, refreshCounter ]);
+    
+    const sessionIdRef = useRef(null);
+    const sessionIdInputValueRef = useRef(sessionId);
+    const sessionIdSyncRef = useRef(true);
+
+    if (sessionIdSyncRef.current) {
+        sessionIdSyncRef.current = false;
+        sessionIdInputValueRef.current = sessionId;
+        if (sessionIdRef.current) {
+            sessionIdRef.current.value = sessionIdInputValueRef.current;
+        }
+    }
+
+    function handleSessionIdChange(e : any) {
+        sessionIdInputValueRef.current = e.target.value;
+        setTimeout(() => {
+            dispatch({
+                type: 'session-changed',
+                changes : {
+                    sessionId: sessionIdInputValueRef.current,
+                }
+            })
+        }, 180);
+    }
+
+    function handleSessionIdBlur() {
+        dispatch({ type: 'accept-or-reject-session-changes' });
+        sessionIdSyncRef.current = true;
+    }
 
     return (
         <div className="snow-animation" >
             <div className="animation-header">
+
+                <CircularProgressWithLabel sessionIdx={sessionIdx}  />
+
                 <TextField
+                    InputLabelProps={{ shrink: true }}
+                    inputRef={sessionIdRef}
                     variant="standard"
                     label="Session id"
-                    value={sessionId}
+                    defaultValue={sessionId}
                     required
                     disabled={!isSessionIdInputActive}
-                    error={sessionIdError != null}
+                    error={hasSessionIdError}
                     helperText={sessionIdError}
-                    onChange={ e => dispatch({
-                        type: 'session-changed',
-                        changes : {
-                            sessionId: e.target.value
-                        }
-                    })}
-                    onBlur={() => dispatch({ type: 'commit-session-changes' })}
+                    onChange={handleSessionIdChange}
+                    onBlur={handleSessionIdBlur}
                     style={{ minWidth: 70 }}
                 />
 
                 <Button className="start-button" variant="contained" disabled={!isStartActive}>{startLabel}</Button>
                 <Button className="stop-button" variant="contained" disabled={!isStopActive}>Stop</Button>
 
-                <CircularProgressWithLabel sessionIdx={sessionIdx}  />
             </div>
             <SnowCanvas session={session} />
             <Tooltip title="Animation progress" >
@@ -63,7 +171,8 @@ interface CircularProgressWithLabelProps {
 }
 
 function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelProps) {
-    const { status, errorMsg, bufferLevel } = useSnowSession(sessionIdx);
+    const { status, errorMsg, bufferLevel, animationProgress } = useDelayedSnowSession(sessionIdx);
+
     let color : "primary" | "error" | "info" | "success" | "inherit" | "secondary" | "warning" = "primary";
     let fontWeight
     let progress
@@ -96,7 +205,7 @@ function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelPro
             color = "inherit";
             progress = 100
             insideText = "●"
-            title = "Click START button"
+            title = "Animation is stopped"
             break;
         case "buffering":
             color = "primary";
@@ -106,7 +215,7 @@ function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelPro
             break;
         case "playing":
             color = "success";
-            progress = 100;
+            progress = animationProgress;
             insideText = '▶'
             title = "Playing"
             fontWeight = "bold";
@@ -121,7 +230,7 @@ function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelPro
     }
 
     return (
-        <Box sx={{ position: 'relative', display: 'inline-flex', textAlign: "right", marginRight: 0, marginLeft: 'auto', padding: 1 }} >
+        <Box sx={{ position: 'relative', display: 'inline-flex', textAlign: "right", marginRight: 0, padding: 1 }} >
             <CircularProgress variant={ progress !== null ? "determinate" : "indeterminate"} color={color} value={progress} />
             <Tooltip title={title} >
                 <Box sx={{
