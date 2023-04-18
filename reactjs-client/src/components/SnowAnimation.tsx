@@ -2,6 +2,7 @@ import * as React from "react";
 import { useEffect, useState, useMemo, useRef, MutableRefObject, FocusEvent, FocusEventHandler } from "react";
 import { useSnowSession, useSnowSessionDispatch, useDelayedSnowSession } from '../snow/SnowSessionsProvider'
 import { fetchSnowDataDetails } from '../stream/snowEndpoint'
+import useSessionInput from '../snow/snowSessionInput'
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Tooltip from '@mui/material/Tooltip';
@@ -11,42 +12,6 @@ import LinearProgress from '@mui/material/LinearProgress';
 import SnowCanvas from './SnowCanvas'
 import TextField from '@mui/material/TextField';
 
-
-function useSessionInput(sessionIdx: number, varName: string, value: any):
-    [ MutableRefObject<any>, FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>, FocusEventHandler<HTMLInputElement | HTMLTextAreaElement> ]
-{
-    const dispatch = useSnowSessionDispatch(sessionIdx);
-    const valueRef = useRef(value);
-    const inputRef = useRef(null);
-    const needSyncRef = useRef(true);
-
-    if (needSyncRef.current) {
-        needSyncRef.current = false;
-        valueRef.current = value;
-        if (inputRef.current) {
-            inputRef.current.value = valueRef.current;
-        }
-    }
-
-    function handleBlur(e : FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        needSyncRef.current = true;
-        dispatch({ type: 'accept-or-reject-session-changes' });
-    }
-
-    function handleChange(e : FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        valueRef.current = e.target.value;
-        let changes : any = {};
-        changes[varName] = valueRef.current;
-        setTimeout(() => {
-            dispatch({
-                type: 'session-changed',
-                changes : changes,
-            })
-        }, 50);
-    }
-
-    return [ inputRef, handleBlur, handleChange ];
-}
 
 interface SnowAnimationProps {
     sessionIdx: number,
@@ -104,7 +69,7 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
         });
 
         fetchSnowDataDetails(sessionId)
-            .then((data) => {
+            .then((data : any) => {
                 if (ignored) {
                     return;
                 }

@@ -1,23 +1,24 @@
 import * as React from "react";
+import { useEffect, useRef } from "react";
 import TextField from '@mui/material/TextField';
 import Container from '@mui/material/Container';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
+import useSessionInput from '../snow/snowSessionInput'
 
-import { snowConstraints, useDelayedSnowSession, useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
+import { snowConstraints, useDelayedSnowSession, useSnowSessionDispatch, useSnowSession } from '../snow/SnowSessionsProvider'
 
 interface SnowConfigurationProps {
     sessionIdx: number
 }
 
-
 export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps) {
-    let { status,
-          width: userWidth,
+    let { width: userWidth,
           height: userHeight,
           fps: userFps,
-          presetName: userPresetName,
+          presetName: userPresetName } = useSnowSession(sessionIdx);
+    let { status,
           widthError, heightError, fpsError,
           foundWidth, foundHeight, foundFps, foundPresetName } = useDelayedSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
@@ -34,33 +35,6 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
             type: 'session-changed',
             changes: {
                 presetName: e.target.value
-            }
-        });
-    }
-
-    function handleWidthChange(e : any) {
-        dispatch({
-            type: 'session-changed',
-            changes: {
-                width: e.target.value
-            }
-        });
-    }
-
-    function handleHeightChange(e : any) {
-        dispatch({
-            type: 'session-changed',
-            changes: {
-                height: e.target.value
-            }
-        });
-    }
-
-    function handleFpsChange(e : any) {
-        dispatch({
-            type: 'session-changed',
-            changes: {
-                fps: e.target.value
             }
         });
     }
@@ -84,50 +58,83 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                 <FormHelperText sx={{ pl: 2 }} >Animation preset</FormHelperText>
             </Container>
             <Container sx={{ padding: 2 }} >
-                <TextField
-                    value={isAvailable ? width : ""}
-                    onChange={handleWidthChange}
-                    onBlur={() => dispatch({ type: 'accept-or-reject-session-changes' })}
-                    inputProps={{ inputMode: 'numeric' }}
-                    size="small"
-                    disabled={!isEditable}
-                    label={isAvailable ? "Width" : "?"}
-                    variant="outlined"
-                    helperText={widthError != null ? widthError : 'Horizontal canvas size'}
-                    error={widthError != null}
-                    sx={{ width: 180 }}
+                <ConfigNumberField
+                    sessionIdx={sessionIdx}
+                    varName="width"
+                    isAvailable={isAvailable}
+                    isEditable={isEditable}
+                    value={width}
+                    errorMsg={widthError}
+                    label="Width"
+                    helperText="Horizontal canvas size"
                 />
             </Container>
             <Container sx={{ padding: 2 }} >
-                 <TextField
-                    value={isAvailable ? height : ""}
-                    onChange={handleHeightChange}
-                    onBlur={() => dispatch({ type: 'accept-or-reject-session-changes' })}
-                    inputProps={{ inputMode: 'numeric' }}
-                    size="small"
-                    disabled={!isEditable}
-                    label={isAvailable ? "Height" : "?"}
-                    variant="outlined"
-                    helperText={heightError != null ? heightError : 'Vertical canvas size'}
-                    error={heightError != null}
-                    sx={{ width: 180 }}
+                <ConfigNumberField
+                    sessionIdx={sessionIdx}
+                    varName="height"
+                    isAvailable={isAvailable}
+                    isEditable={isEditable}
+                    value={height}
+                    errorMsg={heightError}
+                    label="Height"
+                    helperText="Vertical canvas size"
                 />
             </Container>
             <Container sx={{ padding: 2 }} >
-                 <TextField
-                    value={isAvailable ? fps : ""}
-                    onChange={handleFpsChange}
-                    onBlur={() => dispatch({ type: 'accept-or-reject-session-changes' })}
-                    inputProps={{ inputMode: 'numeric' }}
-                    size="small"
-                    disabled={!isEditable}
-                    label={isAvailable ? "Fps" : "?"}
-                    variant="outlined"
-                    helperText={fpsError != null ? fpsError : 'Frames per second'}
-                    error={fpsError != null}
-                    sx={{ width: 180 }}
+                <ConfigNumberField
+                    sessionIdx={sessionIdx}
+                    varName="fps"
+                    isAvailable={isAvailable}
+                    isEditable={isEditable}
+                    value={fps}
+                    errorMsg={fpsError}
+                    label="Fps"
+                    helperText="Frames per second"
                 />
             </Container>
           </>
     );
+}
+
+
+type ConfigNumberFieldProps = {
+    sessionIdx: number, varName: string, isAvailable: boolean, isEditable: boolean,
+    value: string|number, errorMsg : string, label : string, helperText : string }
+
+function ConfigNumberField(
+    { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText }: ConfigNumberFieldProps) {
+
+    const [
+        inputRef,
+        handleBlur,
+        handleChange
+    ] = useSessionInput(sessionIdx, varName, value);
+
+    const restoreOnceAvailableRef = useRef(false);
+    useEffect(() => {
+        if (!isAvailable) {
+            inputRef.current.value = '?';
+            restoreOnceAvailableRef.current = true;
+        } else if (restoreOnceAvailableRef.current) {
+            restoreOnceAvailableRef.current = false;
+            inputRef.current.value = value;
+        }
+    });
+
+    return <TextField
+        InputLabelProps={{ shrink: true }}
+        inputRef={inputRef}
+        defaultValue={isAvailable ? value : ""}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        inputProps={{ inputMode: 'numeric' }}
+        size="small"
+        disabled={!isEditable}
+        label={label}
+        variant="outlined"
+        helperText={errorMsg != null ? errorMsg : helperText}
+        error={errorMsg != null}
+        sx={{ width: 180 }}
+    />
 }
