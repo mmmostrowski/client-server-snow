@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class BinaryStreamDecoderTest {
 
     private BinaryStreamDecoder decoder;
-    private DataInputStream inputStream;
 
     @BeforeEach
     void setup() {
@@ -35,7 +34,7 @@ class BinaryStreamDecoderTest {
                 0x1, 0x0, 0x0, 0x0,  // fps
         };
 
-        inputStream = new DataInputStream(new ByteArrayInputStream(binary));
+        DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(binary));
         SnowAnimationMetadata metadata = decoder.decodeMetadata(
                 inputStream,
                 new ServerMetadata(Duration.ofSeconds(3)));

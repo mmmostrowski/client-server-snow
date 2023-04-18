@@ -24,6 +24,7 @@ import java.util.Map;
 @Service
 public final class ProxyService implements ApplicationListener<SnowStream.SnowStreamFinishedEvent> {
 
+    private final Map<String, Object> sessionLocks = Maps.newConcurrentMap();
     private final PhpSnowConfigConverter configConverter;
     private final SnowStreamFactory snowStreamProvider;
     private final Map<String, SnowStream> streams;
@@ -67,63 +68,82 @@ public final class ProxyService implements ApplicationListener<SnowStream.SnowSt
     }
 
     public void stopSession(String sessionId) throws IOException, InterruptedException {
-        if (!session.exists(sessionId)) {
-            log.debug("stopStream( {} ) | Nothing to stop!", sessionId);
-            return;
+        synchronized (sessionLock(sessionId)) {
+            if (!session.exists(sessionId)) {
+                log.debug("stopStream( {} ) | Nothing to stop!", sessionId);
+                return;
+            }
+            log.debug("stopStream( {} ) | Stopping PhpSnow App", sessionId);
+            final SnowStream snowStream = streams.get(sessionId);
+            removeStream(sessionId);
+            snowStream.stop();
         }
-        log.debug("stopStream( {} ) | Stopping PhpSnow App", sessionId);
-        final SnowStream snowStream = streams.get(sessionId);
-        removeStream(sessionId);
-        snowStream.stop();
     }
 
     public Map<String, Object> sessionDetails(String sessionId) {
-        if (!session.exists(sessionId)) {
-            throw new InvalidSessionException("Unknown snow streaming session:" + sessionId);
+        synchronized (sessionLock(sessionId)) {
+            if (!session.exists(sessionId)) {
+                throw new InvalidSessionException("Unknown snow streaming session:" + sessionId);
+            }
+            final SnowStream stream = streams.get(sessionId);
+            return configConverter.toMap(stream.config());
         }
-        final SnowStream stream = streams.get(sessionId);
-        return configConverter.toMap(stream.config());
     }
 
-    private synchronized SnowStream snowStream(String sessionId, Map<String, String> config) throws IOException {
-        if (session.exists(sessionId)) {
-            log.debug("snowStream( {} ) | Returning existing stream", sessionId);
-            final SnowStream stream = streams.get(sessionId);
-            if (!config.isEmpty()) {
-                stream.ensureCompatibleWithConfig(configConverter.fromMap(config));
+    private SnowStream snowStream(String sessionId, Map<String, String> config) throws IOException {
+        SnowStream stream;
+        synchronized (sessionLock(sessionId)) {
+            if (session.exists(sessionId)) {
+                log.debug("snowStream( {} ) | Returning existing stream", sessionId);
+                stream = streams.get(sessionId);
+                if (!config.isEmpty()) {
+                    stream.ensureCompatibleWithConfig(configConverter.fromMap(config));
+                }
+            } else {
+                log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, config);
+                stream = snowStreamProvider.create(sessionId, config);
+                stream.startPhpApp();
+                stream.startConsumingSnowData();
+                streams.put(sessionId, stream);
+                session.create(sessionId);
             }
-            return stream;
         }
-        log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, config);
-        final SnowStream snow = snowStreamProvider.create(sessionId, config);
-        snow.startPhpApp();
-        snow.startConsumingSnowData();
-        streams.put(sessionId, snow);
-        session.create(sessionId);
-        return snow;
+        return stream;
     }
 
     private synchronized void removeStream(String sessionId) {
-        if (!session.exists(sessionId)) {
-            return;
+        synchronized (sessionLock(sessionId)) {
+            if (session.exists(sessionId)) {
+                log.debug("stopStream( {} ) | Removing stream", sessionId);
+                session.delete(sessionId);
+                streams.remove(sessionId);
+            }
         }
-
-        log.debug("stopStream( {} ) | Removing stream", sessionId);
-        session.delete(sessionId);
-        streams.remove(sessionId);
     }
 
     public boolean hasSession(String sessionId) {
-        return session.exists(sessionId);
+        boolean exists;
+        synchronized (sessionLock(sessionId)) {
+            exists = session.exists(sessionId);
+        }
+        return exists;
     }
 
     public boolean isSessionRunning(String sessionId) {
-        return session.exists(sessionId) && streams.get(sessionId).isActive();
+        boolean isRunning;
+        synchronized (sessionLock(sessionId)) {
+            isRunning = session.exists(sessionId) && streams.get(sessionId).isActive();
+        }
+        return isRunning;
     }
 
     @Override
     @SneakyThrows
     public void onApplicationEvent(SnowStream.SnowStreamFinishedEvent event) {
         stopSession(event.getSessionId());
+    }
+
+    private Object sessionLock(String sessionId) {
+        return sessionLocks.computeIfAbsent(sessionId, k -> new Object());
     }
 }

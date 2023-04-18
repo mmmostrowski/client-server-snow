@@ -38,6 +38,7 @@ class WebSocketConfigTest {
 
         verify(registry).addEndpoint(any());
         verify(endpointRegistration).setAllowedOrigins(any());
+        verify(endpointRegistration).setHandshakeHandler(any());
     }
 
     @Test

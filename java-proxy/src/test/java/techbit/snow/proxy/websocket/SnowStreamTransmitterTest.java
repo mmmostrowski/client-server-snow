@@ -35,41 +35,41 @@ class SnowStreamWebsocketClientTest {
     @Mock
     private StreamEncoder encoder;
     private byte[] byteArray;
-    private SnowStreamWebsocketClient transmitter;
+    private SnowStreamWebsocketClient client;
 
     @BeforeEach
     void setup() {
         byteArray = new byte[] { 1, 2, 3 };
 
-        transmitter = new SnowStreamWebsocketClient("client-id", messagingTemplate, encoder, output);
+        client = new SnowStreamWebsocketClient("client-id", messagingTemplate, encoder, output);
     }
 
     @Test
     void whenBrandNewTransmitter_thenHasActiveStream() {
-        Assertions.assertTrue(transmitter.continueStreaming());
+        Assertions.assertTrue(client.continueStreaming());
     }
 
     @Test
     void whenTransmitterDeactivated_thenHasInactiveStream() {
-        transmitter.deactivate();
-        Assertions.assertFalse(transmitter.continueStreaming());
+        client.deactivate();
+        Assertions.assertFalse(client.continueStreaming());
     }
 
     @Test
     void whenStreamingEnded_thenHasInactiveStream() throws IOException {
-        transmitter.stopStreaming();
-        Assertions.assertFalse(transmitter.continueStreaming());
+        client.stopStreaming();
+        Assertions.assertFalse(client.continueStreaming());
     }
 
     @Test
     void whenMetadataEncodedIntoOutputStream_thenFlushItToWebsocketMessage() throws IOException {
         when(output.toByteArray()).thenReturn(byteArray);
 
-        transmitter.startStreaming(metadata, background);
+        client.startStreaming(metadata, background);
 
         InOrder inOrder = inOrder(messagingTemplate, output);
         inOrder.verify(messagingTemplate).convertAndSendToUser(
-                "client-id", "/user/stream/", byteArray);
+                "client-id", "/stream/", byteArray);
         inOrder.verify(output).reset();
     }
 
@@ -77,11 +77,11 @@ class SnowStreamWebsocketClientTest {
     void whenSnowDataFrameEncodedIntoOutputStream_thenFlushItToWebsocketMessage() throws IOException {
         when(output.toByteArray()).thenReturn(byteArray);
 
-        transmitter.streamFrame(snowDataFrame, SnowBasis.NONE);
+        client.streamFrame(snowDataFrame, SnowBasis.NONE);
 
         InOrder inOrder = inOrder(messagingTemplate, output);
         inOrder.verify(messagingTemplate).convertAndSendToUser(
-                "client-id", "/user/stream/", byteArray);
+                "client-id", "/stream/", byteArray);
         inOrder.verify(output).reset();
     }
 
