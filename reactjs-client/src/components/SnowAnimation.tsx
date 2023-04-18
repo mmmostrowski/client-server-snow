@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, MutableRefObject, FocusEvent, FocusEventHandler } from "react";
 import { useSnowSession, useSnowSessionDispatch, useDelayedSnowSession } from '../snow/SnowSessionsProvider'
 import { fetchSnowDataDetails } from '../stream/snowEndpoint'
 import Button from '@mui/material/Button';
@@ -10,6 +10,43 @@ import CircularProgress from '@mui/material/CircularProgress';
 import LinearProgress from '@mui/material/LinearProgress';
 import SnowCanvas from './SnowCanvas'
 import TextField from '@mui/material/TextField';
+
+
+function useSessionInput(sessionIdx: number, varName: string, value: any):
+    [ MutableRefObject<any>, FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>, FocusEventHandler<HTMLInputElement | HTMLTextAreaElement> ]
+{
+    const dispatch = useSnowSessionDispatch(sessionIdx);
+    const valueRef = useRef(value);
+    const inputRef = useRef(null);
+    const needSyncRef = useRef(true);
+
+    if (needSyncRef.current) {
+        needSyncRef.current = false;
+        valueRef.current = value;
+        if (inputRef.current) {
+            inputRef.current.value = valueRef.current;
+        }
+    }
+
+    function handleBlur(e : FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
+        needSyncRef.current = true;
+        dispatch({ type: 'accept-or-reject-session-changes' });
+    }
+
+    function handleChange(e : FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
+        valueRef.current = e.target.value;
+        let changes : any = {};
+        changes[varName] = valueRef.current;
+        setTimeout(() => {
+            dispatch({
+                type: 'session-changed',
+                changes : changes,
+            })
+        }, 50);
+    }
+
+    return [ inputRef, handleBlur, handleChange ];
+}
 
 interface SnowAnimationProps {
     sessionIdx: number,
@@ -55,7 +92,7 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
                     errorMsg: 'Invalid session id',
                 },
             });
-            return
+            return;
         }
 
         dispatch({
@@ -68,6 +105,9 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
 
         fetchSnowDataDetails(sessionId)
             .then((data) => {
+                if (ignored) {
+                    return;
+                }
                 if (data.running) {
                     dispatch({
                         type : 'session-changed',
@@ -103,35 +143,13 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
             });
         return () => { ignored = true };
     }, [ sessionId, sessionIdx, sessionIdError, refreshCounter ]);
-    
-    const sessionIdRef = useRef(null);
-    const sessionIdInputValueRef = useRef(sessionId);
-    const sessionIdSyncRef = useRef(true);
 
-    if (sessionIdSyncRef.current) {
-        sessionIdSyncRef.current = false;
-        sessionIdInputValueRef.current = sessionId;
-        if (sessionIdRef.current) {
-            sessionIdRef.current.value = sessionIdInputValueRef.current;
-        }
-    }
+    const [
+        inputRef,
+        handleSessionIdBlur,
+        handleSessionIdChange
+    ] = useSessionInput(sessionIdx, 'sessionId', sessionId);
 
-    function handleSessionIdChange(e : any) {
-        sessionIdInputValueRef.current = e.target.value;
-        setTimeout(() => {
-            dispatch({
-                type: 'session-changed',
-                changes : {
-                    sessionId: sessionIdInputValueRef.current,
-                }
-            })
-        }, 180);
-    }
-
-    function handleSessionIdBlur() {
-        dispatch({ type: 'accept-or-reject-session-changes' });
-        sessionIdSyncRef.current = true;
-    }
 
     return (
         <div className="snow-animation" >
@@ -141,7 +159,7 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
 
                 <TextField
                     InputLabelProps={{ shrink: true }}
-                    inputRef={sessionIdRef}
+                    inputRef={inputRef}
                     variant="standard"
                     label="Session id"
                     defaultValue={sessionId}

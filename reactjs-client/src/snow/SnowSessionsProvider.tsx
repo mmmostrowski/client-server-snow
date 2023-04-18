@@ -115,7 +115,7 @@ export function useSnowSessionDispatch(sessionIdx : number) {
     return (props : any) => dispatch({ ...props, sessionIdx: sessionIdx })
 }
 
-export function useDelayedSnowSession(sessionIdx: number, delayMs : number = 130) {
+export function useDelayedSnowSession(sessionIdx: number, delayMs : number = 70) {
     const targetSession = useSnowSession(sessionIdx);
     const [ session, setSession ] = useState(targetSession);
 
