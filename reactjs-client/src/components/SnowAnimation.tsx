@@ -64,9 +64,9 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
         };
         animationParams = {
             ...animationParams,
-            validatedWidth: width,
-            validatedHeight: height,
-            validatedFps: fps,
+            validatedWidth: animationParams.width,
+            validatedHeight: animationParams.height,
+            validatedFps: animationParams.fps,
         };
 
         startStreamSnowData({
