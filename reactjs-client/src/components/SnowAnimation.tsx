@@ -56,11 +56,17 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
             },
         });
 
-        const animationParams = {
+        let animationParams: any = {
             width: status === 'found' ? foundWidth : width,
             height: status === 'found' ? foundHeight : height,
             fps: status === 'found' ? foundFps : fps,
             presetName: status === 'found' ? foundPresetName : presetName,
+        };
+        animationParams = {
+            ...animationParams,
+            validatedWidth: width,
+            validatedHeight: height,
+            validatedFps: fps,
         };
 
         startStreamSnowData({
