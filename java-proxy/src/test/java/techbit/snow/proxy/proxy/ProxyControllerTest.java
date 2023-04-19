@@ -85,6 +85,7 @@ class ProxyControllerTest {
 
     private void assertExpectedDetails(Map<?, ?> details) {
         assertEquals(Map.of(
+                "status", true,
                 "exists", true,
                 "running", true,
                 "sessionId", "session-abc",
@@ -139,6 +140,7 @@ class ProxyControllerTest {
         Map<String, Object> response = controller.streamDetails("session-abc", request);
 
         assertEquals(Map.of(
+                "status", true,
                 "sessionId", "session-abc",
                 "exists", true,
                 "running", true,
@@ -160,6 +162,7 @@ class ProxyControllerTest {
         Map<String, Object> response = controller.stopStreaming("session-abc");
 
         assertEquals(Map.of(
+                "status", true,
                 "sessionId", "session-abc",
                 "running", false
         ), response);

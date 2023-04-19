@@ -23,7 +23,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
           foundWidth, foundHeight, foundFps, foundPresetName } = useDelayedSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
     const isEditable = status === 'stopped';
-    const isAvailable = status !== 'initializing' && status !== 'checking' && status !== 'error';
+    const isAvailable = status !== 'checking' && status !== 'error';
 
     const width = status === 'found' ? foundWidth : userWidth;
     const height = status === 'found' ? foundHeight : userHeight;
@@ -55,7 +55,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                         ) }
                     { !isAvailable && <MenuItem key="?" value="?">?</MenuItem> }
                 </Select>
-                <FormHelperText sx={{ pl: 2 }} >Animation preset</FormHelperText>
+                <FormHelperText className={isEditable ? "" : "Mui-disabled"}  sx={{ pl: 2 }} >Animation preset</FormHelperText>
             </Container>
             <Container sx={{ padding: 2 }} >
                 <ConfigNumberField

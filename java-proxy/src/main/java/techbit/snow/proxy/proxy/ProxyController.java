@@ -81,6 +81,7 @@ public class ProxyController {
         streaming.stopSession(sessionId);
 
         return Map.of(
+            "status", true,
             "sessionId", sessionId,
             "running", false
         );
@@ -95,6 +96,7 @@ public class ProxyController {
                 : new HashMap<>();
 
         map.putAll(Map.of(
+                "status", true,
                 "sessionId", sessionId,
                 "exists", streaming.hasSession(sessionId),
                 "running", streaming.isSessionRunning(sessionId),

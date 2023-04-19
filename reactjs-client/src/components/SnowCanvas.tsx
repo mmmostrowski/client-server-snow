@@ -2,17 +2,17 @@ import * as React from 'react';
 import { useRef, useEffect } from 'react';
 // import SnowFlakes from './SnowFlakes'
 // import { SnowDataFrame } from '../dto/SnowDataFrame'
-import { ValidatedSnowSession } from '../snow/SnowSessionsProvider'
+import { useSnowSession } from '../snow/SnowSessionsProvider'
 import { useResizeDetector } from 'react-resize-detector';
 
 type SnowCanvasProps = {
-    session : ValidatedSnowSession
+    sessionIdx: number
 }
 
-export default function SnowCanvas({ session } : SnowCanvasProps) {
+export default function SnowCanvas({ sessionIdx } : SnowCanvasProps) {
+    const { validatedWidth : width, validatedHeight : height } = useSnowSession(sessionIdx);;
     const { width: canvasWidth, height : canvasHeight, ref : canvasWrapperRef } = useResizeDetector();
     const canvasRef = useRef();
-    const { validatedWidth : width, validatedHeight : height } = session;
 
     const canvas : HTMLCanvasElement = canvasRef.current;
     const ctx = canvas === undefined ? null : canvas.getContext('2d');

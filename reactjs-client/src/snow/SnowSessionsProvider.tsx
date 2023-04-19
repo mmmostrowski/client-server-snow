@@ -148,6 +148,9 @@ function snowSessionsReducer(sessions : ValidatedSnowSession[], action : SnowSes
                 ...sessionIdChangeAction.changes,
             }
             const draft = draftSession(changed, last);
+
+            console.log("changes:", sessionIdChangeAction.changes, "status change: " + changed.status);
+
             return [
                ...sessions.slice(0, idx),
                 draft,
@@ -214,14 +217,14 @@ function sessionWithAppliedChanges(session: ValidatedSnowSession): ValidatedSnow
 }
 
 function sessionWithCommittedDraftChanges(draft: SnowSession): ValidatedSnowSession {
-    return {
+    return postProcessedSession({
         ...draft,
         ...( sessionErrors(draft) ),
         validatedSessionId: draft.sessionId,
         validatedWidth: parseInt(draft.width),
         validatedHeight: parseInt(draft.height),
         validatedFps: parseInt(draft.fps),
-    }
+    });
 }
 
 function sessionWithRevertedDraftChanges(session: ValidatedSnowSession): ValidatedSnowSession {
@@ -232,8 +235,15 @@ function sessionWithRevertedDraftChanges(session: ValidatedSnowSession): Validat
         height: '' + session.validatedHeight,
         fps: '' + session.validatedFps,
     };
-    return {
+    return postProcessedSession({
         ...revertedSession,
         ...( sessionErrors(revertedSession) ),
+    });
+}
+
+function postProcessedSession(session: ValidatedSnowSession): ValidatedSnowSession {
+    return {
+        ...session,
+        animationProgress: session.status === 'playing' ? session.animationProgress : 0,
     };
 }

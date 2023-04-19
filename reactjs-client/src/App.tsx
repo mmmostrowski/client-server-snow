@@ -113,7 +113,7 @@ export default function App({ maxTabs } : AppProps) {
                 sessions.map((s, idx) =>
                     currentTab === idx &&
                     (
-                        <div key={s.validatedSessionId} className="snow-session-wrapper" >
+                        <div key={idx} className="snow-session-wrapper" >
                             <div className="snow-configuration-wrapper" >
                                 <Paper elevation={3} sx={{ mt: 1 }} >
                                     <SnowConfiguration
