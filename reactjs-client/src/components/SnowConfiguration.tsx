@@ -22,9 +22,9 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
           widthError, heightError, fpsError,
           foundWidth, foundHeight, foundFps, foundPresetName } = useDelayedSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
+
     const isEditable = status === 'stopped';
     const isAvailable = status !== 'checking' && status !== 'error';
-
     const width = status === 'found' ? foundWidth : userWidth;
     const height = status === 'found' ? foundHeight : userHeight;
     const fps = status === 'found' ? foundFps : userFps;
@@ -102,16 +102,15 @@ type ConfigNumberFieldProps = {
     sessionIdx: number, varName: string, isAvailable: boolean, isEditable: boolean,
     value: string|number, errorMsg : string, label : string, helperText : string }
 
-function ConfigNumberField(
-    { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText }: ConfigNumberFieldProps) {
-
+function ConfigNumberField(props: ConfigNumberFieldProps) {
+    const { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText } = props;
+    const restoreOnceAvailableRef = useRef(false);
     const [
         inputRef,
         handleBlur,
         handleChange
     ] = useSessionInput(sessionIdx, varName, value);
 
-    const restoreOnceAvailableRef = useRef(false);
     useEffect(() => {
         if (!isAvailable) {
             inputRef.current.value = '?';

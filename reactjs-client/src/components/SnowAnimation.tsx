@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect, useState, useMemo, useRef, MutableRefObject, FocusEvent, FocusEventHandler } from "react";
-import { useSnowSession, useSnowSessionDispatch, useDelayedSnowSession } from '../snow/SnowSessionsProvider'
+import { useSnowSession, useSnowSessionDispatch, useDelayedSnowSession, useSnowStatuses } from '../snow/SnowSessionsProvider'
 import { fetchSnowDataDetails, startStreamSnowData, stopStreamSnowData } from '../stream/snowEndpoint'
 import useSessionInput from '../snow/snowSessionInput'
 import Button from '@mui/material/Button';
@@ -15,34 +15,26 @@ import TextField from '@mui/material/TextField';
 
 interface SnowAnimationProps {
     sessionIdx: number,
+    refreshPeriodMs: number
 }
 
-export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
-    const dispatch = useSnowSessionDispatch(sessionIdx);
+export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnimationProps) {
     const {
-        sessionId, sessionIdError, status,
-        validatedWidth: width, validatedHeight: height, validatedFps: fps, presetName,
-        animationProgress,
+        sessionId, sessionIdError,
+        status, presetName, animationProgress,
+        validatedWidth: width, validatedHeight: height, validatedFps: fps,
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSnowSession(sessionIdx);
-
     const { status: delayedStatus } = useDelayedSnowSession(sessionIdx);
+    const dispatch = useSnowSessionDispatch(sessionIdx);
+    const setSnowStatus = useSnowStatuses(sessionIdx);
     const [ refreshCounter, setRefreshCounter ] = useState(0);
+
     const isStartActive = delayedStatus === 'stopped' || delayedStatus === 'found';
     const isStopActive = delayedStatus === 'buffering' || delayedStatus === 'playing';
     const startLabel = delayedStatus === 'found' ? "Play" : "Start";
     const isSessionIdInputActive = status === 'stopped' || status === 'checking' || status === 'found' || status == 'error';
     const hasSessionIdError = sessionIdError !== null;
-    const sessionHasErrorRef = useRef(hasSessionIdError);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setRefreshCounter(refreshCounter + 1);
-        }, 1000);
-        return () => {
-            clearTimeout(handler);
-        };
-    });
 
     const [
         inputRef,
@@ -55,27 +47,14 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
         if (isSessionIdUnderEdit() || hasSessionIdError) {
             return;
         }
-
-        dispatch({
-            type : 'session-changed',
-            sessionIdx: sessionIdx,
-            changes: {
-                status: 'initializing',
-            },
-        });
-
-        let animationParams: any = {
+        const animationParams: any = {
             width: status === 'found' ? foundWidth : width,
             height: status === 'found' ? foundHeight : height,
             fps: status === 'found' ? foundFps : fps,
             presetName: status === 'found' ? foundPresetName : presetName,
         };
-        animationParams = {
-            ...animationParams,
-            validatedWidth: animationParams.width,
-            validatedHeight: animationParams.height,
-            validatedFps: animationParams.fps,
-        };
+
+        setSnowStatus('initializing');
 
         startStreamSnowData({
             sessionId: sessionId,
@@ -89,36 +68,22 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
             if (!data.running) {
                 throw Error("Server did not start animation!");
             }
-            dispatch({
-                type : 'session-changed',
-                sessionIdx: sessionIdx,
-                changes: {
-                    status: 'playing',
-                    ...animationParams,
-                },
+            setSnowStatus('playing', {
+                ...animationParams,
+                validatedWidth: animationParams.width,
+                validatedHeight: animationParams.height,
+                validatedFps: animationParams.fps,
             });
         }).catch(error => {
             console.error(error);
-            dispatch({
-                type : 'session-changed',
-                sessionIdx: sessionIdx,
-                changes: {
-                    status: 'error',
-                    errorMsg: error.message,
-                },
+            setSnowStatus('error', {
+                errorMsg: error.message,
             });
-            console.error('Dispatch error');
         });
     }
 
     function handleStop() {
-        dispatch({
-            type : 'session-changed',
-            sessionIdx: sessionIdx,
-            changes: {
-                status: 'initializing',
-            },
-        });
+        setSnowStatus('initializing');
 
         stopStreamSnowData({
             sessionId: sessionId,
@@ -127,23 +92,12 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
             if (data.running) {
                 throw Error("Server did not stop animation!");
             }
-            dispatch({
-                type : 'session-changed',
-                sessionIdx: sessionIdx,
-                changes: {
-                    status: 'stopped',
-                },
-            });
+            setSnowStatus('stopped');
         })
         .catch(error => {
             console.error(error);
-            dispatch({
-                type : 'session-changed',
-                sessionIdx: sessionIdx,
-                changes: {
-                    status: 'error',
-                    errorMsg: error.message,
-                },
+            setSnowStatus('error', {
+                errorMsg: error.message,
             });
         });
     }
@@ -156,25 +110,14 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
         }
 
         if (hasSessionIdError) {
-            dispatch({
-                type : 'session-changed',
-                sessionIdx: sessionIdx,
-                changes: {
-                    status: 'error',
-                    errorMsg: 'Invalid session id',
-                },
+            setSnowStatus('error', {
+                errorMsg: 'Invalid session id',
             });
             return;
         }
 
-        if (status === 'stopped') {
-            dispatch({
-                type : 'session-changed',
-                sessionIdx: sessionIdx,
-                changes: {
-                    status: 'checking',
-                },
-            });
+        if (status === 'stopped' || status === 'error') {
+            setSnowStatus('checking');
         }
 
         fetchSnowDataDetails(sessionId)
@@ -183,42 +126,37 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
                     return;
                 }
                 if (data.running) {
-                    if (status === 'checking') {
-                        dispatch({
-                            type : 'session-changed',
-                            sessionIdx: sessionIdx,
-                            changes: {
-                                status: 'found',
-                                foundWidth: data.width,
-                                foundHeight: data.height,
-                                foundFps: data.fps,
-                                foundPresetName: data.presetName,
-                            },
-                        });
+                    if (status !== 'checking') {
+                        return;
                     }
-                } else {
-                    dispatch({
-                        type : 'session-changed',
-                        sessionIdx: sessionIdx,
-                        changes: {
-                            status: 'stopped',
-                        },
+                    setSnowStatus('found', {
+                        foundWidth: data.width,
+                        foundHeight: data.height,
+                        foundFps: data.fps,
+                        foundPresetName: data.presetName,
                     });
+                } else {
+                    setSnowStatus('stopped');
                 }
             })
             .catch(error => {
                 console.error(error);
-                dispatch({
-                    type : 'session-changed',
-                    sessionIdx: sessionIdx,
-                    changes: {
-                        status: 'error',
-                        errorMsg: error.message,
-                    },
+                setSnowStatus('error', {
+                    errorMsg: error.message,
                 });
             });
         return () => { ignored = true };
     }, [ sessionId, hasSessionIdError, refreshCounter ]);
+
+    // refresh status in background
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setRefreshCounter(refreshCounter + 1);
+        }, refreshPeriodMs);
+        return () => {
+            clearTimeout(handler);
+        };
+    });
 
     return (
         <div className="snow-animation" >

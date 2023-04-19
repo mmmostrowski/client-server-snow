@@ -125,6 +125,7 @@ export default function App({ maxTabs } : AppProps) {
                                     <SnowAnimation
                                         key={idx}
                                         sessionIdx={idx}
+                                        refreshPeriodMs={1000}
                                     />
                                 </Paper>
                             </div>

@@ -134,6 +134,21 @@ export function useDelayedSnowSession(sessionIdx: number, delayMs : number = 70)
     return session;
 }
 
+export function useSnowStatuses(sessionIdx: number) {
+    const dispatch = useSnowSessionDispatch(sessionIdx);
+
+    return (state: string, params?: object) => {
+        dispatch({
+            type : 'session-changed',
+            sessionIdx: sessionIdx,
+            changes: {
+                status: state,
+                ...params,
+            },
+        });
+    }
+}
+
 function snowSessionsReducer(sessions : ValidatedSnowSession[], action : SnowSessionDispatchAction): ValidatedSnowSession[] {
     switch(action.type) {
        case 'new-session':
