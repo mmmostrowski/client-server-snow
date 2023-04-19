@@ -17,7 +17,6 @@ interface AppProps {
 
 export default function App({ maxTabs } : AppProps) {
     const [ currentTab, setCurrentTab ] = useState(0);
-    const [ isInitialized, setInitialized ] = useState(false);
     const createdCount = useRef(1);
     const sessions = useSnowSessions();
     const dispatch = useSnowSessionsDispatch();
@@ -26,18 +25,12 @@ export default function App({ maxTabs } : AppProps) {
         : undefined;
 
     useEffect(() => {
-        if (!isInitialized) {
-            setInitialized(true);
-            const initialSessionId = window.location.pathname.substring(1);
-            if (initialSessionId !== "") {
-                // TODO: start session initialSessionId
-            }
-            return;
+        if (currentSessionId !== undefined) {
+            window.history.replaceState({
+                session: currentSessionId,
+            }, "Session: " + currentSessionId, "/" + currentSessionId)
         }
-        window.history.pushState({
-            session: currentSessionId,
-        }, "Session: " + currentSessionId, "/" + currentSessionId)
-    }, [ currentSessionId, isInitialized ]);
+    }, [ currentSessionId]);
 
     function handleNewSession() {
         if (sessions.length >= maxTabs) {
@@ -45,9 +38,14 @@ export default function App({ maxTabs } : AppProps) {
             return;
         }
 
-         dispatch({
+        let newSessionId: string;
+        do {
+            newSessionId = 'session-' + createdCount.current++;
+        } while( sessions.map(s => s.sessionId).indexOf(newSessionId) != -1);
+
+        dispatch({
             type: 'new-session',
-            newSessionId : 'session-' + createdCount.current++,
+            newSessionId: newSessionId,
         })
     }
 
@@ -87,7 +85,7 @@ export default function App({ maxTabs } : AppProps) {
             <div className="snow-animation-header" >
                 <h1>Snow Animation</h1>
                 <Paper elevation={2} sx={{ mt: 1 }} >
-                        <Tabs value={sessions.length > 0 ? currentTab : undefined} onChange={handleTabChange}  >
+                        <Tabs value={sessions.length > 0 ? currentTab : false} onChange={handleTabChange}  >
                         {
                             sessions.map((s, idx) =>
                                 <Tab key={idx}

@@ -83,9 +83,12 @@ interface SnowSessionDispatchDeleteSessionAction extends SnowSessionDispatchAnyA
     sessionIdx : number,
 }
 
-export function SnowSessionsProvider({ children } : any) {
+export function SnowSessionsProvider({ initialSessionId, children } : any) {
     const [ sessions, dispatch ] = useReducer(snowSessionsReducer, [
-        createSession(snowConstraints.defaultSessionId),
+        createSession(initialSessionId === ""
+            ? snowConstraints.defaultSessionId
+            : initialSessionId
+        ),
     ]);
 
     return (

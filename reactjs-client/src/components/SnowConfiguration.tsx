@@ -136,5 +136,6 @@ function ConfigNumberField(
         helperText={errorMsg != null ? errorMsg : helperText}
         error={errorMsg != null}
         sx={{ width: 180 }}
+        autoComplete="off"
     />
 }

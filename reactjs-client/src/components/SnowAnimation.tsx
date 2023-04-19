@@ -30,7 +30,7 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
     const [ refreshCounter, setRefreshCounter ] = useState(0);
     const isStartActive = delayedStatus === 'stopped' || delayedStatus === 'found';
     const isStopActive = delayedStatus === 'buffering' || delayedStatus === 'playing';
-    const startLabel = delayedStatus === 'found' ? "Attach" : "Start";
+    const startLabel = delayedStatus === 'found' ? "Play" : "Start";
     const isSessionIdInputActive = status === 'stopped' || status === 'checking' || status === 'found' || status == 'error';
     const hasSessionIdError = sessionIdError !== null;
     const sessionHasErrorRef = useRef(hasSessionIdError);
@@ -220,6 +220,7 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
                     onChange={handleSessionIdChange}
                     onBlur={handleSessionIdBlur}
                     style={{ minWidth: 70 }}
+                    autoComplete="off"
                 />
 
                 <Button

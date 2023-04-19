@@ -7,9 +7,10 @@ import { SnowSessionsProvider, useSnowSessions, useSnowSessionsDispatch } from '
 
 const container = document.getElementById('root');
 const root = ReactDOMClient.createRoot(container);
+const initialSessionId = window.location.pathname.substring(1);
 
 root.render(
-    <SnowSessionsProvider>
+    <SnowSessionsProvider initialSessionId={initialSessionId} >
         <App maxTabs={5} />
     </SnowSessionsProvider>
 );
