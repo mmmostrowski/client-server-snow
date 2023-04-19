@@ -26,7 +26,7 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSnowSession(sessionIdx);
 
-    const delayedStatus = status;
+    const { status: delayedStatus } = useDelayedSnowSession(sessionIdx);
     const [ refreshCounter, setRefreshCounter ] = useState(0);
     const isStartActive = delayedStatus === 'stopped' || delayedStatus === 'found';
     const isStopActive = delayedStatus === 'buffering' || delayedStatus === 'playing';
@@ -35,6 +35,14 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
     const hasSessionIdError = sessionIdError !== null;
     const sessionHasErrorRef = useRef(hasSessionIdError);
 
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setRefreshCounter(refreshCounter + 1);
+        }, 1000);
+        return () => {
+            clearTimeout(handler);
+        };
+    });
 
     const [
         inputRef,
@@ -159,30 +167,35 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
             return;
         }
 
-        dispatch({
-            type : 'session-changed',
-            sessionIdx: sessionIdx,
-            changes: {
-                status: 'checking',
-            },
-        });
+        if (status === 'stopped') {
+            dispatch({
+                type : 'session-changed',
+                sessionIdx: sessionIdx,
+                changes: {
+                    status: 'checking',
+                },
+            });
+        }
+
         fetchSnowDataDetails(sessionId)
             .then((data : any) => {
                 if (ignored) {
                     return;
                 }
                 if (data.running) {
-                    dispatch({
-                        type : 'session-changed',
-                        sessionIdx: sessionIdx,
-                        changes: {
-                            status: 'found',
-                            foundWidth: data.width,
-                            foundHeight: data.height,
-                            foundFps: data.fps,
-                            foundPresetName: data.presetName,
-                        },
-                    });
+                    if (status === 'checking') {
+                        dispatch({
+                            type : 'session-changed',
+                            sessionIdx: sessionIdx,
+                            changes: {
+                                status: 'found',
+                                foundWidth: data.width,
+                                foundHeight: data.height,
+                                foundFps: data.fps,
+                                foundPresetName: data.presetName,
+                            },
+                        });
+                    }
                 } else {
                     dispatch({
                         type : 'session-changed',
@@ -205,7 +218,7 @@ export default function SnowAnimation({ sessionIdx } : SnowAnimationProps) {
                 });
             });
         return () => { ignored = true };
-    }, [ sessionId, hasSessionIdError ]);
+    }, [ sessionId, hasSessionIdError, refreshCounter ]);
 
     return (
         <div className="snow-animation" >
