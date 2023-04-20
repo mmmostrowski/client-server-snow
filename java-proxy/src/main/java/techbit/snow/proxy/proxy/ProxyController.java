@@ -92,7 +92,7 @@ public class ProxyController {
         log.debug("streamDetails( {} )", sessionId);
 
         Map<String, Object> map = streaming.hasSession(sessionId)
-                ? streaming.sessionDetails(sessionId)
+                ? new HashMap<>(streaming.sessionDetails(sessionId))
                 : new HashMap<>();
 
         map.putAll(Map.of(

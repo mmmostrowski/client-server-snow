@@ -42,6 +42,10 @@ class ProxyControllerTest {
         lenient().when(request.getScheme()).thenReturn("http");
         lenient().when(request.getServerName()).thenReturn("domain.com");
         lenient().when(request.getServerPort()).thenReturn(1234);
+        lenient().when(streaming.sessionDetails("session-abc")).thenReturn(Map.of(
+                "key1", "value1",
+                "key2", "value2"
+        ));
 
         controller = new ProxyController(streaming, textStreamEncoder);
     }
@@ -81,18 +85,6 @@ class ProxyControllerTest {
                 "session-abc", request);
 
         assertExpectedDetails(details);
-    }
-
-    private void assertExpectedDetails(Map<?, ?> details) {
-        assertEquals(Map.of(
-                "status", true,
-                "exists", true,
-                "running", true,
-                "sessionId", "session-abc",
-                "streamTextUrl", "http://domain.com:1234/text/session-abc",
-                "streamWebsocketsStompBrokerUrl", "http://domain.com:1234/ws/",
-                "streamWebsocketsUrl", "/app/stream/session-abc"
-        ), details);
     }
 
     @Test
@@ -139,15 +131,7 @@ class ProxyControllerTest {
 
         Map<String, Object> response = controller.streamDetails("session-abc", request);
 
-        assertEquals(Map.of(
-                "status", true,
-                "sessionId", "session-abc",
-                "exists", true,
-                "running", true,
-                "streamTextUrl", "http://domain.com:1234/text/session-abc",
-                "streamWebsocketsStompBrokerUrl", "http://domain.com:1234/ws/",
-                "streamWebsocketsUrl", "/app/stream/session-abc"
-        ), response);
+        assertExpectedDetails(response);
     }
 
     @Test
@@ -184,4 +168,17 @@ class ProxyControllerTest {
         assertThrows(IOException.class, () -> controller.streamTextToClient("session-abc", "").get().writeTo(out));
     }
 
+    private void assertExpectedDetails(Map<?, ?> details) {
+        assertEquals(Map.of(
+                "status", true,
+                "exists", true,
+                "running", true,
+                "sessionId", "session-abc",
+                "streamTextUrl", "http://domain.com:1234/text/session-abc",
+                "streamWebsocketsStompBrokerUrl", "http://domain.com:1234/ws/",
+                "streamWebsocketsUrl", "/app/stream/session-abc",
+                "key1", "value1",
+                "key2", "value2"
+        ), details);
+    }
 }
