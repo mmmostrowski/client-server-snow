@@ -39,7 +39,7 @@ public final class PhpSnowConfigConverter {
             @Value("${phpsnow.default.preset-name}") String presetName,
             @Value("${phpsnow.default.width}") int width,
             @Value("${phpsnow.default.height}") int height,
-            @Value("#{ ${phpsnow.default.animation-duration} * 1000 }") Duration duration,
+            @Value("#{ ${phpsnow.default.animation-duration-sec} * 1000 }") Duration duration,
             @Value("${phpsnow.default.fps}") int fps,
             Validator validator
     ) {
