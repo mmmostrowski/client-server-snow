@@ -52,7 +52,7 @@ interface StartSnowStreamAction extends SnowAnimationConfiguration, SnowStreamAc
 interface StopSnowStreamAction extends SnowStreamAction {
 }
 
-async function askSnowEndpoint(action: SnowStreamEndpointAction): Promise<SnowStreamEndpointResponse> {
+async function askSnowEndpoint(action: SnowStreamEndpointAction, controller?: AbortController): Promise<SnowStreamEndpointResponse> {
     let url = `${snowEndpointUrl}/${action.action}/${action.sessionId}`;
 
     url += action.fps ? "/fps/" + action.fps : ""
@@ -60,7 +60,7 @@ async function askSnowEndpoint(action: SnowStreamEndpointAction): Promise<SnowSt
     url += action.fps ? "/height/" + action.height : ""
     url += action.fps ? "/presetName/" + action.presetName : ""
 
-    return fetch(url)
+    return fetch(url, controller)
         .then((response) => response.json())
         .then((data) => {
             if (!data) {
@@ -72,13 +72,12 @@ async function askSnowEndpoint(action: SnowStreamEndpointAction): Promise<SnowSt
                 }
                 throw Error("Error respond with error!");
             }
-            console.log(url, data);
+//             console.log(url, data);
             return data;
-        })
-        ;
+        });
 }
 
-export async function fetchSnowDataDetails(sessionId: string): Promise<SnowStreamDetailsResponse> {
+export async function fetchSnowDataDetails(sessionId: string, controller?: AbortController): Promise<SnowStreamDetailsResponse> {
     if (!sessionId) {
         return {
             running: false,
@@ -97,14 +96,14 @@ export async function fetchSnowDataDetails(sessionId: string): Promise<SnowStrea
     }) as Promise<SnowStreamDetailsResponse>;
 }
 
-export async function startStreamSnowData(action: StartSnowStreamAction): Promise<SnowStreamStartResponse> {
+export async function startStreamSnowData(action: StartSnowStreamAction, controller?: AbortController): Promise<SnowStreamStartResponse> {
     return askSnowEndpoint({
         action: 'start',
         ...action,
     }) as Promise<SnowStreamStartResponse>;
 }
 
-export async function stopStreamSnowData(action: StopSnowStreamAction): Promise<SnowStreamStopResponse>{
+export async function stopStreamSnowData(action: StopSnowStreamAction, controller?: AbortController): Promise<SnowStreamStopResponse>{
     return askSnowEndpoint({
         action: 'stop',
         ...action,

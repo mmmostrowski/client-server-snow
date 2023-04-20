@@ -10,7 +10,7 @@ type SnowCanvasProps = {
 export default function SnowCanvas({ sessionIdx } : SnowCanvasProps) {
     const { validatedWidth : width, validatedHeight : height } = useSnowSession(sessionIdx);
     const { width: canvasWidth, height : canvasHeight, ref : canvasWrapperRef } = useResizeDetector();
-    const canvasRef = useRef(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
     let canvasOffsetV : number;
     let canvasOffsetH : number;

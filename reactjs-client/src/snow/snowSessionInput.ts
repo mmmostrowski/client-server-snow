@@ -10,9 +10,9 @@ type UseSessionInputResponse = [
 
 export default function useSessionInput(sessionIdx: number, varName: string, value: string|number): UseSessionInputResponse {
     const dispatch = useSnowSessionDispatch(sessionIdx);
-    const valueRef = useRef(value);
-    const prevValueRef = useRef(value);
-    const inputRef = useRef(null);
+    const valueRef = useRef<string|number>(value);
+    const prevValueRef = useRef<string|number>(value);
+    const inputRef = useRef<HTMLInputElement>(null);
     const needSyncRef = useRef<boolean>(true);
     const underEditRef = useRef<boolean>(false);
     const underFocusRef = useRef<boolean>(false);
@@ -29,7 +29,7 @@ export default function useSessionInput(sessionIdx: number, varName: string, val
         prevValueRef.current = value;
         valueRef.current = value;
         if (inputRef.current) {
-            inputRef.current.value = value;
+            inputRef.current.value = '' + value;
         }
     }
 

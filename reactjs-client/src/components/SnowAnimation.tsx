@@ -1,11 +1,12 @@
 import * as React from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSnowSession, useDelayedSnowSession, useSessionStatusUpdater, SessionStatusUpdater } from '../snow/SnowSessionsProvider'
-import { fetchSnowDataDetails, startStreamSnowData, stopStreamSnowData, SnowAnimationConfiguration, SnowStreamStartResponse, SnowStreamStopResponse, SnowStreamDetailsResponse } from '../stream/snowEndpoint'
+import { fetchSnowDataDetails, startStreamSnowData, stopStreamSnowData,
+         SnowAnimationConfiguration, SnowStreamStartResponse, SnowStreamStopResponse,
+         SnowStreamDetailsResponse } from '../stream/snowEndpoint'
 import useSessionInput from '../snow/snowSessionInput'
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -34,7 +35,7 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
     const isStartActive: boolean = delayedStatus === 'stopped' || delayedStatus === 'found';
     const isStopActive: boolean = delayedStatus === 'buffering' || delayedStatus === 'playing';
     const isSessionIdInputActive: boolean = status === 'stopped' || status === 'checking' || status === 'found' || status === 'error';
-    const startLabel: string = delayedStatus === 'found' ? "Play" : "Start";
+    const isSessionExists: boolean = delayedStatus === 'found';
 
     const [
         inputRef,
@@ -43,8 +44,8 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
         isSessionIdUnderEdit,
     ] = useSessionInput(sessionIdx, 'sessionId', sessionId);
 
+    // trick linter to use status but not react to it
     statusRef.current = [ status, setSessionStatus ];
-
 
     function handleStart(): void {
         if (isSessionIdUnderEdit() || hasSessionIdError) {
@@ -107,24 +108,25 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
         });
     }
 
-    const refreshStatus = useCallback( (status: string, setSessionStatus: SessionStatusUpdater, ignore: boolean) => {
+    const refreshStatus = useCallback( (): AbortController => {
+        const [ status, setSessionStatus ] = statusRef.current;
+        const controller = new AbortController();
+
         if (hasSessionIdError) {
             setSessionStatus('error', {
                 errorMsg: 'Invalid session id',
             });
-            return;
+            return controller;
         }
 
         if (status === 'stopped' || status === 'error') {
             setSessionStatus('checking');
         }
-        fetchSnowDataDetails(sessionId)
+        fetchSnowDataDetails(sessionId, controller)
             .then(( data: SnowStreamDetailsResponse ) => {
-                if (ignore) {
-                    return;
-                }
+                const [ status, setSessionStatus ] = statusRef.current;
                 if (data.running) {
-                    if (status !== 'checking') {
+                    if (status !== 'checking' && status !== 'found') {
                         return;
                     }
                     setSessionStatus('found', {
@@ -143,23 +145,22 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
                     errorMsg: error.message,
                 });
             });
+        return controller;
     }, [ sessionId, hasSessionIdError ]);
 
     useEffect(() => {
-        let ignore = false;
-
         // periodical refresh
         const handler = setTimeout(() => {
             setRefreshCounter(refreshCounter + 1);
         }, refreshPeriodMs);
 
-        // trick the linter to use status but not react to it
-        const [ status, setSessionStatus ] = statusRef.current;
+        const controller = refreshStatus();
 
-        refreshStatus(status, setSessionStatus, ignore);
-
-        return () => { ignore = true; clearTimeout(handler) };
-    }, [ sessionId, hasSessionIdError, refreshCounter, statusRef, refreshPeriodMs, refreshStatus ]);
+        return () => {
+            controller.abort()
+            clearTimeout(handler);
+        };
+    }, [ refreshCounter, statusRef, refreshPeriodMs, refreshStatus ]);
 
 
     return (
@@ -187,20 +188,22 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
                 <Button
                     className="start-button"
                     variant="contained"
+                    title={isSessionExists ? "Active animation found on server. Attach to it!" : "Start new animation on server!"}
                     onClick={handleStart}
-                    disabled={!isStartActive}>{startLabel}</Button>
+                    disabled={!isStartActive}>{isSessionExists ? "Play" : "Start"}</Button>
 
                 <Button
                     className="stop-button"
                     variant="contained"
+                    title="Stop animation on server!"
                     onClick={handleStop}
                     disabled={!isStopActive}>Stop</Button>
 
             </div>
             <SnowCanvas sessionIdx={sessionIdx} />
-            <Tooltip title="Animation progress" >
-                <LinearProgress variant="determinate" value={animationProgress} />
-            </Tooltip>
+            <LinearProgress value={animationProgress}
+                title="Animation progress"
+                variant="determinate" />
         </div>
     )
 }
@@ -230,21 +233,21 @@ function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelPro
             color = "success";
             progress = 100;
             insideText = "exists"
-            title = "Session exists!"
+            title = "Animation exists on server!"
             fontWeight = 'bold'
             break;
         case "initializing":
             color = "primary";
             progress = null;
             insideText = "Init"
-            title = "Connecting to server..."
+            title = "Starting animation on server..."
             fontWeight = 'normal'
             break;
         case "stopped":
             color = "inherit";
             progress = 100
             insideText = "●"
-            title = "Animation is stopped"
+            title = "No such active animation found on server"
             break;
         case "buffering":
             color = "primary";
@@ -256,7 +259,7 @@ function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelPro
             color = "success";
             progress = animationProgress;
             insideText = '▶'
-            title = "Playing"
+            title = "Animation playing..."
             fontWeight = "bold";
             break;
         case "error":
@@ -270,30 +273,32 @@ function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelPro
 
     return (
         <Box sx={{ position: 'relative', display: 'inline-flex', textAlign: "right", marginRight: 0, padding: 1 }} >
-            <CircularProgress variant={ progress !== null ? "determinate" : "indeterminate"} color={color} value={progress} />
-            <Tooltip title={title} >
-                <Box sx={{
-                        top: 0,
-                        left: 0,
-                        bottom: 0,
-                        right: 0,
-                        position: 'absolute',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        height: 56,
-                    }} >
-                    <Typography
-                        fontSize="10px"
-                        variant="caption"
-                        component="div"
-                        color={color}
-                        sx={{ fontWeight: fontWeight }}
-                     >
-                        {insideText}
-                    </Typography>
-                </Box>
-            </Tooltip>
+            <CircularProgress
+                variant={ progress !== null ? "determinate" : "indeterminate"}
+                color={color}
+                value={progress}
+            />
+            <Box title={title}
+                 sx={{
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    right: 0,
+                    position: 'absolute',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 56,
+                }} >
+                <Typography
+                    fontSize="10px"
+                    variant="caption"
+                    component="div"
+                    color={color}
+                    sx={{ fontWeight: fontWeight }} >
+                    {insideText}
+                </Typography>
+            </Box>
         </Box>
     );
 }

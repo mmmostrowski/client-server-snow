@@ -13,13 +13,15 @@ interface SnowConfigurationProps {
 }
 
 export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps): JSX.Element {
-    let { width: userWidth,
+    const { width: userWidth,
           height: userHeight,
           fps: userFps,
-          presetName: userPresetName } = useSnowSession(sessionIdx);
-    let { status,
+          presetName: userPresetName,
+          foundWidth, foundHeight, foundFps, foundPresetName,
+    } = useSnowSession(sessionIdx);
+    const { status,
           widthError, heightError, fpsError,
-          foundWidth, foundHeight, foundFps, foundPresetName } = useDelayedSnowSession(sessionIdx);
+    } = useDelayedSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
 
     const isEditable = status === 'stopped';
@@ -111,7 +113,8 @@ type ConfigNumberFieldProps = {
 
 function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
     const { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText } = props;
-    const restoreOnceAvailableRef = useRef(false);
+
+    const restoreOnceAvailableRef = useRef<boolean>(false);
     const [
         inputRef,
         handleBlur,
