@@ -1,6 +1,6 @@
 import * as React from "react";
-import { useState, useRef, forwardRef, useEffect } from 'react';
-import { useSnowSessions, useSnowSessionsDispatch } from './snow/SnowSessionsProvider'
+import { useState, forwardRef, useEffect, MouseEvent, HTMLProps } from 'react';
+import { useSnowSessions, useSessionsManager } from './snow/SnowSessionsProvider'
 import SnowAnimation from './components/SnowAnimation'
 import SnowConfiguration from './components/SnowConfiguration'
 import Tab from '@mui/material/Tab';
@@ -10,74 +10,58 @@ import IconButton from '@mui/material/IconButton';
 import ClearIcon from '@mui/icons-material/Clear';
 import Paper from '@mui/material/Paper';
 
-
 interface AppProps {
     maxTabs : number
 }
 
-export default function App({ maxTabs } : AppProps) {
+export default function App({ maxTabs } : AppProps): JSX.Element {
     const [ currentTab, setCurrentTab ] = useState(0);
-    const createdCount = useRef(1);
     const sessions = useSnowSessions();
-    const dispatch = useSnowSessionsDispatch();
-    const currentSessionId=sessions[currentTab] !== undefined
-        ? sessions[currentTab].validatedSessionId
-        : undefined;
+    const { createNewSession, deleteSession } = useSessionsManager();
 
-    useEffect(() => {
-        if (currentSessionId !== undefined) {
-            window.history.replaceState({
-                session: currentSessionId,
-            }, "Session: " + currentSessionId, "/" + currentSessionId)
-        }
-    }, [ currentSessionId]);
+    useUrlSwitcher(currentTab);
 
-    function handleNewSession() {
+    function handleNewSession(): void {
         if (sessions.length >= maxTabs) {
-            alert('You can have maximum ' + maxTabs + ' tabs opened!')
+            alert(`You can have maximum ${maxTabs} tabs opened!`)
             return;
         }
-
-        let newSessionId: string;
-        do {
-            newSessionId = 'session-' + createdCount.current++;
-        } while( sessions.map(s => s.sessionId).indexOf(newSessionId) != -1);
-
-        dispatch({
-            type: 'new-session',
-            newSessionId: newSessionId,
-        })
+        createNewSession();
     }
 
-    function handleDeleteSession(e : any, value : number) {
+    function handleDeleteSession(e: MouseEvent<HTMLElement>, sessionIdx: number): void {
         e.stopPropagation();
-        const sessionId = sessions[value].sessionId;
-        if (window.confirm('Are you sure you want to delete session ' + sessionId + ' ?')) {
-             if (currentTab >= value) {
-                 setCurrentTab(currentTab > 0 ? currentTab - 1 : 0);
-             }
-             dispatch({
-                 type: 'delete-session',
-                 sessionIdx: value
-             })
+        const sessionId = sessions[sessionIdx].sessionId;
+        if (!window.confirm(`Are you sure you want to delete session ${sessionId}?`)) {
+            return;
+        }
+        deleteSession(sessionIdx);
+        if (currentTab >= sessionIdx) {
+             setCurrentTab(currentTab > 0 ? currentTab - 1 : 0);
         }
     }
 
-    function handleTabChange(e : any, newTabIdx : number) {
-        if (newTabIdx < maxTabs) {
-            setCurrentTab(newTabIdx);
+    function handleTabChange(e: MouseEvent<HTMLElement>, newTabIdx: number): void {
+        if (newTabIdx >= maxTabs) {
+            return;
         }
+        setCurrentTab(newTabIdx);
     }
 
-    const TabButton = forwardRef<HTMLDivElement, any>((props, ref) => (
-        <span ref={ref}>
-            <div role="button" {...props} >
-                <IconButton className="tab-delete-button" onClick={(e) => { handleDeleteSession(e, props['data-value'])} }  >
-                    <ClearIcon fontSize="inherit" />
-                </IconButton>
-                {props.children}
-            </div>
-        </span>
+    interface TabButtonProps extends HTMLProps<HTMLDivElement> {
+        tabIdx: number;
+    }
+
+    const TabButton = forwardRef<HTMLDivElement, TabButtonProps>(
+        ({ tabIdx, children, ...divProps }, ref ): JSX.Element => (
+            <span ref={ref}>
+                <div role="button" {...divProps} >
+                    <IconButton className="tab-delete-button" onClick={ e => { handleDeleteSession(e, tabIdx) } }  >
+                        <ClearIcon fontSize="inherit" />
+                    </IconButton>
+                    {children}
+                </div>
+            </span>
     ));
 
     return (
@@ -85,24 +69,27 @@ export default function App({ maxTabs } : AppProps) {
             <div className="snow-animation-header" >
                 <h1>Snow Animation</h1>
                 <Paper elevation={2} sx={{ mt: 1 }} >
-                        <Tabs value={sessions.length > 0 ? currentTab : false} onChange={handleTabChange}  >
+                        <Tabs value={sessions.length > 0 ? currentTab : false} onChange={handleTabChange} >
                         {
                             sessions.map((s, idx) =>
                                 <Tab key={idx}
-                                     label={s.validatedSessionId}
-                                     data-value={idx}
+                                     tabIdx={idx}
                                      component={TabButton}
+                                     label={s.validatedSessionId}
                                      sx={{ borderRight: 1, borderColor: 'divider' }}
-                                     />
+                                 />
                             )
                         }
                             <Tooltip title="Add new session" >
-                                <Tab key="new" label="+" className="add-new-session-button" onClick={handleNewSession}
-                                    sx={{   height: 40,
-                                            backgroundColor: 'primary.main', color: 'primary.contrastText',
+                                <Tab key="new"
+                                     label="+"
+                                     onClick={handleNewSession}
+                                     className="add-new-session-button"
+                                     sx={{ height: 40,
+                                           backgroundColor: 'primary.main', color: 'primary.contrastText',
                                            "&:hover": { backgroundColor: 'primary.dark', color: 'primary.contrastText' },
-                                           "&:selected": { backgroundColor: 'primary.dark', color: 'primary.contrastText' },
-                                        }} />
+                                           "&:selected": { backgroundColor: 'primary.dark', color: 'primary.contrastText' }}}
+                               />
                             </Tooltip>
                         </Tabs>
                 </Paper>
@@ -135,4 +122,17 @@ export default function App({ maxTabs } : AppProps) {
             }
         </>
     );
+}
+
+function useUrlSwitcher(currentTab: number) {
+    const sessions = useSnowSessions();
+    const currentSessionId = sessions[currentTab]?.validatedSessionId;
+
+    useEffect(() => {
+        if (currentSessionId !== undefined) {
+            window.history.replaceState({
+                session: currentSessionId,
+            }, "Session: " + currentSessionId, "/" + currentSessionId)
+        }
+    }, [ currentSessionId]);
 }

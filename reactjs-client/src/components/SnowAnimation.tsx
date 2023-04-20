@@ -1,7 +1,7 @@
 import * as React from "react";
-import { useEffect, useState, useMemo, useRef, MutableRefObject, FocusEvent, FocusEventHandler } from "react";
-import { useSnowSession, useSnowSessionDispatch, useDelayedSnowSession, useSnowStatuses } from '../snow/SnowSessionsProvider'
-import { fetchSnowDataDetails, startStreamSnowData, stopStreamSnowData } from '../stream/snowEndpoint'
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useSnowSession, useDelayedSnowSession, useSessionStatusUpdater, SessionStatusUpdater } from '../snow/SnowSessionsProvider'
+import { fetchSnowDataDetails, startStreamSnowData, stopStreamSnowData, SnowAnimationConfiguration, SnowStreamStartResponse, SnowStreamStopResponse, SnowStreamDetailsResponse } from '../stream/snowEndpoint'
 import useSessionInput from '../snow/snowSessionInput'
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
@@ -18,7 +18,7 @@ interface SnowAnimationProps {
     refreshPeriodMs: number
 }
 
-export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnimationProps) {
+export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnimationProps): JSX.Element {
     const {
         sessionId, sessionIdError,
         status, presetName, animationProgress,
@@ -26,15 +26,15 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSnowSession(sessionIdx);
     const { status: delayedStatus } = useDelayedSnowSession(sessionIdx);
-    const dispatch = useSnowSessionDispatch(sessionIdx);
-    const setSnowStatus = useSnowStatuses(sessionIdx);
-    const [ refreshCounter, setRefreshCounter ] = useState(0);
+    const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
+    const statusRef = useRef<[string, SessionStatusUpdater]>([ status, setSessionStatus ]);
+    const [ refreshCounter, setRefreshCounter ] = useState<number>(0);
 
-    const isStartActive = delayedStatus === 'stopped' || delayedStatus === 'found';
-    const isStopActive = delayedStatus === 'buffering' || delayedStatus === 'playing';
-    const startLabel = delayedStatus === 'found' ? "Play" : "Start";
-    const isSessionIdInputActive = status === 'stopped' || status === 'checking' || status === 'found' || status == 'error';
-    const hasSessionIdError = sessionIdError !== null;
+    const hasSessionIdError: boolean = sessionIdError !== null;
+    const isStartActive: boolean = delayedStatus === 'stopped' || delayedStatus === 'found';
+    const isStopActive: boolean = delayedStatus === 'buffering' || delayedStatus === 'playing';
+    const isSessionIdInputActive: boolean = status === 'stopped' || status === 'checking' || status === 'found' || status === 'error';
+    const startLabel: string = delayedStatus === 'found' ? "Play" : "Start";
 
     const [
         inputRef,
@@ -43,24 +43,27 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
         isSessionIdUnderEdit,
     ] = useSessionInput(sessionIdx, 'sessionId', sessionId);
 
-    function handleStart() {
+    statusRef.current = [ status, setSessionStatus ];
+
+
+    function handleStart(): void {
         if (isSessionIdUnderEdit() || hasSessionIdError) {
             return;
         }
-        const animationParams: any = {
+        const animationParams: SnowAnimationConfiguration = {
             width: status === 'found' ? foundWidth : width,
             height: status === 'found' ? foundHeight : height,
             fps: status === 'found' ? foundFps : fps,
             presetName: status === 'found' ? foundPresetName : presetName,
         };
 
-        setSnowStatus('initializing');
+        setSessionStatus('initializing');
 
         startStreamSnowData({
             sessionId: sessionId,
             ...animationParams,
-        }).then( (data: any ) => {
-            console.log("sessionIdError", sessionIdError);
+        })
+        .then(( data: SnowStreamStartResponse ) => {
             if (hasSessionIdError) {
                 return;
             }
@@ -68,101 +71,102 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
             if (!data.running) {
                 throw Error("Server did not start animation!");
             }
-            setSnowStatus('playing', {
+
+            setSessionStatus('playing', {
                 ...animationParams,
                 validatedWidth: animationParams.width,
                 validatedHeight: animationParams.height,
                 validatedFps: animationParams.fps,
             });
-        }).catch(error => {
+        })
+        .catch(( error: Error ) => {
             console.error(error);
-            setSnowStatus('error', {
+            setSessionStatus('error', {
                 errorMsg: error.message,
             });
         });
     }
 
-    function handleStop() {
-        setSnowStatus('initializing');
+    function handleStop(): void {
+        setSessionStatus('initializing');
 
         stopStreamSnowData({
             sessionId: sessionId,
         })
-        .then( (data: any ) => {
+        .then(( data: SnowStreamStopResponse ) => {
             if (data.running) {
                 throw Error("Server did not stop animation!");
             }
-            setSnowStatus('stopped');
+            setSessionStatus('stopped');
         })
-        .catch(error => {
+        .catch(( error: Error ) => {
             console.error(error);
-            setSnowStatus('error', {
+            setSessionStatus('error', {
                 errorMsg: error.message,
             });
         });
     }
 
-
-    let ignored = false;
-    useEffect(() => {
-        if (ignored) {
-            return;
-        }
-
+    const refreshStatus = useCallback( (status: string, setSessionStatus: SessionStatusUpdater, ignore: boolean) => {
         if (hasSessionIdError) {
-            setSnowStatus('error', {
+            setSessionStatus('error', {
                 errorMsg: 'Invalid session id',
             });
             return;
         }
 
         if (status === 'stopped' || status === 'error') {
-            setSnowStatus('checking');
+            setSessionStatus('checking');
         }
-
         fetchSnowDataDetails(sessionId)
-            .then((data : any) => {
-                if (ignored) {
+            .then(( data: SnowStreamDetailsResponse ) => {
+                if (ignore) {
                     return;
                 }
                 if (data.running) {
                     if (status !== 'checking') {
                         return;
                     }
-                    setSnowStatus('found', {
+                    setSessionStatus('found', {
                         foundWidth: data.width,
                         foundHeight: data.height,
                         foundFps: data.fps,
                         foundPresetName: data.presetName,
                     });
                 } else {
-                    setSnowStatus('stopped');
+                    setSessionStatus('stopped');
                 }
             })
-            .catch(error => {
+            .catch(( error : Error ) => {
                 console.error(error);
-                setSnowStatus('error', {
+                setSessionStatus('error', {
                     errorMsg: error.message,
                 });
             });
-        return () => { ignored = true };
-    }, [ sessionId, hasSessionIdError, refreshCounter ]);
+    }, [ sessionId, hasSessionIdError ]);
 
-    // refresh status in background
     useEffect(() => {
+        let ignore = false;
+
+        // periodical refresh
         const handler = setTimeout(() => {
             setRefreshCounter(refreshCounter + 1);
         }, refreshPeriodMs);
-        return () => {
-            clearTimeout(handler);
-        };
-    });
+
+        // trick the linter to use status but not react to it
+        const [ status, setSessionStatus ] = statusRef.current;
+
+        refreshStatus(status, setSessionStatus, ignore);
+
+        return () => { ignore = true; clearTimeout(handler) };
+    }, [ sessionId, hasSessionIdError, refreshCounter, statusRef, refreshPeriodMs, refreshStatus ]);
+
 
     return (
         <div className="snow-animation" >
             <div className="animation-header">
 
-                <CircularProgressWithLabel sessionIdx={sessionIdx}  />
+                <CircularProgressWithLabel sessionIdx={sessionIdx} />
 
                 <TextField
                     InputLabelProps={{ shrink: true }}
@@ -293,3 +297,4 @@ function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelPro
         </Box>
     );
 }
+

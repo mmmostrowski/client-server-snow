@@ -6,14 +6,13 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
 import useSessionInput from '../snow/snowSessionInput'
-
 import { snowConstraints, useDelayedSnowSession, useSnowSessionDispatch, useSnowSession } from '../snow/SnowSessionsProvider'
 
 interface SnowConfigurationProps {
     sessionIdx: number
 }
 
-export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps) {
+export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps): JSX.Element {
     let { width: userWidth,
           height: userHeight,
           fps: userFps,
@@ -30,7 +29,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
     const fps = status === 'found' ? foundFps : userFps;
     const presetName = status === 'found' ? foundPresetName : userPresetName;
 
-    function handlePresetChange(e : any) {
+    function handlePresetChange(e : React.ChangeEvent<HTMLInputElement>) {
         dispatch({
             type: 'session-changed',
             changes: {
@@ -43,53 +42,54 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
         <>
             <Container sx={{ padding: 2, paddingRight: [ 4, 4, 4 ] }} >
                 <Select
-                    id="demo-simple-select-helper"
                     value={isAvailable ? presetName : "?"}
                     onChange={handlePresetChange}
+                    disabled={!isEditable}
                     variant="outlined"
                     size="small"
-                    disabled={!isEditable}
                     sx={{ width: 180 }} >
+
+                    { !isAvailable && <MenuItem key="?" value="?">?</MenuItem> }
                     { isAvailable && Object.entries(snowConstraints.presets).map(([presetName, presetLabel]) =>
                             <MenuItem key={presetName} value={presetName}>{presetLabel}</MenuItem>
-                        ) }
-                    { !isAvailable && <MenuItem key="?" value="?">?</MenuItem> }
+                    ) }
+
                 </Select>
-                <FormHelperText className={isEditable ? "" : "Mui-disabled"}  sx={{ pl: 2 }} >Animation preset</FormHelperText>
+                <FormHelperText className={isEditable ? "" : "Mui-disabled"} sx={{ pl: 2 }} >Animation preset</FormHelperText>
             </Container>
             <Container sx={{ padding: 2 }} >
                 <ConfigNumberField
-                    sessionIdx={sessionIdx}
+                    label="Width"
                     varName="width"
-                    isAvailable={isAvailable}
-                    isEditable={isEditable}
                     value={width}
                     errorMsg={widthError}
-                    label="Width"
+                    sessionIdx={sessionIdx}
+                    isEditable={isEditable}
+                    isAvailable={isAvailable}
                     helperText="Horizontal canvas size"
                 />
             </Container>
             <Container sx={{ padding: 2 }} >
                 <ConfigNumberField
-                    sessionIdx={sessionIdx}
+                    label="Height"
                     varName="height"
-                    isAvailable={isAvailable}
-                    isEditable={isEditable}
                     value={height}
                     errorMsg={heightError}
-                    label="Height"
+                    sessionIdx={sessionIdx}
+                    isEditable={isEditable}
+                    isAvailable={isAvailable}
                     helperText="Vertical canvas size"
                 />
             </Container>
             <Container sx={{ padding: 2 }} >
                 <ConfigNumberField
-                    sessionIdx={sessionIdx}
+                    label="Fps"
                     varName="fps"
-                    isAvailable={isAvailable}
-                    isEditable={isEditable}
                     value={fps}
                     errorMsg={fpsError}
-                    label="Fps"
+                    sessionIdx={sessionIdx}
+                    isEditable={isEditable}
+                    isAvailable={isAvailable}
                     helperText="Frames per second"
                 />
             </Container>
@@ -99,10 +99,17 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
 
 
 type ConfigNumberFieldProps = {
-    sessionIdx: number, varName: string, isAvailable: boolean, isEditable: boolean,
-    value: string|number, errorMsg : string, label : string, helperText : string }
+    sessionIdx: number,
+    varName: string,
+    label: string,
+    isAvailable: boolean,
+    isEditable: boolean,
+    value: string|number,
+    helperText: string
+    errorMsg: string,
+}
 
-function ConfigNumberField(props: ConfigNumberFieldProps) {
+function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
     const { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText } = props;
     const restoreOnceAvailableRef = useRef(false);
     const [
@@ -122,19 +129,19 @@ function ConfigNumberField(props: ConfigNumberFieldProps) {
     });
 
     return <TextField
-        InputLabelProps={{ shrink: true }}
-        inputRef={inputRef}
-        defaultValue={isAvailable ? value : ""}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        inputProps={{ inputMode: 'numeric' }}
-        size="small"
-        disabled={!isEditable}
-        label={label}
-        variant="outlined"
         helperText={errorMsg != null ? errorMsg : helperText}
+        defaultValue={isAvailable ? value : ""}
+        inputProps={{ inputMode: 'numeric' }}
+        InputLabelProps={{ shrink: true }}
         error={errorMsg != null}
+        onChange={handleChange}
+        disabled={!isEditable}
+        inputRef={inputRef}
+        onBlur={handleBlur}
         sx={{ width: 180 }}
+        label={label}
         autoComplete="off"
+        variant="outlined"
+        size="small"
     />
 }

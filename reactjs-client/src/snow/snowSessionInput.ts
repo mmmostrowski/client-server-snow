@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo, useRef, MutableRefObject, FocusEvent, FocusEventHandler } from "react";
-import { useSnowSession, useSnowSessionDispatch, useDelayedSnowSession } from '../snow/SnowSessionsProvider'
+import { useEffect, useRef, MutableRefObject, FocusEvent, FocusEventHandler } from "react";
+import { useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
 
 type UseSessionInputResponse = [
     MutableRefObject<any>,
@@ -8,67 +8,93 @@ type UseSessionInputResponse = [
     () => boolean,
 ]
 
-export default function useSessionInput(sessionIdx: number, varName: string, value: any): UseSessionInputResponse {
+export default function useSessionInput(sessionIdx: number, varName: string, value: string|number): UseSessionInputResponse {
     const dispatch = useSnowSessionDispatch(sessionIdx);
     const valueRef = useRef(value);
-    const orgValueRef = useRef(value);
+    const prevValueRef = useRef(value);
     const inputRef = useRef(null);
-    const needSyncRef = useRef(true);
-    const underEditRef = useRef(false);
-    const underFocusRef = useRef(false);
-    const timeoutRef = useRef(null);
+    const needSyncRef = useRef<boolean>(true);
+    const underEditRef = useRef<boolean>(false);
+    const underFocusRef = useRef<boolean>(false);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> >(null);
 
     useEffect(() => {
-        if (orgValueRef.current !== value) {
-            valueRef.current = value;
-            inputRef.current.value = value;
-            orgValueRef.current = value;
-        }
-
-        if (needSyncRef.current) {
-            needSyncRef.current = false;
-            valueRef.current = value;
-            if (inputRef.current) {
-                inputRef.current.value = valueRef.current;
-            }
+        if (isValueChangedOutside() || needsSyncWithOutside()) {
+            synchronizeValue();
         }
     });
 
-    function handleBlur(e : FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        underFocusRef.current = false;
+    function synchronizeValue(): void {
+        needsSyncWithOutside(false);
+        prevValueRef.current = value;
+        valueRef.current = value;
+        if (inputRef.current) {
+            inputRef.current.value = value;
+        }
+    }
+
+    function handleChange(e : FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
+        valueRef.current = e.target.value;
+        isFocused(true);
+        isUnderEdit(true);
+        runDelayed(() => {
+            updateInput();
+            isUnderEdit(false);
+        });
+    }
+
+    function handleBlur(e : FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
+        isFocused(false);
         updateInput();
     }
 
-    function handleChange(e : FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        underEditRef.current = true;
-        underFocusRef.current = true;
-        valueRef.current = e.target.value;
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-        }
-        timeoutRef.current = setTimeout(() => {
-            updateInput();
-            underEditRef.current = false;
-        }, 25);
-    }
-
-    function updateInput() {
-        if (underFocusRef.current) {
+    function updateInput(): void {
+        if (isFocused()) {
             dispatch({
                 type: 'session-changed',
                 changes : {
-                    [varName]: valueRef.current,
+                    [ varName ]: valueRef.current,
                 },
             })
         } else {
             dispatch({ type: 'accept-or-reject-session-changes' });
-            needSyncRef.current = true;
+            needsSyncWithOutside(true);
         }
     }
 
-    function isUnderEdit(): boolean {
-        return underEditRef.current;
+    function isFocused(value?: boolean): boolean {
+        return value === undefined
+            ? underFocusRef.current
+            : underFocusRef.current = value
+        ;
     }
 
-    return [ inputRef, handleBlur, handleChange, isUnderEdit ];
+    function isUnderEdit(value?: boolean): boolean {
+        return value === undefined
+            ? underEditRef.current
+            : underEditRef.current = value
+        ;
+    }
+
+    function needsSyncWithOutside(value?: boolean): boolean {
+        return value === undefined
+            ? needSyncRef.current
+            : needSyncRef.current = value
+        ;
+    }
+
+    function isValueChangedOutside(): boolean {
+        return prevValueRef.current !== value;
+    }
+
+    function runDelayed(callback: () => void) {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = setTimeout(() => {
+            callback();
+        }, 25);
+    }
+
+    return [ inputRef, handleBlur, handleChange, () => isUnderEdit() ];
 }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useContext, createContext, useReducer, useState, useEffect } from 'react';
+import { useContext, createContext, useReducer, useState, useEffect, useRef, PropsWithChildren, Reducer } from 'react';
 import { validateSnowSessionId, validateNumberBetween } from './snowSessionValidator';
 
 export const SnowSessionsContext = createContext([]);
@@ -47,18 +47,18 @@ interface SnowSession {
     foundFps: number|null,
 }
 
-export interface ValidatedSnowSession extends SnowSession {
-    validatedSessionId: string,
+interface SessionErrors {
     sessionIdError: string|null,
-
-    validatedWidth: number,
     widthError: string|null,
-
-    validatedHeight: number,
     heightError: string|null,
-
-    validatedFps: number,
     fpsError: string|null,
+}
+
+export interface ValidatedSnowSession extends SnowSession, SessionErrors {
+    validatedSessionId: string,
+    validatedWidth: number,
+    validatedHeight: number,
+    validatedFps: number,
 }
 
 type SnowSessionDispatchAction =
@@ -83,8 +83,19 @@ interface SnowSessionDispatchDeleteSessionAction extends SnowSessionDispatchAnyA
     sessionIdx : number,
 }
 
-export function SnowSessionsProvider({ initialSessionId, children } : any) {
-    const [ sessions, dispatch ] = useReducer(snowSessionsReducer, [
+type SnowSessionDispatchActionWithoutSessionIdx = DistributiveOmit<SnowSessionDispatchAction, "sessionIdx">;
+
+type DistributiveOmit<T, K extends keyof any> = T extends any
+  ? Omit<T, K>
+  : never;
+
+
+interface SnowSessionsProviderProps {
+    initialSessionId: string,
+}
+
+export function SnowSessionsProvider({ initialSessionId, children }: PropsWithChildren<SnowSessionsProviderProps>): JSX.Element {
+    const [ sessions, dispatch ] = useReducer<Reducer<ValidatedSnowSession[], SnowSessionDispatchAction>>(snowSessionsReducer, [
         createSession(initialSessionId === ""
             ? snowConstraints.defaultSessionId
             : initialSessionId
@@ -109,47 +120,76 @@ export function useSnowSession(sessionIdx : number): ValidatedSnowSession {
     return sessions[sessionIdx];
 }
 
-export function useSnowSessionsDispatch() : (action : SnowSessionDispatchAction) => void {
+function useSnowSessionsDispatch(): (action: SnowSessionDispatchAction) => void {
     return useContext(SnowSessionsDispatchContext);
 }
 
-export function useSnowSessionDispatch(sessionIdx : number) {
+export function useSnowSessionDispatch(sessionIdx : number): (action: SnowSessionDispatchActionWithoutSessionIdx) => void {
     const dispatch = useSnowSessionsDispatch();
-    return (props : any) => dispatch({ ...props, sessionIdx: sessionIdx })
+    return (action: SnowSessionDispatchActionWithoutSessionIdx) => dispatch({ ...action, sessionIdx: sessionIdx })
 }
 
-export function useDelayedSnowSession(sessionIdx: number, delayMs : number = 70) {
+export function useDelayedSnowSession(sessionIdx: number, delayMs: number = 70): ValidatedSnowSession {
     const targetSession = useSnowSession(sessionIdx);
-    const [ session, setSession ] = useState(targetSession);
+    const [ currentSession, setCurrentSession ] = useState(targetSession);
 
     useEffect(() => {
         const handler = setTimeout(() => {
-            setSession(targetSession);
+            setCurrentSession(targetSession);
         }, delayMs);
         return () => {
             clearTimeout(handler);
         };
-    }, [ targetSession ]);
+    }, [ targetSession, delayMs ]);
 
-    return session;
+    return currentSession;
 }
 
-export function useSnowStatuses(sessionIdx: number) {
+export type SessionStatusUpdater = (status: string, params?: object) => void;
+
+export function useSessionStatusUpdater(sessionIdx: number): SessionStatusUpdater {
     const dispatch = useSnowSessionDispatch(sessionIdx);
 
-    return (state: string, params?: object) => {
+    return ( status: string, params?: object ) => {
         dispatch({
             type : 'session-changed',
-            sessionIdx: sessionIdx,
             changes: {
-                status: state,
+                status: status,
                 ...params,
             },
         });
     }
 }
 
-function snowSessionsReducer(sessions : ValidatedSnowSession[], action : SnowSessionDispatchAction): ValidatedSnowSession[] {
+type SessionsManager = {
+    createNewSession: () => void,
+    deleteSession: (sessionIdx: number) => void,
+}
+
+export function useSessionsManager(): SessionsManager {
+    const sessions = useSnowSessions();
+    const dispatch = useSnowSessionsDispatch();
+    const createdCounter = useRef(1);
+
+    return {
+        createNewSession: () => {
+            let newSessionId: string;
+            do {
+                newSessionId = 'session-' + createdCounter.current++;
+            } while( sessions.map(s => s.sessionId).indexOf(newSessionId) !== -1);
+
+            return dispatch({
+                type: 'new-session',
+                newSessionId: newSessionId,
+        })},
+        deleteSession: (sessionIdx: number) => dispatch({
+            type: 'delete-session',
+            sessionIdx: sessionIdx,
+        })
+    };
+}
+
+function snowSessionsReducer(sessions: ValidatedSnowSession[], action: SnowSessionDispatchAction): ValidatedSnowSession[] {
     switch(action.type) {
        case 'new-session':
             const newSessionAction = action as SnowSessionDispatchNewSessionAction;
@@ -187,7 +227,7 @@ function snowSessionsReducer(sessions : ValidatedSnowSession[], action : SnowSes
     throw Error("Unknown action type: " + action.type)
 }
 
-function createSession(initialSessionId : string) : ValidatedSnowSession {
+function createSession(initialSessionId: string): ValidatedSnowSession {
     return sessionWithCommittedDraftChanges({
         sessionId : initialSessionId,
         presetName: snowConstraints.defaultPreset,
@@ -206,7 +246,7 @@ function createSession(initialSessionId : string) : ValidatedSnowSession {
     });
 }
 
-function draftSession(draft : SnowSession, last : ValidatedSnowSession) : ValidatedSnowSession {
+function draftSession(draft: SnowSession, last: ValidatedSnowSession): ValidatedSnowSession {
     return {
         ...last,
         ...draft,
@@ -214,7 +254,7 @@ function draftSession(draft : SnowSession, last : ValidatedSnowSession) : Valida
     }
 }
 
-function sessionErrors(draft : SnowSession) {
+function sessionErrors(draft: SnowSession): SessionErrors {
     return {
        sessionIdError: validateSnowSessionId(draft.sessionId),
        widthError: validateNumberBetween(draft.width, snowConstraints.minWidth, snowConstraints.maxWidth),
