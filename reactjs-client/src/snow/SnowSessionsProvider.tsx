@@ -63,12 +63,21 @@ interface SessionErrors {
     fpsError: string|null,
 }
 
-export interface ValidatedSnowSession extends SnowSession, SessionErrors {
+interface SnowSessionExtraState {
+    isSessionExists: boolean|null,
+    isSessionIdChanged: boolean,
+    cannotStartSession: boolean,
+    hasSessionIdError: boolean,
+}
+
+interface ValidatedSnowSession extends SnowSession, SessionErrors {
     validatedSessionId: string,
     validatedWidth: number,
     validatedHeight: number,
     validatedFps: number,
 }
+
+export type ProcessedSnowSession = ValidatedSnowSession & SnowSessionExtraState;
 
 type DispatchSessionAction =
     | DispatchNewSessionAction
@@ -103,7 +112,7 @@ interface SnowSessionsProviderProps {
 }
 
 export function SnowSessionsProvider({ initialSessionId, children }: PropsWithChildren<SnowSessionsProviderProps>): JSX.Element {
-    const [ sessions, dispatch ] = useReducer<Reducer<ValidatedSnowSession[], DispatchSessionAction>>(snowSessionsReducer, [
+    const [ sessions, dispatch ] = useReducer<Reducer<ProcessedSnowSession[], DispatchSessionAction>>(snowSessionsReducer, [
         createSession(initialSessionId === ""
             ? snowConstraints.defaultSessionId
             : initialSessionId
@@ -119,16 +128,16 @@ export function SnowSessionsProvider({ initialSessionId, children }: PropsWithCh
     );
 }
 
-export function useSnowSessions(): ValidatedSnowSession[] {
+export function useSnowSessions(): ProcessedSnowSession[] {
     return useContext(SnowSessionsContext);
 }
 
-export function useSnowSession(sessionIdx : number): ValidatedSnowSession {
+export function useSnowSession(sessionIdx : number): ProcessedSnowSession {
     const sessions = useSnowSessions();
     return sessions[sessionIdx];
 }
 
-function useSnowSessionsDispatch(): (action: DispatchSessionAction) => void {
+export function useSnowSessionsDispatch(): (action: DispatchSessionAction) => void {
     return useContext(SnowSessionsDispatchContext);
 }
 
@@ -137,7 +146,7 @@ export function useSnowSessionDispatch(sessionIdx : number): (action: DispatchSe
     return (action: DispatchSessionActionWithoutSessionIdx) => dispatch({ ...action, sessionIdx: sessionIdx })
 }
 
-export function useDelayedSnowSession(sessionIdx: number, delayMs: number = 70): ValidatedSnowSession {
+export function useDelayedSnowSession(sessionIdx: number, delayMs: number = 70): ProcessedSnowSession {
     const targetSession = useSnowSession(sessionIdx);
     const [ currentSession, setCurrentSession ] = useState(targetSession);
 
@@ -153,51 +162,7 @@ export function useDelayedSnowSession(sessionIdx: number, delayMs: number = 70):
     return currentSession;
 }
 
-export type SessionStatusUpdater = (status: string, params?: object) => void;
-
-export function useSessionStatusUpdater(sessionIdx: number): SessionStatusUpdater {
-    const dispatch = useSnowSessionDispatch(sessionIdx);
-
-    return ( status: string, params?: object ) => {
-        dispatch({
-            type : 'session-changed',
-            changes: {
-                status: status,
-                ...params,
-            },
-        });
-    }
-}
-
-type SessionsManager = {
-    createNewSession: () => void,
-    deleteSession: (sessionIdx: number) => void,
-}
-
-export function useSessionsManager(): SessionsManager {
-    const sessions = useSnowSessions();
-    const dispatch = useSnowSessionsDispatch();
-    const createdCounter = useRef<number>(1);
-
-    return {
-        createNewSession: () => {
-            let newSessionId: string;
-            do {
-                newSessionId = 'session-' + createdCounter.current++;
-            } while( sessions.map(s => s.sessionId).indexOf(newSessionId) !== -1);
-
-            return dispatch({
-                type: 'new-session',
-                newSessionId: newSessionId,
-        })},
-        deleteSession: (sessionIdx: number) => dispatch({
-            type: 'delete-session',
-            sessionIdx: sessionIdx,
-        })
-    };
-}
-
-function snowSessionsReducer(sessions: ValidatedSnowSession[], action: DispatchSessionAction): ValidatedSnowSession[] {
+function snowSessionsReducer(sessions: ProcessedSnowSession[], action: DispatchSessionAction): ProcessedSnowSession[] {
     switch(action.type) {
        case 'new-session':
             const newSessionAction = action as DispatchNewSessionAction;
@@ -235,8 +200,8 @@ function snowSessionsReducer(sessions: ValidatedSnowSession[], action: DispatchS
     throw Error("Unknown action type: " + action.type)
 }
 
-function createSession(initialSessionId: string): ValidatedSnowSession {
-    return sessionWithCommittedDraftChanges({
+function createSession(initialSessionId: string): ProcessedSnowSession {
+    return sessionWithCommittedDraftChanges(false, {
         sessionId : initialSessionId,
         presetName: snowConstraints.defaultPreset,
         width: '' + snowConstraints.defaultWidth,
@@ -254,12 +219,13 @@ function createSession(initialSessionId: string): ValidatedSnowSession {
     });
 }
 
-function draftSession(draft: SnowSession, last: ValidatedSnowSession): ValidatedSnowSession {
-    return {
+function draftSession(draft: SnowSession, last: ValidatedSnowSession): ProcessedSnowSession {
+    const isSessionIdChanged = draft.sessionId !== last.validatedSessionId;
+    return postProcessedSession(isSessionIdChanged, {
         ...last,
         ...draft,
         ...( sessionErrors(draft) ),
-    }
+    });
 }
 
 function sessionErrors(draft: SnowSession): SessionErrors {
@@ -271,19 +237,20 @@ function sessionErrors(draft: SnowSession): SessionErrors {
    };
 }
 
-function sessionWithAppliedChanges(session: ValidatedSnowSession): ValidatedSnowSession {
+function sessionWithAppliedChanges(session: ValidatedSnowSession): ProcessedSnowSession {
+    const isSessionIdChanged = session.sessionId !== session.validatedSessionId;
     const numOfErrors = Object.values(sessionErrors(session))
          .filter( value => value !== null )
          .length;
     if (numOfErrors === 0) {
-        return sessionWithCommittedDraftChanges(session);
+        return sessionWithCommittedDraftChanges(isSessionIdChanged, session);
     } else {
         return sessionWithRevertedDraftChanges(session);
     }
 }
 
-function sessionWithCommittedDraftChanges(draft: SnowSession): ValidatedSnowSession {
-    return postProcessedSession({
+function sessionWithCommittedDraftChanges(isSessionIdChanged: boolean, draft: SnowSession): ProcessedSnowSession {
+    return postProcessedSession(isSessionIdChanged, {
         ...draft,
         ...( sessionErrors(draft) ),
         validatedSessionId: draft.sessionId,
@@ -293,7 +260,9 @@ function sessionWithCommittedDraftChanges(draft: SnowSession): ValidatedSnowSess
     });
 }
 
-function sessionWithRevertedDraftChanges(session: ValidatedSnowSession): ValidatedSnowSession {
+function sessionWithRevertedDraftChanges(session: ValidatedSnowSession): ProcessedSnowSession {
+    const isSessionIdChanged = session.sessionId !== session.validatedSessionId;
+
     const revertedSession={
         ...session,
         sessionId: session.validatedSessionId,
@@ -301,15 +270,19 @@ function sessionWithRevertedDraftChanges(session: ValidatedSnowSession): Validat
         height: '' + session.validatedHeight,
         fps: '' + session.validatedFps,
     };
-    return postProcessedSession({
+    return postProcessedSession(isSessionIdChanged, {
         ...revertedSession,
         ...( sessionErrors(revertedSession) ),
     });
 }
 
-function postProcessedSession(session: ValidatedSnowSession): ValidatedSnowSession {
+function postProcessedSession(isSessionIdChanged: boolean, session: ValidatedSnowSession): ProcessedSnowSession {
     return {
         ...session,
         animationProgress: session.status === 'playing' ? session.animationProgress : 0,
+        isSessionExists: session.status === 'found' || session.status === 'error-cannot-start-existing',
+        cannotStartSession: session.status === 'error-cannot-start-new' || session.status === 'error-cannot-start-existing',
+        hasSessionIdError: session.sessionIdError !== null,
+        isSessionIdChanged: isSessionIdChanged,
     };
 }

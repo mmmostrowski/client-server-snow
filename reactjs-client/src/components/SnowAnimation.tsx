@@ -1,10 +1,21 @@
 import * as React from "react";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useSnowSession, useDelayedSnowSession, useSessionStatusUpdater, SessionStatusUpdater } from '../snow/SnowSessionsProvider'
-import { fetchSnowDataDetails, startStreamSnowData, stopStreamSnowData,
-         SnowAnimationConfiguration, SnowStreamStartResponse, SnowStreamStopResponse,
-         SnowStreamDetailsResponse } from '../stream/snowEndpoint'
+import { useSnowSession,
+        useDelayedSnowSession,
+        } from '../snow/SnowSessionsProvider'
+import { fetchSnowDataDetails,
+        startStreamSnowData,
+        stopStreamSnowData,
+        SnowAnimationConfiguration,
+        SnowStreamStartResponse,
+        SnowStreamStopResponse,
+        SnowStreamDetailsResponse
+        } from '../stream/snowEndpoint'
 import useSessionInput from '../snow/snowSessionInput'
+import { useSessionStatusUpdater,
+        SessionStatusUpdater,
+        useSessionErrorStatusUpdater,
+        SessionErrorStatusUpdated } from '../snow/snowSessionStatus'
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -122,45 +133,64 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
     }, [ sessionId, hasSessionIdError, cannotStartErrorSessionId, setSessionErrorStatus ]);
 
     function handleStart(): void {
-        if (isSessionIdUnderEdit() || hasSessionIdError) {
-            return;
+        if (isSessionExists) {
+            startExisting();
+        } else {
+            startNew();
         }
-        const animationParams: SnowAnimationConfiguration = {
-            width: status === 'found' ? foundWidth : width,
-            height: status === 'found' ? foundHeight : height,
-            fps: status === 'found' ? foundFps : fps,
-            presetName: status === 'found' ? foundPresetName : presetName,
-        };
 
-        setSessionStatus('initializing');
+        function startExisting() {
+            start({
+                width: foundWidth,
+                height: foundHeight,
+                fps: foundFps,
+                presetName: foundPresetName,
+            })
+            .catch(( error: Error ) => {
+                setSessionErrorStatus(error, "error-cannot-start-existing");
+            });
+        }
 
-        startStreamSnowData({
-            sessionId: sessionId,
-            ...animationParams,
-        })
-        .then(( data: SnowStreamStartResponse ) => {
-            if (hasSessionIdError) {
+        function startNew() {
+            start({
+                  width: width,
+                  height: height,
+                  fps: fps,
+                  presetName: presetName,
+              })
+            .catch(( error: Error ) => {
+                setSessionErrorStatus(error, "error-cannot-start-new");
+            });
+        }
+
+        function start(animationParams: SnowAnimationConfiguration): Promise<void> {
+            if (isSessionIdUnderEdit() || hasSessionIdError) {
                 return;
             }
 
-            setSessionStatus('playing', {
+            setSessionStatus('initializing');
+
+            return startStreamSnowData({
+                sessionId: sessionId,
                 ...animationParams,
-                validatedWidth: animationParams.width,
-                validatedHeight: animationParams.height,
-                validatedFps: animationParams.fps,
-            });
-        })
-        .catch(( error: Error ) => {
-            setSessionErrorStatus (error, isSessionExists
-                ? "error-cannot-start-existing"
-                : "error-cannot-start-new"
-            );
-        });
+            })
+            .then(( data: SnowStreamStartResponse ) => {
+            throw Error("Cannot START!");
+                if (hasSessionIdError) {
+                    return;
+                }
+
+                setSessionStatus('playing', {
+                    ...animationParams,
+                    validatedWidth: animationParams.width,
+                    validatedHeight: animationParams.height,
+                    validatedFps: animationParams.fps,
+                });
+            })
+        }
     }
 
     function handleStop(): void {
-        setSessionStatus('initializing');
-
         stopStreamSnowData({
             sessionId: sessionId,
         })

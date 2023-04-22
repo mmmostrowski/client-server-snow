@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useState, forwardRef, useEffect, MouseEvent, HTMLProps } from 'react';
-import { useSnowSessions, useSessionsManager } from './snow/SnowSessionsProvider'
+import { useSnowSessions } from './snow/SnowSessionsProvider'
+import { useSessionsManager } from './snow/snowSessionManager'
 import SnowAnimation from './components/SnowAnimation'
 import SnowConfiguration from './components/SnowConfiguration'
 import Tab from '@mui/material/Tab';
