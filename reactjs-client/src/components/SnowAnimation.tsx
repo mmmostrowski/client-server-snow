@@ -15,7 +15,7 @@ import useSessionInput from '../snow/snowSessionInput'
 import { useSessionStatusUpdater,
         SessionStatusUpdater,
         useSessionErrorStatusUpdater,
-        SessionErrorStatusUpdated } from '../snow/snowSessionStatus'
+        SessionErrorStatusUpdater } from '../snow/snowSessionStatus'
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -32,30 +32,35 @@ interface SnowAnimationProps {
 
 export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnimationProps): JSX.Element {
     const {
-        sessionId, sessionIdError,
-        status, presetName, animationProgress,
+        status, hasError,
+        sessionId, sessionIdError, hasSessionIdError, isSessionIdChanged, isSessionExists, cannotStartSession,
+        presetName, animationProgress,
         validatedWidth: width, validatedHeight: height, validatedFps: fps,
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSnowSession(sessionIdx);
-    const { status: delayedStatus } = useDelayedSnowSession(sessionIdx);
     const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
+    const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
     const statusRef = useRef<[string, SessionStatusUpdater]>([ status, setSessionStatus ]);
+    const { status: delayedStatus } = useDelayedSnowSession(sessionIdx);
     const [ refreshCounter, setRefreshCounter ] = useState<number>(0);
-//     const errorToStoppedErrorTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
-    const hasSessionIdError: boolean = sessionIdError !== null;
-    const isStartActive: boolean = delayedStatus === 'stopped'
+    const isStartActive: boolean =
+           delayedStatus === 'stopped'
         || delayedStatus === 'found'
         || delayedStatus === 'error-cannot-start-new'
         || delayedStatus === 'error-cannot-start-existing';
-    const isStopActive: boolean = delayedStatus === 'buffering' || delayedStatus === 'playing';
-    const isSessionIdInputActive: boolean = status === 'stopped'
+
+    const isStopActive: boolean =
+           delayedStatus === 'buffering'
+        || delayedStatus === 'playing';
+
+    const isSessionIdInputActive: boolean =
+           status === 'stopped'
         || status === 'checking'
         || status === 'found'
         || status === 'error'
         || status === 'error-cannot-start-new'
         || status === 'error-cannot-start-existing';
-    const isSessionExists: boolean = status === 'found' || status === 'error-cannot-start-existing';
 
     const [
         inputRef,
@@ -67,23 +72,6 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
     // trick linter to use status but not react to it
     statusRef.current = [ status, setSessionStatus ];
 
-    const cannotStartErrorSessionId = useRef<string>(null);
-
-    const setSessionErrorStatus = useCallback((error?: Error|string, status:string = "error") => {
-        const [ oldStatus, setSessionStatus ] = statusRef.current;
-
-        if (typeof error === "string") {
-            setSessionStatus(status, {
-                errorMsg: error,
-            });
-        } else {
-            console.error(error);
-            setSessionStatus(status, {
-                errorMsg: error.message,
-            });
-        }
-    }, [ ]);
-
     const refreshStatus = useCallback( (controller: AbortController):void => {
         const [ status, setSessionStatus ] = statusRef.current;
 
@@ -92,17 +80,11 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
             return;
         }
 
-        const cannotStart = status === 'error-cannot-start-new' || status === 'error-cannot-start-existing';
-        if (cannotStart) {
-            if (cannotStartErrorSessionId.current && cannotStartErrorSessionId.current !== sessionId) {
-                cannotStartErrorSessionId.current = null;
-            } else {
-                cannotStartErrorSessionId.current = sessionId;
-                return;
-            }
+        if (cannotStartSession && !isSessionIdChanged) {
+            return;
         }
 
-        if (status === 'stopped' || status === 'error' || cannotStart) {
+        if (status === 'stopped' || status === 'error' || cannotStartSession) {
             setSessionStatus('checking');
         }
 
@@ -130,7 +112,7 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
                 });
             });
         return;
-    }, [ sessionId, hasSessionIdError, cannotStartErrorSessionId, setSessionErrorStatus ]);
+    }, [ sessionId, hasSessionIdError, setSessionErrorStatus, cannotStartSession, isSessionIdChanged]);
 
     function handleStart(): void {
         if (isSessionExists) {
@@ -175,7 +157,6 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
                 ...animationParams,
             })
             .then(( data: SnowStreamStartResponse ) => {
-            throw Error("Cannot START!");
                 if (hasSessionIdError) {
                     return;
                 }
@@ -198,7 +179,7 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
             setSessionStatus('stopped');
         })
         .catch(( error: Error ) => {
-            setSessionErrorStatus (error, "error-cannot-stop");
+            setSessionErrorStatus(error, "error-cannot-stop");
         });
     }
 

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useContext, createContext, useReducer, useState, useEffect, useRef, PropsWithChildren, Reducer } from 'react';
+import { useContext, createContext, useReducer, useState, useEffect, useCallback, PropsWithChildren, Reducer } from 'react';
 import { validateSnowSessionId, validateNumberBetween } from './snowSessionValidator';
 
 export const SnowSessionsContext = createContext([]);
@@ -68,6 +68,7 @@ interface SnowSessionExtraState {
     isSessionIdChanged: boolean,
     cannotStartSession: boolean,
     hasSessionIdError: boolean,
+    hasError: boolean,
 }
 
 interface ValidatedSnowSession extends SnowSession, SessionErrors {
@@ -143,7 +144,10 @@ export function useSnowSessionsDispatch(): (action: DispatchSessionAction) => vo
 
 export function useSnowSessionDispatch(sessionIdx : number): (action: DispatchSessionActionWithoutSessionIdx) => void {
     const dispatch = useSnowSessionsDispatch();
-    return (action: DispatchSessionActionWithoutSessionIdx) => dispatch({ ...action, sessionIdx: sessionIdx })
+
+    return useCallback(
+        (action: DispatchSessionActionWithoutSessionIdx) => dispatch({ ...action, sessionIdx: sessionIdx })
+    , [ dispatch, sessionIdx ]);
 }
 
 export function useDelayedSnowSession(sessionIdx: number, delayMs: number = 70): ProcessedSnowSession {
@@ -284,5 +288,8 @@ function postProcessedSession(isSessionIdChanged: boolean, session: ValidatedSno
         cannotStartSession: session.status === 'error-cannot-start-new' || session.status === 'error-cannot-start-existing',
         hasSessionIdError: session.sessionIdError !== null,
         isSessionIdChanged: isSessionIdChanged,
+        hasError: session.status === 'error'
+            || session.status === 'error-cannot-start-new'
+            || session.status === 'error-cannot-start-existing',
     };
 }
