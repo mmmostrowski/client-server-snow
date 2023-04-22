@@ -100,6 +100,12 @@ export async function startStreamSnowData(action: StartSnowStreamAction, control
     return askSnowEndpoint({
         action: 'start',
         ...action,
+    })
+    .then(( data: SnowStreamStartResponse ) => {
+        if (!data.running) {
+            throw Error("Server did not start animation!");
+        }
+        return data;
     }) as Promise<SnowStreamStartResponse>;
 }
 
@@ -107,5 +113,11 @@ export async function stopStreamSnowData(action: StopSnowStreamAction, controlle
     return askSnowEndpoint({
         action: 'stop',
         ...action,
-    }) as Promise<SnowStreamStopResponse>;
+    })
+    .then(( data: SnowStreamStartResponse ) => {
+        if (data.running) {
+            throw Error("Server did not stop animation!");
+        }
+        return data;
+    }) as Promise<SnowStreamStartResponse>;
 }

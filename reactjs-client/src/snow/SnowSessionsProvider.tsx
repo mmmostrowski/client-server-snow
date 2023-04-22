@@ -38,7 +38,16 @@ interface SnowSession {
     fps: string,
     animationProgress: number,
     bufferLevel: number,
-    status: "stopped"|"buffering"|"playing"|"error"|"initializing"|"checking"|"found",
+    status: "stopped"
+        | "buffering"
+        | "playing"
+        | "initializing"
+        | "checking"
+        | "found"
+        | "error"
+        | "error-cannot-start-new"
+        | "error-cannot-start-existing"
+        | "error-cannot-stop",
     errorMsg: string|null,
 
     foundPresetName: string|null,
@@ -206,7 +215,7 @@ function snowSessionsReducer(sessions: ValidatedSnowSession[], action: DispatchS
             }
             const draft = draftSession(changed, last);
 
-//             console.log("changes:", sessionIdChangeAction.changes, "status change: " + changed.status);
+            console.log("changes:", sessionIdChangeAction.changes, "status change: " + changed.status);
 
             return [
                ...sessions.slice(0, idx),

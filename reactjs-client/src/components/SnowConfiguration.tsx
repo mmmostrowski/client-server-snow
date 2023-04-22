@@ -24,12 +24,13 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
     } = useDelayedSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
 
-    const isEditable = status === 'stopped';
+    const isSessionExists: boolean = status === 'found' || status === 'error-cannot-start-existing';
+    const isEditable = status === 'stopped' || status === 'error-cannot-start-new';
     const isAvailable = status !== 'checking' && status !== 'error';
-    const width = status === 'found' ? foundWidth : userWidth;
-    const height = status === 'found' ? foundHeight : userHeight;
-    const fps = status === 'found' ? foundFps : userFps;
-    const presetName = status === 'found' ? foundPresetName : userPresetName;
+    const width = isSessionExists ? foundWidth : userWidth;
+    const height = isSessionExists ? foundHeight : userHeight;
+    const fps = isSessionExists ? foundFps : userFps;
+    const presetName = isSessionExists ? foundPresetName : userPresetName;
 
     function handlePresetChange(e : React.ChangeEvent<HTMLInputElement>) {
         dispatch({
