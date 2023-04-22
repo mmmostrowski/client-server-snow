@@ -19,7 +19,7 @@ export default function App({ maxTabs } : AppProps): JSX.Element {
     const sessions = useSnowSessions();
     const { createNewSession, deleteSession } = useSessionsManager();
 
-    useUrlSwitcher(currentTab);
+    useUrlUpdater(currentTab);
 
     function handleNewSession(): void {
         if (sessions.length >= maxTabs) {
@@ -67,7 +67,6 @@ export default function App({ maxTabs } : AppProps): JSX.Element {
     return (
         <>
             <div className="snow-animation-header" >
-                <h1>Snow Animation</h1>
                 <Paper elevation={2} sx={{ mt: 1 }} >
                         <Tabs value={sessions.length > 0 ? currentTab : false} onChange={handleTabChange} >
                         {
@@ -124,7 +123,7 @@ export default function App({ maxTabs } : AppProps): JSX.Element {
     );
 }
 
-function useUrlSwitcher(currentTab: number) {
+function useUrlUpdater(currentTab: number) {
     const sessions = useSnowSessions();
     const currentSessionId = sessions[currentTab]?.validatedSessionId;
 

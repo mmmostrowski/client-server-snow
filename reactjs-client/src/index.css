@@ -40,16 +40,12 @@ body,
 
 .snow-animation-header {
     height: 110px;
-    padding-top: 20px;
+    padding-top: 10px;
 }
 
 .snow-animation-header .MuiPaper-root {
     width: calc(100% - 28px);
     margin-left: 10px;
-}
-
-.snow-animation-header  h1{
-    margin: 0px 0px 10px 0px;
 }
 
 .snow-animation {
