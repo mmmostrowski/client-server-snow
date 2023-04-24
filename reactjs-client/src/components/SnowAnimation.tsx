@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useSnowSession,
         useDelayedSnowSession,
         } from '../snow/SnowSessionsProvider'
@@ -32,87 +32,28 @@ interface SnowAnimationProps {
 
 export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnimationProps): JSX.Element {
     const {
-        status, hasError,
-        sessionId, sessionIdError, hasSessionIdError, isSessionIdChanged, isSessionExists, cannotStartSession,
+        status, hasError, isStopped,
+        sessionId, sessionIdError, hasSessionIdError, isSessionExists, cannotStartSession,
         presetName, animationProgress,
         validatedWidth: width, validatedHeight: height, validatedFps: fps,
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSnowSession(sessionIdx);
     const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
     const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
-    const statusRef = useRef<[string, SessionStatusUpdater]>([ status, setSessionStatus ]);
     const { status: delayedStatus } = useDelayedSnowSession(sessionIdx);
     const [ refreshCounter, setRefreshCounter ] = useState<number>(0);
 
     const isStartActive: boolean =
-           delayedStatus === 'stopped'
-        || delayedStatus === 'found'
-        || delayedStatus === 'error-cannot-start-new'
-        || delayedStatus === 'error-cannot-start-existing';
+           isStopped
+        || hasError
+        || status === 'checking';
 
     const isStopActive: boolean =
            delayedStatus === 'buffering'
         || delayedStatus === 'playing';
 
-    const isSessionIdInputActive: boolean =
-           status === 'stopped'
-        || status === 'checking'
-        || status === 'found'
-        || status === 'error'
-        || status === 'error-cannot-start-new'
-        || status === 'error-cannot-start-existing';
+    const isSessionIdInputActive: boolean = isStartActive;
 
-    const [
-        inputRef,
-        handleSessionIdBlur,
-        handleSessionIdChange,
-        isSessionIdUnderEdit,
-    ] = useSessionInput(sessionIdx, 'sessionId', sessionId);
-
-    // trick linter to use status but not react to it
-    statusRef.current = [ status, setSessionStatus ];
-
-    const refreshStatus = useCallback( (controller: AbortController):void => {
-        const [ status, setSessionStatus ] = statusRef.current;
-
-        if (hasSessionIdError) {
-            setSessionErrorStatus ('Invalid session id');
-            return;
-        }
-
-        if (cannotStartSession && !isSessionIdChanged) {
-            return;
-        }
-
-        if (status === 'stopped' || status === 'error' || cannotStartSession) {
-            setSessionStatus('checking');
-        }
-
-        fetchSnowDataDetails(sessionId, controller)
-            .then(( data: SnowStreamDetailsResponse ) => {
-                const [ status, setSessionStatus ] = statusRef.current;
-                if (data.running) {
-                    if (status !== 'checking' && status !== 'found') {
-                        return;
-                    }
-                    setSessionStatus('found', {
-                        foundWidth: data.width,
-                        foundHeight: data.height,
-                        foundFps: data.fps,
-                        foundPresetName: data.presetName,
-                    });
-                } else {
-                    setSessionStatus('stopped');
-                }
-            })
-            .catch(( error : Error ) => {
-                console.error(error);
-                setSessionStatus('error', {
-                    errorMsg: error.message,
-                });
-            });
-        return;
-    }, [ sessionId, hasSessionIdError, setSessionErrorStatus, cannotStartSession, isSessionIdChanged]);
 
     function handleStart(): void {
         if (isSessionExists) {
@@ -176,27 +117,76 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
             sessionId: sessionId,
         })
         .then(( data: SnowStreamStopResponse ) => {
-            setSessionStatus('stopped');
+            setSessionStatus('stopped-not-found');
         })
         .catch(( error: Error ) => {
             setSessionErrorStatus(error, "error-cannot-stop");
         });
     }
 
+    function handleSessionIdChange(value: string) {
+        setSessionStatus("stopped-not-checked");
+    }
+
+    // Periodical session checking
     useEffect(() => {
-        // periodical refresh
         const handler = setTimeout(() => {
-            setRefreshCounter((refreshCounter:number) => refreshCounter + 1);
+             setRefreshCounter((c: number) => c + 1);
         }, refreshPeriodMs);
+        return () => {
+            clearTimeout(handler);
+        };
+    });
+
+    // Session checking
+    useEffect(() => {
+        if (hasSessionIdError) {
+            setSessionErrorStatus ('Invalid session id');
+            return;
+        }
+
+        if (cannotStartSession) {
+            return;
+        }
+
+        if (status === 'stopped-not-checked' || hasError) {
+            setSessionStatus('checking');
+        }
 
         const controller = new AbortController();
-        refreshStatus(controller);
+
+        fetchSnowDataDetails(sessionId, controller)
+            .then(( data: SnowStreamDetailsResponse ) => {
+                if (!data.running) {
+                    setSessionStatus('stopped-not-found');
+                    return;
+                }
+
+                if (status === 'checking'
+                    || status === 'stopped-not-found'
+                    || status === 'stopped-not-checked') {
+                    setSessionStatus('stopped-found', {
+                        foundWidth: data.width,
+                        foundHeight: data.height,
+                        foundFps: data.fps,
+                        foundPresetName: data.presetName,
+                    });
+                }
+            })
+            .catch(( error : Error ) => {
+                setSessionErrorStatus(error);
+            });
 
         return () => {
             controller.abort()
-            clearTimeout(handler);
         };
-    }, [ refreshCounter, statusRef, refreshPeriodMs, refreshStatus ]);
+    }, [
+        status, setSessionStatus, sessionId, refreshCounter,
+        hasError, cannotStartSession, hasSessionIdError, setSessionErrorStatus,
+    ]);
+
+    const [ inputRef, handleSessionIdInputBlur, handleSessionIdInputChange, isSessionIdUnderEdit ] =
+            useSessionInput(sessionIdx, 'sessionId', sessionId, handleSessionIdChange);
 
     return (
         <div className="snow-animation" >
@@ -214,8 +204,8 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
                     disabled={!isSessionIdInputActive}
                     error={hasSessionIdError}
                     helperText={sessionIdError}
-                    onChange={handleSessionIdChange}
-                    onBlur={handleSessionIdBlur}
+                    onChange={handleSessionIdInputChange}
+                    onBlur={handleSessionIdInputBlur}
                     style={{ minWidth: 70 }}
                     autoComplete="off"
                 />
@@ -264,7 +254,14 @@ function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelPro
             title = "Checking on server..."
             fontWeight = 'normal'
             break;
-        case "found":
+        case "stopped-not-checked":
+        case "stopped-not-found":
+            color = "inherit";
+            progress = 100
+            insideText = "●"
+            title = "No such active animation found on server"
+            break;
+        case "stopped-found":
             color = "success";
             progress = 100;
             insideText = "exists"
@@ -277,12 +274,6 @@ function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelPro
             insideText = "Init"
             title = "Starting animation on server..."
             fontWeight = 'normal'
-            break;
-        case "stopped":
-            color = "inherit";
-            progress = 100
-            insideText = "●"
-            title = "No such active animation found on server"
             break;
         case "error-cannot-start-existing":
         case "error-cannot-start-new":

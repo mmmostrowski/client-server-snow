@@ -72,9 +72,10 @@ async function askSnowEndpoint(action: SnowStreamEndpointAction, controller?: Ab
                 }
                 throw Error("Error respond with error!");
             }
-//             console.log(url, data);
+            // console.log(url, data);
             return data;
-        });
+        })
+        .catch((error: Error) => console.error(error));
 }
 
 export async function fetchSnowDataDetails(sessionId: string, controller?: AbortController): Promise<SnowStreamDetailsResponse> {

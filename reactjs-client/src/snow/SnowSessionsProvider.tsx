@@ -30,6 +30,22 @@ export const snowConstraints = {
     },
 };
 
+export type SessionErrorStatus =
+        | "error"
+        | "error-cannot-start-new"
+        | "error-cannot-start-existing"
+        | "error-cannot-stop";
+
+export type SessionStatus =
+        | "stopped-not-checked"
+        | "stopped-not-found"
+        | "stopped-found"
+        | "buffering"
+        | "playing"
+        | "initializing"
+        | "checking"
+        | SessionErrorStatus;
+
 interface SnowSession {
     sessionId: string,
     presetName: string,
@@ -38,16 +54,7 @@ interface SnowSession {
     fps: string,
     animationProgress: number,
     bufferLevel: number,
-    status: "stopped"
-        | "buffering"
-        | "playing"
-        | "initializing"
-        | "checking"
-        | "found"
-        | "error"
-        | "error-cannot-start-new"
-        | "error-cannot-start-existing"
-        | "error-cannot-stop",
+    status: SessionStatus,
     errorMsg: string|null,
 
     foundPresetName: string|null,
@@ -69,6 +76,7 @@ interface SnowSessionExtraState {
     cannotStartSession: boolean,
     hasSessionIdError: boolean,
     hasError: boolean,
+    isStopped: boolean,
 }
 
 interface ValidatedSnowSession extends SnowSession, SessionErrors {
@@ -184,7 +192,7 @@ function snowSessionsReducer(sessions: ProcessedSnowSession[], action: DispatchS
             }
             const draft = draftSession(changed, last);
 
-            console.log("changes:", sessionIdChangeAction.changes, "status change: " + changed.status);
+            console.log("changes:", sessionIdChangeAction.changes);
 
             return [
                ...sessions.slice(0, idx),
@@ -213,7 +221,7 @@ function createSession(initialSessionId: string): ProcessedSnowSession {
         fps: '' + snowConstraints.defaultFps,
         animationProgress: 0,
         bufferLevel: 0,
-        status: "stopped",
+        status: "stopped-not-checked",
         errorMsg: "",
 
         foundPresetName: null,
@@ -283,13 +291,22 @@ function sessionWithRevertedDraftChanges(session: ValidatedSnowSession): Process
 function postProcessedSession(isSessionIdChanged: boolean, session: ValidatedSnowSession): ProcessedSnowSession {
     return {
         ...session,
-        animationProgress: session.status === 'playing' ? session.animationProgress : 0,
-        isSessionExists: session.status === 'found' || session.status === 'error-cannot-start-existing',
-        cannotStartSession: session.status === 'error-cannot-start-new' || session.status === 'error-cannot-start-existing',
-        hasSessionIdError: session.sessionIdError !== null,
         isSessionIdChanged: isSessionIdChanged,
-        hasError: session.status === 'error'
+        hasSessionIdError: session.sessionIdError !== null,
+        animationProgress: session.status === 'playing' ? session.animationProgress : 0,
+        isSessionExists:
+               session.status === 'stopped-found'
+            || session.status === 'error-cannot-start-existing',
+        cannotStartSession:
+               session.status === 'error-cannot-start-new'
+            || session.status === 'error-cannot-start-existing',
+        hasError:
+               session.status === 'error'
             || session.status === 'error-cannot-start-new'
             || session.status === 'error-cannot-start-existing',
+        isStopped:
+               session.status === 'stopped-not-checked'
+            || session.status === 'stopped-not-found'
+            || session.status === 'stopped-found'
     };
 }

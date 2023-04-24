@@ -8,7 +8,7 @@ type UseSessionInputResponse = [
     () => boolean,
 ]
 
-export default function useSessionInput(sessionIdx: number, varName: string, value: string|number): UseSessionInputResponse {
+export default function useSessionInput(sessionIdx: number, varName: string, value: string|number, onChange?: (value:string|number) => void ): UseSessionInputResponse {
     const dispatch = useSnowSessionDispatch(sessionIdx);
     const valueRef = useRef<string|number>(value);
     const prevValueRef = useRef<string|number>(value);
@@ -59,6 +59,10 @@ export default function useSessionInput(sessionIdx: number, varName: string, val
         } else {
             dispatch({ type: 'accept-or-reject-session-changes' });
             needsSyncWithOutside(true);
+        }
+
+        if (onChange && isUnderEdit()) {
+            onChange(valueRef.current);
         }
     }
 

@@ -13,7 +13,8 @@ interface SnowConfigurationProps {
 }
 
 export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps): JSX.Element {
-    const { width: userWidth,
+    const { isSessionExists,
+          width: userWidth,
           height: userHeight,
           fps: userFps,
           presetName: userPresetName,
@@ -24,8 +25,11 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
     } = useDelayedSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
 
-    const isSessionExists: boolean = status === 'found' || status === 'error-cannot-start-existing';
-    const isEditable = status === 'stopped' || status === 'error-cannot-start-new';
+    const isEditable =
+           status === 'stopped-not-checked'
+        || status === 'stopped-not-found'
+        || status === 'error-cannot-start-new';
+
     const isAvailable = status !== 'checking' && status !== 'error';
     const width = isSessionExists ? foundWidth : userWidth;
     const height = isSessionExists ? foundHeight : userHeight;
@@ -116,21 +120,24 @@ function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
     const { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText } = props;
 
     const restoreOnceAvailableRef = useRef<boolean>(false);
-    const [
-        inputRef,
-        handleBlur,
-        handleChange
-    ] = useSessionInput(sessionIdx, varName, value);
+    const [ inputRef, handleBlur, handleChange ] = useSessionInput(sessionIdx, varName, value);
 
     useEffect(() => {
         if (!isAvailable) {
             inputRef.current.value = '?';
-            restoreOnceAvailableRef.current = true;
-        } else if (restoreOnceAvailableRef.current) {
-            restoreOnceAvailableRef.current = false;
+            restoreOnceAvailable(true);
+        } else if (restoreOnceAvailable()) {
             inputRef.current.value = value;
+            restoreOnceAvailable(false);
         }
     });
+
+    function restoreOnceAvailable(value?: boolean) {
+        return value === undefined
+            ? restoreOnceAvailableRef.current
+            : restoreOnceAvailableRef.current = value
+        ;
+    }
 
     return <TextField
         helperText={errorMsg != null ? errorMsg : helperText}
