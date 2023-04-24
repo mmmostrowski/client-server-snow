@@ -56,7 +56,7 @@ export default function SnowCanvas({ sessionIdx } : SnowCanvasProps) {
         }
     });
 
-    function clearBackground(ctx: CanvasRenderingContext2D) {
+    function clearBackground(ctx: CanvasRenderingContext2D): void {
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }

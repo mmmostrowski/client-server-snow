@@ -6,35 +6,38 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
 import useSessionInput from '../snow/snowSessionInput'
-import { snowConstraints, useDelayedSnowSession, useSnowSessionDispatch, useSnowSession } from '../snow/SnowSessionsProvider'
+import {
+    snowConstraints,
+    useDelayedSnowSession,
+    useSnowSessionDispatch,
+    useSnowSession
+} from '../snow/SnowSessionsProvider'
 
 interface SnowConfigurationProps {
     sessionIdx: number
 }
 
 export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps): JSX.Element {
-    const { isSessionExists,
-          width: userWidth,
-          height: userHeight,
-          fps: userFps,
-          presetName: userPresetName,
-          foundWidth, foundHeight, foundFps, foundPresetName,
+    const {
+        isSessionExists,
+        width: userWidth,
+        height: userHeight,
+        fps: userFps,
+        presetName: userPresetName,
+        foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSnowSession(sessionIdx);
-    const { status,
-          widthError, heightError, fpsError,
-    } = useDelayedSnowSession(sessionIdx);
+    const { status, widthError, heightError, fpsError } = useDelayedSnowSession(sessionIdx);
     const dispatch = useSnowSessionDispatch(sessionIdx);
-
+    const width = isSessionExists ? foundWidth : userWidth;
+    const height = isSessionExists ? foundHeight : userHeight;
+    const fps = isSessionExists ? foundFps : userFps;
+    const presetName = isSessionExists ? foundPresetName : userPresetName;
+    const isAvailable = status !== 'checking' && status !== 'error';
     const isEditable =
            status === 'stopped-not-checked'
         || status === 'stopped-not-found'
         || status === 'error-cannot-start-new';
 
-    const isAvailable = status !== 'checking' && status !== 'error';
-    const width = isSessionExists ? foundWidth : userWidth;
-    const height = isSessionExists ? foundHeight : userHeight;
-    const fps = isSessionExists ? foundFps : userFps;
-    const presetName = isSessionExists ? foundPresetName : userPresetName;
 
     function handlePresetChange(e : React.ChangeEvent<HTMLInputElement>) {
         dispatch({
@@ -118,7 +121,6 @@ type ConfigNumberFieldProps = {
 
 function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
     const { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText } = props;
-
     const restoreOnceAvailableRef = useRef<boolean>(false);
     const { inputRef, handleBlur, handleChange } = useSessionInput(sessionIdx, varName, value);
 
@@ -132,7 +134,7 @@ function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
         }
     });
 
-    function restoreOnceAvailable(value?: boolean) {
+    function restoreOnceAvailable(value?: boolean): boolean {
         return value === undefined
             ? restoreOnceAvailableRef.current
             : restoreOnceAvailableRef.current = value
@@ -149,7 +151,6 @@ function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
         disabled={!isEditable}
         inputRef={inputRef}
         onBlur={handleBlur}
-        sx={{ width: 180 }}
         label={label}
         autoComplete="off"
         variant="outlined"

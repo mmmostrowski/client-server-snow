@@ -5,10 +5,16 @@ type UseSessionInputResponse = {
     inputRef: MutableRefObject<any>,
     handleBlur: FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>,
     handleChange: FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>,
-    isUnderEdit: () => boolean,
 }
 
-export default function useSessionInput(sessionIdx: number, varName: string, value: string|number, onChange?: (value:string|number) => void ): UseSessionInputResponse {
+export default function useSessionInput(
+    sessionIdx: number,
+    varName: string,
+    value: string|number,
+    onChange: (value:string|number) => void = (value:string|number) => {},
+    onUnderEditChanged: (underEdit: boolean) => void = (underEdit: boolean) => {},
+): UseSessionInputResponse
+{
     const dispatch = useSnowSessionDispatch(sessionIdx);
     const valueRef = useRef<string|number>(value);
     const prevValueRef = useRef<string|number>(value);
@@ -61,7 +67,7 @@ export default function useSessionInput(sessionIdx: number, varName: string, val
             needsSyncWithOutside(true);
         }
 
-        if (onChange && isUnderEdit()) {
+        if (isUnderEdit()) {
             onChange(valueRef.current);
         }
     }
@@ -75,6 +81,9 @@ export default function useSessionInput(sessionIdx: number, varName: string, val
     }
 
     function isUnderEdit(value?: boolean): boolean {
+        if (value !== undefined) {
+            onUnderEditChanged(value);
+        }
         return refFlag(underEditRef, value);
     }
 
@@ -82,13 +91,13 @@ export default function useSessionInput(sessionIdx: number, varName: string, val
         return refFlag(needSyncRef, value);
     }
 
-    function runDelayed(callback: () => void) {
+    function runDelayed(callback: () => void): void {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
         timeoutRef.current = setTimeout(() => {
             callback();
-        }, 25);
+        }, 35);
     }
 
     function refFlag(ref: MutableRefObject<boolean>, value?: boolean): boolean {
@@ -99,6 +108,5 @@ export default function useSessionInput(sessionIdx: number, varName: string, val
         inputRef: inputRef,
         handleBlur: handleBlur,
         handleChange: handleChange,
-        isUnderEdit: () => isUnderEdit(),
     }
 }

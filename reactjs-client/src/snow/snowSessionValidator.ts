@@ -1,5 +1,5 @@
 
-export function validateSnowSessionId(sessionId : string) : string|null {
+export function validateSnowSessionId(sessionId : string): string|null {
     if (sessionId === "") {
         return "Cannot be empty";
     }
@@ -19,7 +19,7 @@ export function validateSnowSessionId(sessionId : string) : string|null {
     return null;
 }
 
-export function validateNumberBetween(value: string, min : number, max : number) : string|null {
+export function validateNumberBetween(value: string, min : number, max : number): string|null {
     const number = Number(value);
 
     if (isNaN(number)) {

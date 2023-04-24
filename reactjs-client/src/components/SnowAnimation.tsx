@@ -1,28 +1,19 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
-import { useSnowSession,
-        useDelayedSnowSession,
-        } from '../snow/SnowSessionsProvider'
-import { fetchSnowDataDetails,
-        startStreamSnowData,
-        stopStreamSnowData,
-        SnowAnimationConfiguration,
-        SnowStreamStartResponse,
-        SnowStreamStopResponse,
-        SnowStreamDetailsResponse
-        } from '../stream/snowEndpoint'
-import useSessionInput from '../snow/snowSessionInput'
-import { useSessionStatusUpdater,
-        SessionStatusUpdater,
-        useSessionErrorStatusUpdater,
-        SessionErrorStatusUpdater } from '../snow/snowSessionStatus'
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-import LinearProgress from '@mui/material/LinearProgress';
+import { useEffect, useState, useRef } from "react";
 import SnowCanvas from './SnowCanvas'
-import TextField from '@mui/material/TextField';
+import LinearProgress from '@mui/material/LinearProgress';
+import AnimationCircularProgress from './SnowAnimation/AnimationCircularProgress'
+import AnimationControlButtons from './SnowAnimation/AnimationControlButtons'
+import AnimationSessionId from './SnowAnimation/AnimationSessionId'
+import { useSnowSession } from '../snow/SnowSessionsProvider'
+import {
+    fetchSnowDataDetails,
+    SnowStreamDetailsResponse } from '../stream/snowEndpoint'
+import {
+    useSessionStatusUpdater,
+    SessionStatusUpdater,
+    useSessionErrorStatusUpdater,
+    SessionErrorStatusUpdater } from '../snow/snowSessionStatus'
 
 
 interface SnowAnimationProps {
@@ -32,101 +23,15 @@ interface SnowAnimationProps {
 
 export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnimationProps): JSX.Element {
     const {
-        status, hasError, isStopped,
-        sessionId, sessionIdError, hasSessionIdError, isSessionExists, cannotStartSession,
-        presetName, animationProgress,
-        validatedWidth: width, validatedHeight: height, validatedFps: fps,
-        foundWidth, foundHeight, foundFps, foundPresetName,
+        status, hasError,
+        sessionId, hasSessionIdError, cannotStartSession,
+        animationProgress,
     } = useSnowSession(sessionIdx);
     const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
     const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
-    const { status: delayedStatus } = useDelayedSnowSession(sessionIdx);
     const [ refreshCounter, setRefreshCounter ] = useState<number>(0);
+    const sessionIdUnderEditRef = useRef<boolean>(false);
 
-    const isStartActive: boolean =
-           isStopped
-        || hasError
-        || status === 'checking';
-
-    const isStopActive: boolean =
-           delayedStatus === 'buffering'
-        || delayedStatus === 'playing';
-
-    const isSessionIdInputActive: boolean = isStartActive;
-
-
-    function handleStart(): void {
-        if (isSessionExists) {
-            startExisting();
-        } else {
-            startNew();
-        }
-
-        function startExisting() {
-            start({
-                width: foundWidth,
-                height: foundHeight,
-                fps: foundFps,
-                presetName: foundPresetName,
-            })
-            .catch(( error: Error ) => {
-                setSessionErrorStatus(error, "error-cannot-start-existing");
-            });
-        }
-
-        function startNew() {
-            start({
-                  width: width,
-                  height: height,
-                  fps: fps,
-                  presetName: presetName,
-              })
-            .catch(( error: Error ) => {
-                setSessionErrorStatus(error, "error-cannot-start-new");
-            });
-        }
-
-        function start(animationParams: SnowAnimationConfiguration): Promise<void> {
-            if (isSessionIdUnderEdit() || hasSessionIdError) {
-                return;
-            }
-
-            setSessionStatus('initializing');
-
-            return startStreamSnowData({
-                sessionId: sessionId,
-                ...animationParams,
-            })
-            .then(( data: SnowStreamStartResponse ) => {
-                if (hasSessionIdError) {
-                    return;
-                }
-
-                setSessionStatus('playing', {
-                    ...animationParams,
-                    validatedWidth: animationParams.width,
-                    validatedHeight: animationParams.height,
-                    validatedFps: animationParams.fps,
-                });
-            })
-        }
-    }
-
-    function handleStop(): void {
-        stopStreamSnowData({
-            sessionId: sessionId,
-        })
-        .then(( data: SnowStreamStopResponse ) => {
-            setSessionStatus('stopped-not-found');
-        })
-        .catch(( error: Error ) => {
-            setSessionErrorStatus(error, "error-cannot-stop");
-        });
-    }
-
-    function handleSessionIdChange(value: string) {
-        setSessionStatus("stopped-not-checked");
-    }
 
     // Periodical session checking
     useEffect(() => {
@@ -164,7 +69,8 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
 
                 if (status === 'checking'
                     || status === 'stopped-not-found'
-                    || status === 'stopped-not-checked') {
+                    || status === 'stopped-not-checked')
+                {
                     setSessionStatus('stopped-found', {
                         foundWidth: data.width,
                         foundHeight: data.height,
@@ -182,52 +88,16 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
         };
     }, [
         status, setSessionStatus, sessionId, refreshCounter,
-        hasError, cannotStartSession, hasSessionIdError, setSessionErrorStatus,
+        hasError, hasSessionIdError, setSessionErrorStatus,
+        cannotStartSession,
     ]);
-
-    const {
-        inputRef,
-        handleBlur: handleSessionIdInputBlur,
-        handleChange: handleSessionIdInputChange,
-        isUnderEdit: isSessionIdUnderEdit
-    } = useSessionInput(sessionIdx, 'sessionId', sessionId, handleSessionIdChange);
 
     return (
         <div className="snow-animation" >
             <div className="animation-header">
-
-                <CircularProgressWithLabel sessionIdx={sessionIdx} />
-
-                <TextField
-                    InputLabelProps={{ shrink: true }}
-                    inputRef={inputRef}
-                    variant="standard"
-                    label="Session id"
-                    defaultValue={sessionId}
-                    required
-                    disabled={!isSessionIdInputActive}
-                    error={hasSessionIdError}
-                    helperText={sessionIdError}
-                    onChange={handleSessionIdInputChange}
-                    onBlur={handleSessionIdInputBlur}
-                    style={{ minWidth: 70 }}
-                    autoComplete="off"
-                />
-
-                <Button
-                    className="start-button"
-                    variant="contained"
-                    title={isSessionExists ? "Active animation found on server. Attach to it!" : "Start new animation on server!"}
-                    onClick={handleStart}
-                    disabled={!isStartActive}>{isSessionExists ? "Play" : "Start"}</Button>
-
-                <Button
-                    className="stop-button"
-                    variant="contained"
-                    title="Stop animation on server!"
-                    onClick={handleStop}
-                    disabled={!isStopActive}>Stop</Button>
-
+                <AnimationCircularProgress sessionIdx={sessionIdx}/>
+                <AnimationSessionId sessionIdx={sessionIdx} underEditRef={sessionIdUnderEditRef} />
+                <AnimationControlButtons sessionIdx={sessionIdx} isLockedRef={sessionIdUnderEditRef}/>
             </div>
             <SnowCanvas sessionIdx={sessionIdx} />
             <LinearProgress value={animationProgress}
@@ -236,108 +106,3 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
         </div>
     )
 }
-
-interface CircularProgressWithLabelProps {
-    sessionIdx: number;
-}
-
-function CircularProgressWithLabel({ sessionIdx } : CircularProgressWithLabelProps) {
-    const { status, errorMsg, bufferLevel, animationProgress } = useDelayedSnowSession(sessionIdx);
-
-    let color : "primary" | "error" | "info" | "success" | "inherit" | "secondary" | "warning" = "primary";
-    let fontWeight
-    let progress
-    let title
-    let insideText
-
-    switch (status) {
-        case "checking":
-            color = "secondary";
-            progress = null;
-            insideText = ""
-            title = "Checking on server..."
-            fontWeight = 'normal'
-            break;
-        case "stopped-not-checked":
-        case "stopped-not-found":
-            color = "inherit";
-            progress = 100
-            insideText = "●"
-            title = "No such active animation found on server"
-            break;
-        case "stopped-found":
-            color = "success";
-            progress = 100;
-            insideText = "exists"
-            title = "Animation session exists on server!"
-            fontWeight = 'bold'
-            break;
-        case "initializing":
-            color = "primary";
-            progress = null;
-            insideText = "Init"
-            title = "Starting animation on server..."
-            fontWeight = 'normal'
-            break;
-        case "error-cannot-start-existing":
-        case "error-cannot-start-new":
-            color = "error";
-            progress = 100;
-            insideText = "error";
-            title = `Error: ${errorMsg}`;
-            fontWeight = "bold";
-            break;
-        case "buffering":
-            color = "primary";
-            progress = bufferLevel;
-            insideText = `${Math.round(progress)}%`
-            title = "Buffering..."
-            break;
-        case "playing":
-            color = "success";
-            progress = animationProgress;
-            insideText = '▶'
-            title = "Animation playing..."
-            fontWeight = "bold";
-            break;
-        case "error":
-            color = "error";
-            progress = 100;
-            insideText = "error";
-            title = `Error: ${errorMsg}`;
-            fontWeight = "bold";
-            break;
-    }
-
-    return (
-        <Box sx={{ position: 'relative', display: 'inline-flex', textAlign: "right", marginRight: 0, padding: 1 }} >
-            <CircularProgress
-                variant={ progress !== null ? "determinate" : "indeterminate"}
-                color={color}
-                value={progress}
-            />
-            <Box title={title}
-                 sx={{
-                    top: 0,
-                    left: 0,
-                    bottom: 0,
-                    right: 0,
-                    position: 'absolute',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: 56,
-                }} >
-                <Typography
-                    fontSize="10px"
-                    variant="caption"
-                    component="div"
-                    color={color}
-                    sx={{ fontWeight: fontWeight }} >
-                    {insideText}
-                </Typography>
-            </Box>
-        </Box>
-    );
-}
-

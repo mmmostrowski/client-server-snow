@@ -114,6 +114,10 @@ body,
     margin-bottom: 30px;
 }
 
+.snow-configuration-wrapper .MuiTextField-root {
+    width: 180px;
+}
+
 .snow-animation-wrapper {
     display: inline-block;
     width: calc(100% - 241px);
@@ -124,3 +128,29 @@ body,
 .snow-configuration-wrapper > .MuiPaper-root {
     margin-top: 0px;
 }
+
+.snow-animation-circular-progress {
+    position: relative;
+    display: inline-flex;
+    text-align: right;
+    margin-right: 0px;
+    padding: 8px;
+}
+
+.snow-animation-circular-progress-inside{
+    top: 0px;
+    left: 0px;
+    bottom: 0px;
+    right: 0px;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 56px;
+}
+
+.snow-animation-circular-progress-inside p {
+    font-weight: bold;
+    font-size: 10px;
+}
+

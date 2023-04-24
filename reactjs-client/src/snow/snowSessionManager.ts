@@ -11,16 +11,19 @@ export function useSessionsManager(): SessionsManager {
     const dispatch = useSnowSessionsDispatch();
     const createdCounter = useRef<number>(1);
 
+    function uniqueSessionId(): string {
+        let newSessionId: string;
+        do {
+            newSessionId = 'session-' + createdCounter.current++;
+        } while( sessions.map(s => s.sessionId).indexOf(newSessionId) !== -1);
+        return newSessionId;
+    }
+
     return {
         createNewSession: () => {
-            let newSessionId: string;
-            do {
-                newSessionId = 'session-' + createdCounter.current++;
-            } while( sessions.map(s => s.sessionId).indexOf(newSessionId) !== -1);
-
             return dispatch({
                 type: 'new-session',
-                newSessionId: newSessionId,
+                newSessionId: uniqueSessionId(),
         })},
         deleteSession: (sessionIdx: number) => dispatch({
             type: 'delete-session',
