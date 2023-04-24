@@ -185,8 +185,12 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
         hasError, cannotStartSession, hasSessionIdError, setSessionErrorStatus,
     ]);
 
-    const [ inputRef, handleSessionIdInputBlur, handleSessionIdInputChange, isSessionIdUnderEdit ] =
-            useSessionInput(sessionIdx, 'sessionId', sessionId, handleSessionIdChange);
+    const {
+        inputRef,
+        handleBlur: handleSessionIdInputBlur,
+        handleChange: handleSessionIdInputChange,
+        isUnderEdit: isSessionIdUnderEdit
+    } = useSessionInput(sessionIdx, 'sessionId', sessionId, handleSessionIdChange);
 
     return (
         <div className="snow-animation" >

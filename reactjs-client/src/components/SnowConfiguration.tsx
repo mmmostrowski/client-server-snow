@@ -120,7 +120,7 @@ function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
     const { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText } = props;
 
     const restoreOnceAvailableRef = useRef<boolean>(false);
-    const [ inputRef, handleBlur, handleChange ] = useSessionInput(sessionIdx, varName, value);
+    const { inputRef, handleBlur, handleChange } = useSessionInput(sessionIdx, varName, value);
 
     useEffect(() => {
         if (!isAvailable) {
