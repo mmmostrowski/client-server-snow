@@ -30,12 +30,6 @@ export const snowConstraints = {
     },
 };
 
-export type SessionErrorStatus =
-        | "error"
-        | "error-cannot-start-new"
-        | "error-cannot-start-existing"
-        | "error-cannot-stop";
-
 export type SessionStatus =
         | "stopped-not-checked"
         | "stopped-not-found"
@@ -45,6 +39,12 @@ export type SessionStatus =
         | "initializing"
         | "checking"
         | SessionErrorStatus;
+
+export type SessionErrorStatus =
+        | "error"
+        | "error-cannot-start-new"
+        | "error-cannot-start-existing"
+        | "error-cannot-stop";
 
 interface SnowSession {
     sessionId: string,
@@ -72,7 +72,6 @@ interface SessionErrors {
 
 interface SnowSessionExtraState {
     isSessionExists: boolean|null,
-    isSessionIdChanged: boolean,
     cannotStartSession: boolean,
     hasSessionIdError: boolean,
     hasError: boolean,
@@ -93,15 +92,15 @@ type DispatchSessionAction =
     | DispatchChangeSessionAction
     | DispatchDeleteSessionAction
 
+interface DispatchNewSessionAction {
+    type: string,
+    newSessionId: string,
+}
+
 interface DispatchChangeSessionAction {
     type: string,
     sessionIdx : number,
     changes: object,
-}
-
-interface DispatchNewSessionAction {
-    type: string,
-    newSessionId: string,
 }
 
 interface DispatchDeleteSessionAction {
@@ -192,7 +191,7 @@ function snowSessionsReducer(sessions: ProcessedSnowSession[], action: DispatchS
             }
             const draft = draftSession(changed, last);
 
-            console.log("changes:", sessionIdChangeAction.changes);
+//             console.log("changes:", sessionIdChangeAction.changes);
 
             return [
                ...sessions.slice(0, idx),
@@ -213,12 +212,14 @@ function snowSessionsReducer(sessions: ProcessedSnowSession[], action: DispatchS
 }
 
 function createSession(initialSessionId: string): ProcessedSnowSession {
-    return sessionWithCommittedDraftChanges(false, {
+    return sessionWithCommittedDraftChanges({
         sessionId : initialSessionId,
+
         presetName: snowConstraints.defaultPreset,
         width: '' + snowConstraints.defaultWidth,
         height: '' + snowConstraints.defaultHeight,
         fps: '' + snowConstraints.defaultFps,
+
         animationProgress: 0,
         bufferLevel: 0,
         status: "stopped-not-checked",
@@ -232,8 +233,7 @@ function createSession(initialSessionId: string): ProcessedSnowSession {
 }
 
 function draftSession(draft: SnowSession, last: ValidatedSnowSession): ProcessedSnowSession {
-    const isSessionIdChanged = draft.sessionId !== last.validatedSessionId;
-    return postProcessedSession(isSessionIdChanged, {
+    return postProcessedSession({
         ...last,
         ...draft,
         ...( sessionErrors(draft) ),
@@ -250,19 +250,18 @@ function sessionErrors(draft: SnowSession): SessionErrors {
 }
 
 function sessionWithAppliedChanges(session: ValidatedSnowSession): ProcessedSnowSession {
-    const isSessionIdChanged = session.sessionId !== session.validatedSessionId;
     const numOfErrors = Object.values(sessionErrors(session))
          .filter( value => value !== null )
          .length;
     if (numOfErrors === 0) {
-        return sessionWithCommittedDraftChanges(isSessionIdChanged, session);
+        return sessionWithCommittedDraftChanges(session);
     } else {
         return sessionWithRevertedDraftChanges(session);
     }
 }
 
-function sessionWithCommittedDraftChanges(isSessionIdChanged: boolean, draft: SnowSession): ProcessedSnowSession {
-    return postProcessedSession(isSessionIdChanged, {
+function sessionWithCommittedDraftChanges(draft: SnowSession): ProcessedSnowSession {
+    return postProcessedSession({
         ...draft,
         ...( sessionErrors(draft) ),
         validatedSessionId: draft.sessionId,
@@ -273,8 +272,6 @@ function sessionWithCommittedDraftChanges(isSessionIdChanged: boolean, draft: Sn
 }
 
 function sessionWithRevertedDraftChanges(session: ValidatedSnowSession): ProcessedSnowSession {
-    const isSessionIdChanged = session.sessionId !== session.validatedSessionId;
-
     const revertedSession={
         ...session,
         sessionId: session.validatedSessionId,
@@ -282,16 +279,15 @@ function sessionWithRevertedDraftChanges(session: ValidatedSnowSession): Process
         height: '' + session.validatedHeight,
         fps: '' + session.validatedFps,
     };
-    return postProcessedSession(isSessionIdChanged, {
+    return postProcessedSession({
         ...revertedSession,
         ...( sessionErrors(revertedSession) ),
     });
 }
 
-function postProcessedSession(isSessionIdChanged: boolean, session: ValidatedSnowSession): ProcessedSnowSession {
+function postProcessedSession(session: ValidatedSnowSession): ProcessedSnowSession {
     return {
         ...session,
-        isSessionIdChanged: isSessionIdChanged,
         hasSessionIdError: session.sessionIdError !== null,
         animationProgress: session.status === 'playing' ? session.animationProgress : 0,
         isSessionExists:

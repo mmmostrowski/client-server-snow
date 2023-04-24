@@ -1,35 +1,18 @@
 import * as React from "react";
 import Button from '@mui/material/Button';
 import { useSnowSession, useDelayedSnowSession } from '../../snow/SnowSessionsProvider'
-import {
-    useSessionStatusUpdater,
-    SessionStatusUpdater,
-    useSessionErrorStatusUpdater,
-    SessionErrorStatusUpdater } from '../../snow/snowSessionStatus'
-import {
-    startStreamSnowData,
-    stopStreamSnowData,
-    SnowAnimationConfiguration,
-    SnowStreamStartResponse,
-    SnowStreamStopResponse } from '../../stream/snowEndpoint'
 
 
 interface AnimationControlButtonsProps {
     sessionIdx: number,
-    isLocked: boolean,
+    handleStart: () => void,
+    handleStop: () => void,
 }
 
-export default function AnimationControlButtons({ sessionIdx, isLocked }: AnimationControlButtonsProps): JSX.Element {
-    const {
-        isStopped,
-        sessionId, hasSessionIdError, isSessionExists,
-        presetName,
-        validatedWidth: width, validatedHeight: height, validatedFps: fps,
-        foundWidth, foundHeight, foundFps, foundPresetName,
-    } = useSnowSession(sessionIdx);
+export default function AnimationControlButtons(props: AnimationControlButtonsProps): JSX.Element {
+    const { sessionIdx, handleStart, handleStop } = props;
+    const { isStopped, isSessionExists } = useSnowSession(sessionIdx);
     const { status } = useDelayedSnowSession(sessionIdx);
-    const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
-    const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
 
     const isStartActive: boolean =
            isStopped
@@ -40,84 +23,6 @@ export default function AnimationControlButtons({ sessionIdx, isLocked }: Animat
     const isStopActive: boolean =
            status === "buffering"
         || status === "playing";
-
-
-    function handleStart(): void {
-        if (isSessionExists) {
-            startExisting();
-        } else {
-            startNew();
-        }
-
-        function startExisting(): void {
-            start({
-                width: foundWidth,
-                height: foundHeight,
-                fps: foundFps,
-                presetName: foundPresetName,
-            })
-            .catch(( error: Error ) => {
-                setSessionErrorStatus(error, "error-cannot-start-existing");
-            });
-        }
-
-        function startNew(): void {
-            start({
-                  width: width,
-                  height: height,
-                  fps: fps,
-                  presetName: presetName,
-            })
-            .catch(( error: Error ) => {
-                setSessionErrorStatus(error, "error-cannot-start-new");
-            });
-        }
-
-        function start(animationParams: SnowAnimationConfiguration): Promise<void> {
-            if (!isActive()) {
-                return Promise.resolve();
-            }
-
-            setSessionStatus('initializing');
-
-            return startStreamSnowData({
-                sessionId: sessionId,
-                ...animationParams,
-            })
-            .then(( data: SnowStreamStartResponse ) => {
-                if (!isActive()) {
-                    return;
-                }
-
-                setSessionStatus('playing', {
-                    ...animationParams,
-                    validatedWidth: animationParams.width,
-                    validatedHeight: animationParams.height,
-                    validatedFps: animationParams.fps,
-                });
-            })
-        }
-
-    }
-
-    function handleStop(): void {
-        stopStreamSnowData({
-            sessionId: sessionId,
-        })
-        .then(( data: SnowStreamStopResponse ) => {
-            setSessionStatus('stopped-not-found');
-        })
-        .catch(( error: Error ) => {
-            if (!isActive()) {
-                return;
-            }
-            setSessionErrorStatus(error, "error-cannot-stop");
-        });
-    }
-
-    function isActive(): boolean {
-        return !hasSessionIdError && !isLocked;
-    }
 
     return (
         <>

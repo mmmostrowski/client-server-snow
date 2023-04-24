@@ -1,46 +1,52 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import SnowCanvas from './SnowCanvas'
-import LinearProgress from '@mui/material/LinearProgress';
-import AnimationCircularProgress from './SnowAnimation/AnimationCircularProgress'
-import AnimationControlButtons from './SnowAnimation/AnimationControlButtons'
-import AnimationSessionId from './SnowAnimation/AnimationSessionId'
+import AnimationPanel from './SnowAnimation/AnimationPanel'
 import { useSnowSession } from '../snow/SnowSessionsProvider'
 import {
+    startStreamSnowData,
+    stopStreamSnowData,
     fetchSnowDataDetails,
-    SnowStreamDetailsResponse } from '../stream/snowEndpoint'
+    SnowAnimationConfiguration,
+    SnowStreamStartResponse,
+    SnowStreamStopResponse,
+    SnowStreamDetailsResponse,
+} from '../stream/snowEndpoint'
 import {
     useSessionStatusUpdater,
     SessionStatusUpdater,
     useSessionErrorStatusUpdater,
-    SessionErrorStatusUpdater } from '../snow/snowSessionStatus'
+    SessionErrorStatusUpdater
+} from '../snow/snowSessionStatus'
 
 
 interface SnowAnimationProps {
     sessionIdx: number,
-    refreshPeriodMs?: number
+    refreshEveryMs?: number
 }
 
-export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnimationProps): JSX.Element {
+export default function SnowAnimation({ sessionIdx, refreshEveryMs } : SnowAnimationProps): JSX.Element {
     const {
         status, hasError,
-        sessionId, hasSessionIdError, cannotStartSession,
-        animationProgress,
+        sessionId, isSessionExists, hasSessionIdError, cannotStartSession,
+        presetName, animationProgress,
+        validatedWidth: width, validatedHeight: height, validatedFps: fps,
+        foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSnowSession(sessionIdx);
     const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
     const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
     const [ refreshCounter, setRefreshCounter ] = useState<number>(0);
     const [ isLocked, setIsLocked ] = useState(false);
+    const isActive = !hasSessionIdError && !isLocked;
 
 
     // Periodical session checking
     useEffect(() => {
-        if (refreshPeriodMs === undefined) {
+        if (refreshEveryMs === undefined) {
             return;
         }
         const handler = setTimeout(() => {
               setRefreshCounter((c: number) => c + 1);
-        }, refreshPeriodMs);
+        }, refreshEveryMs);
         return () => {
             clearTimeout(handler);
         };
@@ -95,21 +101,93 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
         cannotStartSession,
     ]);
 
-    function handleIsEditingSessionId(underEdit: boolean) {
-        setIsLocked(underEdit);
+    function handleStart(): void {
+        if (isSessionExists) {
+            startExisting();
+        } else {
+            startNew();
+        }
+
+        function startExisting(): void {
+            start({
+                width: foundWidth,
+                height: foundHeight,
+                fps: foundFps,
+                presetName: foundPresetName,
+            })
+            .catch(( error: Error ) => {
+                if (!isActive) {
+                    return;
+                }
+                setSessionErrorStatus(error, "error-cannot-start-existing");
+            });
+        }
+
+        function startNew(): void {
+            start({
+                  width: width,
+                  height: height,
+                  fps: fps,
+                  presetName: presetName,
+            })
+            .catch(( error: Error ) => {
+                if (!isActive) {
+                    return;
+                }
+                setSessionErrorStatus(error, "error-cannot-start-new");
+            });
+        }
+
+        function start(animationParams: SnowAnimationConfiguration): Promise<void> {
+            if (!isActive) {
+                return Promise.resolve();
+            }
+
+            setSessionStatus('initializing');
+
+            return startStreamSnowData({
+                sessionId: sessionId,
+                ...animationParams,
+            })
+            .then(( data: SnowStreamStartResponse ) => {
+                if (!isActive) {
+                    return;
+                }
+
+                setSessionStatus('playing', {
+                    ...animationParams,
+                    validatedWidth: animationParams.width,
+                    validatedHeight: animationParams.height,
+                    validatedFps: animationParams.fps,
+                });
+            })
+        }
+
     }
 
-    return (
-        <div className="snow-animation" >
-            <div className="animation-header">
-                <AnimationCircularProgress sessionIdx={sessionIdx}/>
-                <AnimationSessionId sessionIdx={sessionIdx} isEditing={handleIsEditingSessionId} />
-                <AnimationControlButtons sessionIdx={sessionIdx} isLocked={isLocked}/>
-            </div>
-            <SnowCanvas sessionIdx={sessionIdx} />
-            <LinearProgress value={animationProgress}
-                title="Animation progress"
-                variant="determinate" />
-        </div>
-    )
+    function handleStop(): void {
+        stopStreamSnowData({
+            sessionId: sessionId,
+        })
+        .then(( data: SnowStreamStopResponse ) => {
+            if (!isActive) {
+                return;
+            }
+            setSessionStatus('stopped-not-found');
+        })
+        .catch(( error: Error ) => {
+            if (!isActive) {
+                return;
+            }
+            setSessionErrorStatus(error, "error-cannot-stop");
+        });
+    }
+
+    return <AnimationPanel
+        sessionIdx={sessionIdx}
+        handleIsEditingSessionId={(underEdit: boolean) => setIsLocked(underEdit)}
+        animationProgress={animationProgress}
+        handleStart={handleStart}
+        handleStop={handleStop}
+     />
 }
