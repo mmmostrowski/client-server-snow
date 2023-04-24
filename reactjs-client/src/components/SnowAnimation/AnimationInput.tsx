@@ -1,28 +1,32 @@
-import { useEffect, useRef, MutableRefObject, FocusEvent, FocusEventHandler } from "react";
-import { useSnowSessionDispatch } from '../snow/SnowSessionsProvider'
+import * as React from "react";
+import TextField from '@mui/material/TextField';
+import { TextFieldProps } from '@mui/material';
+import { useEffect, useRef, MutableRefObject, FocusEvent } from "react";
+import { useSnowSessionDispatch } from '../../snow/SnowSessionsProvider'
 
-type UseSessionInputResponse = {
-    inputRef: MutableRefObject<any>,
-    handleBlur: FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>,
-    handleChange: FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>,
-}
-
-export default function useSessionInput(
+type UserSessionInputProps = TextFieldProps & {
     sessionIdx: number,
     varName: string,
-    value: string|number,
-    onChange: (value:string|number) => void = (value:string|number) => {},
-    onUnderEditChanged: (underEdit: boolean) => void = (underEdit: boolean) => {},
-): UseSessionInputResponse
-{
+    varValue: string|number,
+    onChangeValue?: (value:string|number) => void,
+    isEditing?: (underEdit: boolean) => void,
+}
+
+export default function AnimationInput(props: UserSessionInputProps): JSX.Element {
+    const defaults = {
+        onChangeValue: (value: string|number) => {},
+        isEditing: (underEdit: boolean) => {},
+    };
+
+    const { sessionIdx, varName, varValue, onChangeValue, isEditing, ...childProps } = { ...defaults, ...props };
     const dispatch = useSnowSessionDispatch(sessionIdx);
-    const valueRef = useRef<string|number>(value);
-    const prevValueRef = useRef<string|number>(value);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const valueRef = useRef<string|number>(varValue);
+    const prevValueRef = useRef<string|number>(varValue);
     const needSyncRef = useRef<boolean>(true);
     const underEditRef = useRef<boolean>(false);
     const underFocusRef = useRef<boolean>(false);
     const timeoutRef = useRef<ReturnType<typeof setTimeout> >(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isValueChangedOutside() || needsSyncWithOutside()) {
@@ -32,10 +36,10 @@ export default function useSessionInput(
 
     function synchronizeValue(): void {
         needsSyncWithOutside(false);
-        prevValueRef.current = value;
-        valueRef.current = value;
+        prevValueRef.current = varValue;
+        valueRef.current = varValue;
         if (inputRef.current) {
-            inputRef.current.value = '' + value;
+            inputRef.current.value = '' + varValue;
         }
     }
 
@@ -67,13 +71,13 @@ export default function useSessionInput(
             needsSyncWithOutside(true);
         }
 
-        if (isUnderEdit()) {
-            onChange(valueRef.current);
+        if (isUnderEdit() && onChangeValue) {
+            onChangeValue(valueRef.current);
         }
     }
 
     function isValueChangedOutside(): boolean {
-        return prevValueRef.current !== value;
+        return prevValueRef.current !== varValue;
     }
 
     function isFocused(value?: boolean): boolean {
@@ -82,7 +86,7 @@ export default function useSessionInput(
 
     function isUnderEdit(value?: boolean): boolean {
         if (value !== undefined) {
-            onUnderEditChanged(value);
+            isEditing(value);
         }
         return refFlag(underEditRef, value);
     }
@@ -104,9 +108,10 @@ export default function useSessionInput(
         return value === undefined ? ref.current : ref.current = value;
     }
 
-    return {
-        inputRef: inputRef,
-        handleBlur: handleBlur,
-        handleChange: handleChange,
-    }
+    return <TextField
+        {...childProps}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        inputRef={inputRef}
+    />;
 }

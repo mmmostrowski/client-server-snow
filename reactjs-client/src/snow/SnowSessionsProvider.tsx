@@ -17,7 +17,7 @@ export const snowConstraints = {
 
     minFps: 1,
     defaultFps: 25,
-    maxFps: 66,
+    maxFps: 60,
 
     defaultPreset: "massiveSnow",
     presets: {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import SnowCanvas from './SnowCanvas'
 import LinearProgress from '@mui/material/LinearProgress';
 import AnimationCircularProgress from './SnowAnimation/AnimationCircularProgress'
@@ -18,7 +18,7 @@ import {
 
 interface SnowAnimationProps {
     sessionIdx: number,
-    refreshPeriodMs: number
+    refreshPeriodMs?: number
 }
 
 export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnimationProps): JSX.Element {
@@ -30,13 +30,16 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
     const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
     const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
     const [ refreshCounter, setRefreshCounter ] = useState<number>(0);
-    const sessionIdUnderEditRef = useRef<boolean>(false);
+    const [ isLocked, setIsLocked ] = useState(false);
 
 
     // Periodical session checking
     useEffect(() => {
+        if (refreshPeriodMs === undefined) {
+            return;
+        }
         const handler = setTimeout(() => {
-             setRefreshCounter((c: number) => c + 1);
+              setRefreshCounter((c: number) => c + 1);
         }, refreshPeriodMs);
         return () => {
             clearTimeout(handler);
@@ -92,12 +95,16 @@ export default function SnowAnimation({ sessionIdx, refreshPeriodMs } : SnowAnim
         cannotStartSession,
     ]);
 
+    function handleIsEditingSessionId(underEdit: boolean) {
+        setIsLocked(underEdit);
+    }
+
     return (
         <div className="snow-animation" >
             <div className="animation-header">
                 <AnimationCircularProgress sessionIdx={sessionIdx}/>
-                <AnimationSessionId sessionIdx={sessionIdx} underEditRef={sessionIdUnderEditRef} />
-                <AnimationControlButtons sessionIdx={sessionIdx} isLockedRef={sessionIdUnderEditRef}/>
+                <AnimationSessionId sessionIdx={sessionIdx} isEditing={handleIsEditingSessionId} />
+                <AnimationControlButtons sessionIdx={sessionIdx} isLocked={isLocked}/>
             </div>
             <SnowCanvas sessionIdx={sessionIdx} />
             <LinearProgress value={animationProgress}

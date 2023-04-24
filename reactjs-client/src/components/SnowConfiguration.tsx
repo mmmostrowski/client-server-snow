@@ -1,11 +1,9 @@
 import * as React from "react";
-import { useEffect, useRef } from "react";
-import TextField from '@mui/material/TextField';
 import Container from '@mui/material/Container';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
-import useSessionInput from '../snow/snowSessionInput'
+import AnimationInput from './SnowAnimation/AnimationInput'
 import {
     snowConstraints,
     useDelayedSnowSession,
@@ -121,36 +119,18 @@ type ConfigNumberFieldProps = {
 
 function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
     const { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText } = props;
-    const restoreOnceAvailableRef = useRef<boolean>(false);
-    const { inputRef, handleBlur, handleChange } = useSessionInput(sessionIdx, varName, value);
 
-    useEffect(() => {
-        if (!isAvailable) {
-            inputRef.current.value = '?';
-            restoreOnceAvailable(true);
-        } else if (restoreOnceAvailable()) {
-            inputRef.current.value = value;
-            restoreOnceAvailable(false);
-        }
-    });
+    return <AnimationInput
+        sessionIdx={sessionIdx}
+        varName={varName}
+        varValue={isAvailable ? value : '?'}
 
-    function restoreOnceAvailable(value?: boolean): boolean {
-        return value === undefined
-            ? restoreOnceAvailableRef.current
-            : restoreOnceAvailableRef.current = value
-        ;
-    }
-
-    return <TextField
         helperText={errorMsg != null ? errorMsg : helperText}
         defaultValue={isAvailable ? value : ""}
         inputProps={{ inputMode: 'numeric' }}
         InputLabelProps={{ shrink: true }}
         error={errorMsg != null}
-        onChange={handleChange}
         disabled={!isEditable}
-        inputRef={inputRef}
-        onBlur={handleBlur}
         label={label}
         autoComplete="off"
         variant="outlined"

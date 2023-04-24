@@ -1,5 +1,4 @@
 import * as React from "react";
-import { MutableRefObject } from 'react';
 import Button from '@mui/material/Button';
 import { useSnowSession, useDelayedSnowSession } from '../../snow/SnowSessionsProvider'
 import {
@@ -17,10 +16,10 @@ import {
 
 interface AnimationControlButtonsProps {
     sessionIdx: number,
-    isLockedRef: MutableRefObject<boolean>,
+    isLocked: boolean,
 }
 
-export default function AnimationControlButtons({ sessionIdx, isLockedRef }: AnimationControlButtonsProps): JSX.Element {
+export default function AnimationControlButtons({ sessionIdx, isLocked }: AnimationControlButtonsProps): JSX.Element {
     const {
         isStopped,
         sessionId, hasSessionIdError, isSessionExists,
@@ -117,7 +116,7 @@ export default function AnimationControlButtons({ sessionIdx, isLockedRef }: Ani
     }
 
     function isActive(): boolean {
-        return !hasSessionIdError && !isLockedRef.current;
+        return !hasSessionIdError && !isLocked;
     }
 
     return (
