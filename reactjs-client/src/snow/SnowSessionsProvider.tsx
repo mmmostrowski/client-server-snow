@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useContext, createContext, useReducer, useState, useEffect, useCallback, PropsWithChildren, Reducer } from 'react';
+import { useContext, createContext, useReducer, useState, useEffect, useCallback, useRef, PropsWithChildren, Reducer } from 'react';
 import { validateSnowSessionId, validateNumberBetween } from './snowSessionValidator';
 
 export const SnowSessionsContext = createContext([]);
@@ -16,7 +16,7 @@ export const snowConstraints = {
     maxHeight: 150,
 
     minFps: 1,
-    defaultFps: 25,
+    defaultFps: 33,
     maxFps: 60,
 
     defaultPreset: "massiveSnow",
@@ -160,14 +160,20 @@ export function useSnowSessionDispatch(sessionIdx : number): (action: DispatchSe
 export function useDelayedSnowSession(sessionIdx: number, delayMs: number = 70): ProcessedSnowSession {
     const targetSession = useSnowSession(sessionIdx);
     const [ currentSession, setCurrentSession ] = useState(targetSession);
+    const isWaitingRef = useRef<boolean>(false);
+    const targetSessionRef = useRef<ProcessedSnowSession>(targetSession);
+
+    targetSessionRef.current = targetSession;
 
     useEffect(() => {
+        if (isWaitingRef.current) {
+            return;
+        }
+        isWaitingRef.current = true;
         const handler = setTimeout(() => {
-            setCurrentSession(targetSession);
+            setCurrentSession(targetSessionRef.current);
+            isWaitingRef.current = false;
         }, delayMs);
-        return () => {
-            clearTimeout(handler);
-        };
     }, [ targetSession, delayMs ]);
 
     return currentSession;
@@ -191,7 +197,7 @@ function snowSessionsReducer(sessions: ProcessedSnowSession[], action: DispatchS
             }
             const draft = draftSession(changed, last);
 
-//             console.log("changes:", sessionIdChangeAction.changes);
+            console.log("changes:", sessionIdChangeAction.changes);
 
             return [
                ...sessions.slice(0, idx),

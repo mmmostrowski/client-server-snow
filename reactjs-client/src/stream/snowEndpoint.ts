@@ -1,3 +1,4 @@
+import { Client, IMessage } from '@stomp/stompjs';
 
 const snowEndpointUrl="http://127.0.0.1:8080"
 
@@ -8,59 +9,61 @@ export interface SnowAnimationConfiguration {
     fps: number,
 }
 
-interface SnowStreamEndpointAction {
-    action: string,
-    sessionId: string,
-    fps?: number,
-    width?: number,
-    height?: number,
-    presetName?: string,
-}
-
-interface SnowStreamEndpointResponse {
+interface EndpointResponse {
     status: boolean,
     sessionId: string,
     running: boolean,
 }
 
-export interface SnowStreamDetailsResponse extends SnowStreamEndpointResponse {
+export interface DetailsEndpointResponse extends EndpointResponse, SnowAnimationConfiguration {
     exists: boolean,
     message: string,
     streamTextUrl: string,
     streamWebsocketsStompBrokerUrl: string,
     streamWebsocketsUrl: string,
-    width?: number,
-    height?: number,
-    fps?: number,
-    presetName?: string,
-    duration?: number,
+    duration: number,
 }
 
-export interface SnowStreamStartResponse extends SnowStreamDetailsResponse {
+export type StartEndpointResponse = DetailsEndpointResponse;
+export type StopEndpointResponse = EndpointResponse;
+
+
+export function startSnowSession(sessionId: string, config: SnowAnimationConfiguration, controller?: AbortController): Promise<StartEndpointResponse> {
+    const url= "/fps/" + config.fps
+        + "/width/" + config.width
+        + "/height/" + config.height
+        + "/presetName/" + config.presetName;
+
+    return askSnowEndpoint(controller, 'start', sessionId, url)
+            .then(( response: StartEndpointResponse ) => {
+                if (!response.running) {
+                    throw Error("Server did not start animation!");
+                }
+                return response;
+            }) as Promise<StartEndpointResponse>;
 }
 
-export interface SnowStreamStopResponse extends SnowStreamEndpointResponse {
+export function fetchSnowDetails(sessionId: string, controller?: AbortController): Promise<DetailsEndpointResponse> {
+    if (!sessionId) {
+        return Promise.reject(new Error("Session id is missing!"));
+    }
+    return askSnowEndpoint(controller, 'details', sessionId) as Promise<DetailsEndpointResponse>;
 }
 
-interface SnowStreamAction {
-    sessionId: string,
+export function stopSnowSession(sessionId: string, controller?: AbortController): Promise<StopEndpointResponse>{
+    return askSnowEndpoint(controller, 'stop', sessionId)
+            .then(( response: StartEndpointResponse ) => {
+                if (response.running) {
+                    throw Error("Server did not stop animation!");
+                }
+                return response;
+            }) as Promise<StartEndpointResponse>;
 }
 
-interface StartSnowStreamAction extends SnowAnimationConfiguration, SnowStreamAction {
-}
+function askSnowEndpoint(controller: AbortController, action: string, sessionId: string, subUrl: string = ""): Promise<EndpointResponse> {
+    const url = `${snowEndpointUrl}/${action}/${sessionId}${subUrl}`;
 
-interface StopSnowStreamAction extends SnowStreamAction {
-}
-
-async function askSnowEndpoint(action: SnowStreamEndpointAction, controller?: AbortController): Promise<SnowStreamEndpointResponse> {
-    let url = `${snowEndpointUrl}/${action.action}/${action.sessionId}`;
-
-    url += action.fps ? "/fps/" + action.fps : ""
-    url += action.fps ? "/width/" + action.width : ""
-    url += action.fps ? "/height/" + action.height : ""
-    url += action.fps ? "/presetName/" + action.presetName : ""
-
-    return fetch(url, controller)
+    return fetch(url, { signal: controller?.signal })
         .then((response) => response.json())
         .then((data) => {
             if (!data) {
@@ -68,57 +71,48 @@ async function askSnowEndpoint(action: SnowStreamEndpointAction, controller?: Ab
             }
             if (!data.status) {
                 if (data.message) {
-                    throw Error("Error respond with error: " + data.message);
+                    throw Error("Server respond with error: " + data.message);
                 }
-                throw Error("Error respond with error!");
+                throw Error("Server respond with error!");
             }
             // console.log(url, data);
             return data;
         })
-        .catch((error: Error) => console.error(error));
+        .catch((error: Error) => {
+            if (error.name === 'AbortError') {
+                return;
+            }
+            console.error(error);
+            throw error;
+        });
 }
 
-export async function fetchSnowDataDetails(sessionId: string, controller?: AbortController): Promise<SnowStreamDetailsResponse> {
-    if (!sessionId) {
-        return {
-            running: false,
-            exists: false,
-            status: false,
-            message: "Session id is missing!",
-            streamTextUrl: "",
-            streamWebsocketsStompBrokerUrl: "",
-            streamWebsocketsUrl: "",
-            sessionId: "",
-        };
-    }
-    return askSnowEndpoint({
-        action: "details",
-        sessionId: sessionId,
-    }) as Promise<SnowStreamDetailsResponse>;
+export type SnowClientHandler = number;
+const stompClients = new Map<SnowClientHandler, Client>();
+let stompClientsCounter = 0;
+
+export function startSnowDataStream(startSessionResponse: StartEndpointResponse, handleMessage: (data: DataView) => void): SnowClientHandler {
+    const stompClient = new Client({
+        brokerURL: startSessionResponse.streamWebsocketsStompBrokerUrl,
+        onConnect: (frame) => {
+            let userId = frame.headers['user-name'];
+
+            stompClient.subscribe('/user/' + userId + '/stream/',
+                (message: IMessage) => handleMessage(new DataView(message.binaryBody.buffer)));
+
+            stompClient.publish({
+                destination: startSessionResponse.streamWebsocketsUrl,
+            });
+        },
+    });
+    stompClient.activate();
+
+    const handler = ++stompClientsCounter;
+    stompClients.set(handler, stompClient);
+    return handler;
 }
 
-export async function startStreamSnowData(action: StartSnowStreamAction, controller?: AbortController): Promise<SnowStreamStartResponse> {
-    return askSnowEndpoint({
-        action: 'start',
-        ...action,
-    })
-    .then(( data: SnowStreamStartResponse ) => {
-        if (!data.running) {
-            throw Error("Server did not start animation!");
-        }
-        return data;
-    }) as Promise<SnowStreamStartResponse>;
-}
-
-export async function stopStreamSnowData(action: StopSnowStreamAction, controller?: AbortController): Promise<SnowStreamStopResponse>{
-    return askSnowEndpoint({
-        action: 'stop',
-        ...action,
-    })
-    .then(( data: SnowStreamStartResponse ) => {
-        if (data.running) {
-            throw Error("Server did not stop animation!");
-        }
-        return data;
-    }) as Promise<SnowStreamStartResponse>;
+export function stopSnowDataStream(handler: SnowClientHandler): void {
+    stompClients.get(handler).deactivate();
+    stompClients.delete(handler);
 }

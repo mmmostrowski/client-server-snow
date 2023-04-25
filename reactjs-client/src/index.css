@@ -154,3 +154,6 @@ body,
     font-size: 10px;
 }
 
+.snow-animation-circular-progress circle {
+    transition: none;
+}

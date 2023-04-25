@@ -44,6 +44,13 @@ public final class SnowStreamWebsocketClient implements SnowStreamClient {
         encoder.encodeFrame(frame, output);
         encoder.encodeBasis(basis, output);
         sendToWebsocketClient();
+        try {
+            if (Math.random() > 0.37) {
+                Thread.sleep(50);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

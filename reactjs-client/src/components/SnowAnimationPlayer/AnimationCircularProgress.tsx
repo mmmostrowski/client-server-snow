@@ -54,9 +54,9 @@ export default function AnimationCircularProgress({ sessionIdx } : { sessionIdx:
             break;
         case "playing":
             color = "success";
-            progress = animationProgress;
+            progress = bufferLevel;
             insideText = '▶'
-            title = "Animation playing..."
+            title = `Playing ( buffer ${bufferLevel}% )`
             break;
         case "error":
             color = "error";

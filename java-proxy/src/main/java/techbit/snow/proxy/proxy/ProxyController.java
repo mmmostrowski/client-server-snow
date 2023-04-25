@@ -101,7 +101,7 @@ public class ProxyController {
                 "exists", streaming.hasSession(sessionId),
                 "running", streaming.isSessionRunning(sessionId),
                 "streamTextUrl", urlTo(request, "/text/" + sessionId),
-                "streamWebsocketsStompBrokerUrl", urlTo(request, "/ws/"),
+                "streamWebsocketsStompBrokerUrl", urlTo("ws://", request, "/ws/"),
                 "streamWebsocketsUrl", "/app/stream/" + sessionId
         ));
 
@@ -135,6 +135,10 @@ public class ProxyController {
     }
 
     private String urlTo(HttpServletRequest request, String location) {
-        return request.getScheme() + "://" + request.getServerName() + ':' + request.getServerPort() + location;
+        return urlTo(request.getScheme() + "://", request, location);
+    }
+
+    private String urlTo(String scheme, HttpServletRequest request, String location) {
+        return scheme + request.getServerName() + ':' + request.getServerPort() + location;
     }
 }

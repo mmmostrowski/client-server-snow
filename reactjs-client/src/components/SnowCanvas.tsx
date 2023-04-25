@@ -1,13 +1,19 @@
 import * as React from 'react';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useSnowSession } from '../snow/SnowSessionsProvider'
 import { useResizeDetector } from 'react-resize-detector';
 
 type SnowCanvasProps = {
-    sessionIdx: number
+    sessionIdx: number,
 }
 
-export default function SnowCanvas({ sessionIdx } : SnowCanvasProps) {
+export interface SnowCanvasRefHandler {
+    clearBackground(): void;
+    setCurrentFont(color: string, scaleFactor: number): void;
+    drawChar(x: number, y: number, char: string): void;
+}
+
+export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(function SnowCanvas({ sessionIdx }, ref ) {
     const { validatedWidth : width, validatedHeight : height } = useSnowSession(sessionIdx);
     const { width: canvasWidth, height : canvasHeight, ref : canvasWrapperRef } = useResizeDetector();
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -32,41 +38,58 @@ export default function SnowCanvas({ sessionIdx } : SnowCanvasProps) {
     const scaleFactorH = workspaceCanvasWidth / width;
     const scaleFactorV = workspaceCanvasHeight / height;
 
+    useImperativeHandle(ref, () => {
+        function viewportX(x : number): number {
+            return x * scaleFactorH + canvasOffsetH;
+        }
+
+        function viewportY(y : number): number {
+            return y * scaleFactorV + canvasOffsetV;
+        }
+
+        return {
+            clearBackground() {
+                whenContext((ctx) => {
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                });
+            },
+            drawChar(x: number, y: number, char: string) {
+                whenContext((ctx) => {
+                    const textOffsetH = Math.floor(scaleFactorV * -0.25);
+                    const textOffsetV = Math.floor(scaleFactorV * 1.9);
+
+                    ctx.fillText(char,
+                        viewportX(x) + textOffsetH,
+                        viewportY(y) + textOffsetV
+                    );
+                });
+            },
+            setCurrentFont(color: string, scaleFactor: number) {
+                whenContext((ctx) => {
+                    const textHeight = Math.floor(scaleFactorV * scaleFactor);
+                    ctx.font = `${textHeight}px Courier New`;
+                    ctx.fillStyle = color;
+                });
+            },
+        };
+      }, [ scaleFactorH, scaleFactorV, canvasOffsetH, canvasOffsetV ]);
+
+
+    // scale font to canvas
     useEffect(() => {
-        if (canvasRef.current === null) {
-            return;
+        whenContext((ctx) => {
+            const textHeight = Math.floor(scaleFactorV * 2.5);
+            ctx.font = `${textHeight}px Courier New`;
+        });
+    }, [ canvasWidth, canvasHeight, scaleFactorV ]);
+
+
+    function whenContext(callback: (ctx: CanvasRenderingContext2D) => void ): void {
+        const ctx = canvasRef.current?.getContext('2d');
+        if (ctx) {
+            callback(ctx);
         }
-
-        const ctx = canvasRef.current.getContext('2d');
-        clearBackground(ctx);
-
-        const textHeight = Math.floor(scaleFactorV * 2.5);
-        const textOffsetH = Math.floor(scaleFactorV * -0.25);
-        const textOffsetV = Math.floor(scaleFactorV * 1.9);
-
-        ctx.fillStyle = 'white';
-        ctx.font = `${textHeight}px Courier New`;
-        for (let y = 0; y < height; ++y) {
-            for (let x = 0; x < width; ++x) {
-                ctx.fillText("*",
-                    viewportX(x) + textOffsetH,
-                    viewportY(y) + textOffsetV
-                );
-            }
-        }
-    });
-
-    function clearBackground(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-    }
-
-    function viewportX(x : number): number {
-        return x * scaleFactorH + canvasOffsetH;
-    }
-
-    function viewportY(y : number): number {
-        return y * scaleFactorV + canvasOffsetV;
     }
 
     return (
@@ -74,4 +97,5 @@ export default function SnowCanvas({ sessionIdx } : SnowCanvasProps) {
             <canvas ref={canvasRef} width={canvasWidth} height={canvasHeight} />
         </div>
     );
-}
+});
+

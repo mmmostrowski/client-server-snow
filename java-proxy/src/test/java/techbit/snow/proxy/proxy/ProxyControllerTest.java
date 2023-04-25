@@ -175,7 +175,7 @@ class ProxyControllerTest {
                 "running", true,
                 "sessionId", "session-abc",
                 "streamTextUrl", "http://domain.com:1234/text/session-abc",
-                "streamWebsocketsStompBrokerUrl", "http://domain.com:1234/ws/",
+                "streamWebsocketsStompBrokerUrl", "ws://domain.com:1234/ws/",
                 "streamWebsocketsUrl", "/app/stream/session-abc",
                 "key1", "value1",
                 "key2", "value2"

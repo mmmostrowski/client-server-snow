@@ -1,22 +1,22 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
-import AnimationPanel from './SnowAnimation/AnimationPanel'
-import { useSnowSession } from '../snow/SnowSessionsProvider'
+import { useEffect, useState, useRef } from "react";
+import AnimationPanel from './SnowAnimationPlayer/AnimationPanel';
+import { useSnowSession } from '../snow/SnowSessionsProvider';
+import { useSnowAnimation } from '../snow/snowAnimation';
+import { SnowCanvasRefHandler } from  './SnowCanvas';
 import {
-    startStreamSnowData,
-    stopStreamSnowData,
-    fetchSnowDataDetails,
+    startSnowSession,
+    stopSnowSession,
+    fetchSnowDetails,
     SnowAnimationConfiguration,
-    SnowStreamStartResponse,
-    SnowStreamStopResponse,
-    SnowStreamDetailsResponse,
-} from '../stream/snowEndpoint'
+    DetailsEndpointResponse,
+} from '../stream/snowEndpoint';
 import {
     useSessionStatusUpdater,
     SessionStatusUpdater,
     useSessionErrorStatusUpdater,
     SessionErrorStatusUpdater
-} from '../snow/snowSessionStatus'
+} from '../snow/snowSessionStatus';
 
 
 interface SnowAnimationProps {
@@ -24,7 +24,7 @@ interface SnowAnimationProps {
     refreshEveryMs?: number
 }
 
-export default function SnowAnimation({ sessionIdx, refreshEveryMs } : SnowAnimationProps): JSX.Element {
+export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : SnowAnimationProps): JSX.Element {
     const {
         status, hasError,
         sessionId, isSessionExists, hasSessionIdError, cannotStartSession,
@@ -37,6 +37,8 @@ export default function SnowAnimation({ sessionIdx, refreshEveryMs } : SnowAnima
     const [ refreshCounter, setRefreshCounter ] = useState<number>(0);
     const [ isLocked, setIsLocked ] = useState(false);
     const isActive = !hasSessionIdError && !isLocked;
+    const canvasRef = useRef<SnowCanvasRefHandler>(null);
+    const { startProcessingSnowAnimation, stopProcessingSnowAnimation } = useSnowAnimation(sessionIdx, canvasRef);
 
 
     // Periodical session checking
@@ -59,7 +61,7 @@ export default function SnowAnimation({ sessionIdx, refreshEveryMs } : SnowAnima
             return;
         }
 
-        if (cannotStartSession) {
+        if (status === 'playing' || status === 'buffering' || cannotStartSession) {
             return;
         }
 
@@ -69,8 +71,12 @@ export default function SnowAnimation({ sessionIdx, refreshEveryMs } : SnowAnima
 
         const controller = new AbortController();
 
-        fetchSnowDataDetails(sessionId, controller)
-            .then(( data: SnowStreamDetailsResponse ) => {
+        fetchSnowDetails(sessionId, controller)
+            .then(( data: DetailsEndpointResponse ) => {
+                if (!data) {
+                    return;
+                }
+
                 if (!data.running) {
                     setSessionStatus('stopped-not-found');
                     return;
@@ -145,42 +151,33 @@ export default function SnowAnimation({ sessionIdx, refreshEveryMs } : SnowAnima
 
             setSessionStatus('initializing');
 
-            return startStreamSnowData({
-                sessionId: sessionId,
-                ...animationParams,
-            })
-            .then(( data: SnowStreamStartResponse ) => {
-                if (!isActive) {
-                    return;
-                }
-
-                setSessionStatus('playing', {
-                    ...animationParams,
-                    validatedWidth: animationParams.width,
-                    validatedHeight: animationParams.height,
-                    validatedFps: animationParams.fps,
-                });
-            })
+            return startSnowSession(sessionId, animationParams)
+                .then(startProcessingSnowAnimation)
+                .then(() => {
+                    console.log('PLAY');
+                    setSessionStatus('buffering', {
+                        ...animationParams,
+                        validatedWidth: animationParams.width,
+                        validatedHeight: animationParams.height,
+                        validatedFps: animationParams.fps,
+                    });
+                } );
         }
 
     }
 
     function handleStop(): void {
-        stopStreamSnowData({
-            sessionId: sessionId,
-        })
-        .then(( data: SnowStreamStopResponse ) => {
-            if (!isActive) {
-                return;
-            }
-            setSessionStatus('stopped-not-found');
-        })
-        .catch(( error: Error ) => {
-            if (!isActive) {
-                return;
-            }
-            setSessionErrorStatus(error, "error-cannot-stop");
-        });
+        stopSnowSession(sessionId)
+            .then(stopProcessingSnowAnimation)
+            .then(() => {
+                setSessionStatus('stopped-not-found');
+            })
+            .catch(( error: Error ) => {
+                if (!isActive) {
+                    return;
+                }
+                setSessionErrorStatus(error, "error-cannot-stop");
+            });
     }
 
     return <AnimationPanel
@@ -189,5 +186,6 @@ export default function SnowAnimation({ sessionIdx, refreshEveryMs } : SnowAnima
         animationProgress={animationProgress}
         handleStart={handleStart}
         handleStop={handleStop}
+        snowCanvasRef={canvasRef}
      />
 }

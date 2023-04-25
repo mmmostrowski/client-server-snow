@@ -1,5 +1,5 @@
 import * as React from "react";
-import SnowCanvas from '../SnowCanvas'
+import { SnowCanvas } from '../SnowCanvas'
 import LinearProgress from '@mui/material/LinearProgress';
 import AnimationCircularProgress from './AnimationCircularProgress'
 import AnimationControlButtons from './AnimationControlButtons'
@@ -12,10 +12,11 @@ interface AnimationPanelProps {
     animationProgress: number,
     handleStart: () => void,
     handleStop: () => void,
+    snowCanvasRef: any,
 }
 
 export default function AnimationPanel(props : AnimationPanelProps): JSX.Element {
-    const { sessionIdx, handleIsEditingSessionId, animationProgress, handleStart, handleStop } = props;
+    const { sessionIdx, handleIsEditingSessionId, animationProgress, handleStart, handleStop, snowCanvasRef } = props;
     return (
         <div className="snow-animation" >
             <div className="animation-header">
@@ -23,7 +24,7 @@ export default function AnimationPanel(props : AnimationPanelProps): JSX.Element
                 <AnimationSessionId sessionIdx={sessionIdx} isEditing={handleIsEditingSessionId} />
                 <AnimationControlButtons sessionIdx={sessionIdx} handleStart={handleStart} handleStop={handleStop} />
             </div>
-            <SnowCanvas sessionIdx={sessionIdx} />
+            <SnowCanvas sessionIdx={sessionIdx} ref={snowCanvasRef} />
             <LinearProgress value={animationProgress}
                 title="Animation progress"
                 variant="determinate" />

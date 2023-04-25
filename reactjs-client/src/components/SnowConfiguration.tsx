@@ -3,7 +3,7 @@ import Container from '@mui/material/Container';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
-import AnimationInput from './SnowAnimation/AnimationInput'
+import AnimationInput from './SnowAnimationPlayer/AnimationInput'
 import {
     snowConstraints,
     useDelayedSnowSession,
