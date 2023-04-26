@@ -53,6 +53,7 @@ export default class SnowDecoder {
 
     private decodeDataFrame(data : DataView): SnowDataFrame {
         const frameNum = data.getInt32(0, false);
+        const isLast = frameNum === -1;
         const chunkSize = data.getUint32(4, false);
         const particlesX = new Float32Array(chunkSize);
         const particlesY = new Float32Array(chunkSize);
@@ -66,7 +67,7 @@ export default class SnowDecoder {
             ptr += 9;
         }
 
-        return { frameNum, chunkSize, particlesX, particlesY, flakeShapes };
+        return { isLast, frameNum, chunkSize, particlesX, particlesY, flakeShapes };
     }
 
     private decodeBasis(data : DataView, frameChunkSize: number): SnowBasis {

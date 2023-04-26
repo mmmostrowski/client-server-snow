@@ -9,8 +9,9 @@ type SnowCanvasProps = {
 
 export interface SnowCanvasRefHandler {
     clearBackground(): void;
-    setCurrentFont(color: string, scaleFactor: number): void;
+    setCurrentFont(color: string, size: string|number): void;
     drawChar(x: number, y: number, char: string): void;
+    drawTextInCenter(text: string): void;
 }
 
 export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(function SnowCanvas({ sessionIdx }, ref ) {
@@ -62,11 +63,26 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(func
                     );
                 });
             },
-            setCurrentFont(color: string, scaleFactor: number) {
+            setCurrentFont(color: string, size: string|number) {
                 whenContext((ctx) => {
-                    const textHeight = Math.floor(scaleFactorV * scaleFactor);
-                    ctx.font = `bold ${textHeight}px Courier New`;
+                    if (typeof size === 'string') {
+                        ctx.font = size;
+                    } else {
+                        const textHeight = Math.floor(scaleFactorV * size);
+                        ctx.font = `bold ${textHeight}px Courier New`;
+                    }
                     ctx.fillStyle = color;
+                });
+            },
+            drawTextInCenter(text: string) {
+                whenContext((ctx) => {
+                    ctx.save();
+                    ctx.textAlign="center";
+                    ctx.fillText(text,
+                        canvasWidth / 2,
+                        canvasHeight / 2,
+                    );
+                    ctx.restore();
                 });
             },
         };

@@ -67,14 +67,14 @@ public final class SnowStreamWebsocketClient implements SnowStreamClient {
         isActive = false;
     }
 
-    @SuppressWarnings("unused")
-    private void simulateNetworkProblems() {
-        try {
-            if (Math.random() > 0.37) {
-                Thread.sleep(50);
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
+
+//    private void simulateNetworkProblems() {
+//        try {
+//            if (Math.random() > 0.37) {
+//                Thread.sleep(50);
+//            }
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 }

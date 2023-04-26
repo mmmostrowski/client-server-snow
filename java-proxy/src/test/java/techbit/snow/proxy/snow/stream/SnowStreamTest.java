@@ -212,6 +212,25 @@ class SnowStreamTest extends SnowStreamBaseTest {
     }
 
     @Test
+    void whenStreamingFrames_thenLastFrameIsStreamedToClient() throws ConsumerThreadException, IOException, InterruptedException {
+        when(phpSnow.isAlive()).thenReturn(true);
+        when(buffer.firstFrame()).thenReturn(frame(1));
+        when(buffer.nextFrame(frame(1))).thenReturn(frame(2));
+        when(buffer.nextFrame(frame(2))).thenReturn(frame(3));
+        when(buffer.nextFrame(frame(3))).thenReturn(SnowDataFrame.LAST);
+
+        snowStream.startConsumingSnowData();
+        snowStream.streamTo(client);
+
+        InOrder inOrder = inOrder(client);
+
+        inOrder.verify(client).streamFrame(frame(1), SnowBasis.NONE);
+        inOrder.verify(client).streamFrame(frame(2), SnowBasis.NONE);
+        inOrder.verify(client).streamFrame(frame(3), SnowBasis.NONE);
+        inOrder.verify(client).streamFrame(SnowDataFrame.LAST, SnowBasis.NONE);
+    }
+
+    @Test
     void givenCustomClient_whenStreamIsDeactivated_thenFrameLoopBreaks() throws ConsumerThreadException, IOException, InterruptedException {
         when(phpSnow.isAlive()).thenReturn(true);
         when(buffer.firstFrame()).thenReturn(frame(1));

@@ -94,7 +94,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
                 snowStream.streamTo(client);
 
-                verify(encoder, times(5)).encodeFrame(any(), eq(outputStream));
+                verify(encoder, times(6)).encodeFrame(any(), eq(outputStream));
                 verify(encoder, times(1)).encodeMetadata(any(), eq(outputStream));
             }
         });

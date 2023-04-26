@@ -1,5 +1,6 @@
 
 export default interface SnowDataFrame {
+    isLast: boolean,
     frameNum: number,
     chunkSize: number,
     particlesX: Float32Array,

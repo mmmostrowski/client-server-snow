@@ -38,7 +38,7 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
     const [ isLocked, setIsLocked ] = useState(false);
     const isActive = !hasSessionIdError && !isLocked;
     const canvasRef = useRef<SnowCanvasRefHandler>(null);
-    const { startProcessingSnowAnimation, stopProcessingSnowAnimation } = useSnowAnimation(sessionIdx, canvasRef);
+    const { startProcessing, stopProcessing } = useSnowAnimation(sessionIdx, canvasRef, handleAnimationFinished);
 
     function handleStart(): void {
         if (isSessionExists) {
@@ -85,7 +85,7 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
             setSessionStatus('initializing');
 
             return startSnowSession(sessionId, animationParams)
-                .then(startProcessingSnowAnimation)
+                .then(startProcessing)
                 .then(() => {
                     setSessionStatus('buffering', {
                         ...animationParams,
@@ -99,17 +99,19 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
     }
 
     function handleStop(): void {
+        stopProcessing({ allowForGoodbye: false });
+        setSessionStatus('stopped-not-found');
         stopSnowSession(sessionId)
-            .then(stopProcessingSnowAnimation)
-            .then(() => {
-                setSessionStatus('stopped-not-found');
-            })
             .catch(( error: Error ) => {
                 if (!isActive) {
                     return;
                 }
                 setSessionErrorStatus(error, "error-cannot-stop");
             });
+    }
+
+    function handleAnimationFinished(): void {
+        setSessionStatus('stopped-not-found');
     }
 
     // Periodical session checking
@@ -132,7 +134,7 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
             return;
         }
 
-        if (status === 'buffering' || cannotStartSession) {
+        if (status === 'buffering' || status === 'initializing' || cannotStartSession) {
             return;
         }
 
@@ -142,6 +144,7 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
 
         const controller = new AbortController();
 
+        console.log("CHECKING DURING STATUS: " + status);
         fetchSnowDetails(sessionId, controller)
             .then(( data: DetailsEndpointResponse ) => {
                 if (!data) {
@@ -149,8 +152,12 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
                 }
 
                 if (!data.running) {
-                    stopProcessingSnowAnimation(data);
-                    setSessionStatus('stopped-not-found');
+                    if (status === 'checking') {
+                        setSessionStatus('stopped-not-found');
+                    }
+                    if ( status === 'playing' ) {
+                        stopProcessing({ allowForGoodbye: true });
+                    }
                     return;
                 }
 

@@ -19,8 +19,9 @@ export const snowConstraints = {
     defaultFps: 33,
     maxFps: 60,
 
-    defaultPreset: "massiveSnow",
+    defaultPreset: "slideshow:random",
     presets: {
+        "slideshow:random" : "Shuffle",
         classical: "Classical",
         massiveSnow: "Massive Snow",
         calm: "Calm",
@@ -197,7 +198,7 @@ function snowSessionsReducer(sessions: ProcessedSnowSession[], action: DispatchS
             }
             const draft = draftSession(changed, last);
 
-//             console.log("changes:", sessionIdChangeAction.changes);
+            console.log("changes:", sessionIdChangeAction.changes);
 
             return [
                ...sessions.slice(0, idx),

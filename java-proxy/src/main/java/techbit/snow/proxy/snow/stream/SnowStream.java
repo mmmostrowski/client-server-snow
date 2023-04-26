@@ -185,6 +185,8 @@ public final class SnowStream {
                 }
             }
 
+            client.streamFrame(SnowDataFrame.LAST, SnowBasis.NONE);
+
             throwConsumerExceptionIfAny();
 
             log.debug("streamTo( {} ) | Last frame", sessionId);

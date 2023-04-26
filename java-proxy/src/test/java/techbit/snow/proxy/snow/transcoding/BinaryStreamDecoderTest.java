@@ -173,6 +173,8 @@ class BinaryStreamDecoderTest {
         assertEquals(9, basis.pixel(1));
         assertEquals(9, basis.x(0));
         assertEquals(768, basis.x(1));
+        assertEquals(0, basis.y(0));
+        assertEquals(3, basis.y(1));
         assertArrayEquals(new int[] { 0, 3 }, basis.y());
     }
 

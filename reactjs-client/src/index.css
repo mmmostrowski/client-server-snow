@@ -157,3 +157,7 @@ body,
 .snow-animation-circular-progress circle {
     transition: none;
 }
+
+.snow-animation .MuiLinearProgress-bar {
+    transition: none;
+}
