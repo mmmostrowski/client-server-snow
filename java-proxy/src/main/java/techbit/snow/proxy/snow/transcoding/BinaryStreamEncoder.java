@@ -9,6 +9,8 @@ import techbit.snow.proxy.dto.SnowDataFrame;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 @Component
 public final class BinaryStreamEncoder implements StreamEncoder {
@@ -59,13 +61,19 @@ public final class BinaryStreamEncoder implements StreamEncoder {
         final DataOutputStream data = new DataOutputStream(out);
 
         data.writeInt(basis.numOfPixels());
-        for (int i = 0; i < basis.numOfPixels(); ++i) {
-            data.writeInt(basis.x(i));
-        }
-        for (int i = 0; i < basis.numOfPixels(); ++i) {
-            data.writeInt(basis.y(i));
-        }
+        data.write(toBytes(basis.x()));
+        data.write(toBytes(basis.y()));
         out.write(basis.pixels());
+    }
+
+    private byte[] toBytes(int[] integers) {
+        if (integers.length == 0) {
+            return new byte[] {};
+        }
+        ByteBuffer byteBuffer = ByteBuffer.allocate(integers.length * 4);
+        IntBuffer intBuffer = byteBuffer.asIntBuffer();
+        intBuffer.put(integers);
+        return byteBuffer.array();
     }
 
 }

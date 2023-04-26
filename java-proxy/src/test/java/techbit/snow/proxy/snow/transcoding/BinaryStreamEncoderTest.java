@@ -25,7 +25,7 @@ class BinaryStreamEncoderTest {
 
 
     @Test
-    void whenEncodingMetadata_thenBinaryDataAreInOutput() throws IOException {
+    void givenMetadata_whenEncoding_thenValidBinaryDataInOutput() throws IOException {
         SnowAnimationMetadata metadata = new SnowAnimationMetadata(
                 99, 101, 15, 73, 987
         );
@@ -44,7 +44,7 @@ class BinaryStreamEncoderTest {
     }
 
     @Test
-    void whenEncodingBackground_thenBinaryDataAreInOutput() throws IOException {
+    void givenBackground_whenEncoding_thenValidBinaryDataInOutput() throws IOException {
         SnowBackground background = new SnowBackground(4, 4,
             new byte[][] {
                 new byte[] { 1, 2, 3, 4 },
@@ -67,7 +67,18 @@ class BinaryStreamEncoderTest {
     }
 
     @Test
-    void whenEncodingFrame_thenBinaryDataAreInOutput() throws IOException {
+    void givenNoBackground_whenEncoding_thenZeroInOutput() throws IOException {
+        encoder.encodeBackground(SnowBackground.NONE, out);
+
+        byte[] expected = new byte[] {
+                0, 0, 0, 0,
+        };
+
+        assertArrayEquals(expected, out.toByteArray());
+    }
+
+    @Test
+    void givenDataFrame_whenEncoding_thenValidBinaryDataInOutput() throws IOException {
         SnowDataFrame frame = new SnowDataFrame(
                 78, 2,
                 new float[] { 103, 22.5f },
@@ -95,7 +106,7 @@ class BinaryStreamEncoderTest {
 
 
     @Test
-    void whenEncodingBasis_thenBinaryDataAreInOutput() throws IOException {
+    void givenBasis_whenEncoding_thenValidBinaryDataInOutput() throws IOException {
         SnowBasis basis = new SnowBasis(5,
             new int[] { 1, 2, 3, 4, 5 },
             new int[] { 5, 4, 3, 2, 1 },
@@ -120,6 +131,17 @@ class BinaryStreamEncoderTest {
                 0, 0, 0, 1,
 
                 11, 12, 13, 14, 15
+        };
+
+        assertArrayEquals(expected, out.toByteArray());
+    }
+
+    @Test
+    void givenNoBasis_whenEncoding_thenZeroInOutput() throws IOException {
+        encoder.encodeBasis(SnowBasis.NONE, out);
+
+        byte[] expected = new byte[] {
+                0, 0, 0, 0,
         };
 
         assertArrayEquals(expected, out.toByteArray());

@@ -1,10 +1,10 @@
 import { useCallback, useRef, MutableRefObject } from "react";
 import { SnowCanvasRefHandler } from  '../components/SnowCanvas';
 import StreamDecoder from '../stream/SnowDecoder';
-import { SnowAnimationMetadata } from '../dto/SnowAnimationMetadata';
-import { SnowBackground } from '../dto/SnowBackground';
-import { SnowDataFrame } from '../dto/SnowDataFrame';
-import { useSnowSession } from '../snow/SnowSessionsProvider';
+import SnowAnimationMetadata from '../dto/SnowAnimationMetadata';
+import SnowBackground from '../dto/SnowBackground';
+import SnowDataFrame from '../dto/SnowDataFrame';
+import SnowBasis from '../dto/SnowBasis';
 import { useSessionStatusUpdater } from '../snow/snowSessionStatus';
 import {
     startSnowDataStream,
@@ -35,17 +35,16 @@ const animationConstraints = {
 export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject<SnowCanvasRefHandler>) {
     const stateRef = useRef<"stopped"|"buffering"|"playing">("stopped");
     const stompClientRef = useRef<SnowClientHandler>(null);
-    const session = useSnowSession(sessionIdx);
     const setSessionStatus = useSessionStatusUpdater(sessionIdx);
-
 
     return {
         startProcessingSnowAnimation: useCallback((startedSession: StartEndpointResponse): Promise<void> => {
-            const buffer = new Array<SnowDataFrame>();
+            const buffer = new Array<[SnowDataFrame, SnowBasis]>();
             const decoder = new StreamDecoder();
 
             let firstFrame = true;
             let metadata: SnowAnimationMetadata;
+            let basis: SnowBasis;
             let background: SnowBackground;
             let lastTimestamp: number;
             let fpsInterval: number;
@@ -60,8 +59,7 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
             function onServerData(data: DataView): void {
                 if (firstFrame) {
                     firstFrame = false;
-                    metadata = decoder.decodeMetadata(data);
-                    background = decoder.decodeBackground(data);
+                    [ metadata, background ] = decoder.decodeHeader(data);
                     stateRef.current = "buffering";
                     setSessionStatus("buffering", {
                         bufferLevel: 0,
@@ -70,8 +68,7 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
                     return;
                 }
 
-                const frame = decoder.decodeDataFrame(data);
-                buffer.push(frame);
+                buffer.push(decoder.decodeFrame(data));
 
                 if (stateRef.current === "buffering") {
                     setSessionStatus("buffering", {
@@ -99,7 +96,7 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
                 animate();
             }
 
-            function animate(): void  {
+            function animate(): void {
                 if (stateRef.current !== "playing") {
                     canvasRef.current.clearBackground();
                     return;
@@ -112,9 +109,13 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
                 }
                 lastTimestamp = now - ( elapsed % fpsInterval );
 
-                const frame = buffer.shift();
-                if (!frame) {
+                if (buffer.length === 0) {
                     return;
+                }
+
+                const [ frame, frameBasis ] = buffer.shift();
+                if (!frameBasis.isNone || !basis) {
+                    basis = frameBasis;
                 }
 
                 setSessionStatus("playing", {
@@ -123,25 +124,33 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
                 });
 
                 drawFrame(frame);
+                drawBasis(basis);
             }
 
-            function drawFrame(frame: SnowDataFrame) {
-              if (!canvasRef.current) {
-                  return;
-              }
-              drawBackground(background);
-              drawSnow(frame);
-            }
-
-            function drawBackground(background: SnowBackground) {
+            function drawFrame(frame: SnowDataFrame): void {
                 const canvas = canvasRef.current;
-                const font = animationConstraints.backgroundFont;
+                if (!canvas) {
+                    return;
+                }
 
                 canvas.clearBackground();
+                drawBackground(background);
+                drawSnow(frame);
+            }
+
+            function drawBackground(background: SnowBackground): void {
+                if (background.isNone) {
+                    return;
+                }
+
+                const canvas = canvasRef.current;
+                const font = animationConstraints.backgroundFont;
+                const { width, height, pixels } = background;
+
                 canvas.setCurrentFont(font.color, font.scale);
-                for (let y = 0; y < background.height; ++y) {
-                    for (let x = 0; x < background.width; ++x) {
-                        const char = background.pixels[x][y];
+                for (let y = 0; y < height; ++y) {
+                    for (let x = 0; x < width; ++x) {
+                        const char = pixels[x][y];
                         if (char === 0) {
                             continue;
                         }
@@ -152,16 +161,14 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
                 }
             }
 
-            function drawSnow(frame: SnowDataFrame ) {
+            function drawSnow(frame: SnowDataFrame): void {
+                const { particlesX, particlesY, flakeShapes: flakes, chunkSize } = frame;
                 const canvas = canvasRef.current;
                 const font = animationConstraints.snowFont;
                 const flakeShapes = animationConstraints.flakeShapes;
-                const particlesX = frame.particlesX;
-                const particlesY = frame.particlesY;
-                const flakes = frame.flakeShapes;
 
                 canvas.setCurrentFont(font.color, font.scale);
-                for (let i = 0; i < frame.chunkSize; ++i) {
+                for (let i = 0; i < chunkSize; ++i) {
                     canvas.drawChar(
                         particlesX[i],
                         particlesY[i],
@@ -169,7 +176,25 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
                     );
                 }
             }
-        }, [ canvasRef ]),
+
+            function drawBasis(basis: SnowBasis): void {
+                if (basis.isNone) {
+                    return;
+                }
+
+                const canvas = canvasRef.current;
+                const flakeShapes = animationConstraints.flakeShapes;
+                const { numOfPixels, x, y, pixels } = basis;
+
+                for (let i = 0; i < numOfPixels; ++i) {
+                    canvas.drawChar(
+                        x[i],
+                        y[i],
+                        flakeShapes[pixels[i]]
+                    );
+                }
+            }
+        }, [ canvasRef, setSessionStatus ]),
 
         stopProcessingSnowAnimation: useCallback((response: StartEndpointResponse): Promise<void> => {
             if (stateRef.current === "stopped") {
