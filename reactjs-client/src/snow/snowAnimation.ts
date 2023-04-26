@@ -102,13 +102,14 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
             }
 
             function animate(): void  {
-                if (stateRef.current === "playing") {
-                    requestAnimationFrame(animate);
-                    setSessionStatus("playing", {
-                        animationProgress: 0,
-                        bufferLevel: bufferLevel(),
-                    });
+                if (stateRef.current !== "playing") {
+                    return;
                 }
+                requestAnimationFrame(animate);
+                setSessionStatus("playing", {
+                    animationProgress: 0,
+                    bufferLevel: bufferLevel(),
+                });
 
                 const now = Date.now();
                 const elapsed = now - lastTimestamp;
@@ -172,6 +173,9 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
         }, [ canvasRef ]),
 
         stopProcessingSnowAnimation: useCallback((response: StartEndpointResponse): Promise<void> => {
+            if (stateRef.current === "stopped") {
+                return;
+            }
             stateRef.current = "stopped";
             stopSnowDataStream(stompClientRef.current);
             return Promise.resolve();

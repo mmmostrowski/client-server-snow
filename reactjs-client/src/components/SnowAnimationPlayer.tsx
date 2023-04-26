@@ -40,73 +40,6 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
     const canvasRef = useRef<SnowCanvasRefHandler>(null);
     const { startProcessingSnowAnimation, stopProcessingSnowAnimation } = useSnowAnimation(sessionIdx, canvasRef);
 
-
-    // Periodical session checking
-    useEffect(() => {
-        if (refreshEveryMs === undefined) {
-            return;
-        }
-        const handler = setTimeout(() => {
-              setRefreshCounter((c: number) => c + 1);
-        }, refreshEveryMs);
-        return () => {
-            clearTimeout(handler);
-        };
-    });
-
-    // Session checking
-    useEffect(() => {
-        if (hasSessionIdError) {
-            setSessionErrorStatus ('Invalid session id');
-            return;
-        }
-
-        if (status === 'playing' || status === 'buffering' || cannotStartSession) {
-            return;
-        }
-
-        if (status === 'stopped-not-checked' || hasError) {
-            setSessionStatus('checking');
-        }
-
-        const controller = new AbortController();
-
-        fetchSnowDetails(sessionId, controller)
-            .then(( data: DetailsEndpointResponse ) => {
-                if (!data) {
-                    return;
-                }
-
-                if (!data.running) {
-                    setSessionStatus('stopped-not-found');
-                    return;
-                }
-
-                if (status === 'checking'
-                    || status === 'stopped-not-found'
-                    || status === 'stopped-not-checked')
-                {
-                    setSessionStatus('stopped-found', {
-                        foundWidth: data.width,
-                        foundHeight: data.height,
-                        foundFps: data.fps,
-                        foundPresetName: data.presetName,
-                    });
-                }
-            })
-            .catch(( error : Error ) => {
-                setSessionErrorStatus(error);
-            });
-
-        return () => {
-            controller.abort()
-        };
-    }, [
-        status, setSessionStatus, sessionId, refreshCounter,
-        hasError, hasSessionIdError, setSessionErrorStatus,
-        cannotStartSession,
-    ]);
-
     function handleStart(): void {
         if (isSessionExists) {
             startExisting();
@@ -154,7 +87,6 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
             return startSnowSession(sessionId, animationParams)
                 .then(startProcessingSnowAnimation)
                 .then(() => {
-                    console.log('PLAY');
                     setSessionStatus('buffering', {
                         ...animationParams,
                         validatedWidth: animationParams.width,
@@ -179,6 +111,73 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
                 setSessionErrorStatus(error, "error-cannot-stop");
             });
     }
+
+    // Periodical session checking
+    useEffect(() => {
+        if (refreshEveryMs === undefined) {
+            return;
+        }
+        const handler = setTimeout(() => {
+              setRefreshCounter((c: number) => c + 1);
+        }, refreshEveryMs);
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [ refreshCounter ]);
+
+    // Session checking
+    useEffect(() => {
+        if (hasSessionIdError) {
+            setSessionErrorStatus ('Invalid session id');
+            return;
+        }
+
+        if (status === 'buffering' || cannotStartSession) {
+            return;
+        }
+
+        if (status === 'stopped-not-checked' || hasError) {
+            setSessionStatus('checking');
+        }
+
+        const controller = new AbortController();
+
+        fetchSnowDetails(sessionId, controller)
+            .then(( data: DetailsEndpointResponse ) => {
+                if (!data) {
+                    return;
+                }
+
+                if (!data.running) {
+                    stopProcessingSnowAnimation(data);
+                    setSessionStatus('stopped-not-found');
+                    return;
+                }
+
+                if (status === 'checking'
+                    || status === 'stopped-not-found'
+                    || status === 'stopped-not-checked' )
+                {
+                    setSessionStatus('stopped-found', {
+                        foundWidth: data.width,
+                        foundHeight: data.height,
+                        foundFps: data.fps,
+                        foundPresetName: data.presetName,
+                    });
+                }
+            })
+            .catch(( error : Error ) => {
+                setSessionErrorStatus(error);
+            });
+
+        return () => {
+            controller.abort()
+        };
+    }, [
+        status, setSessionStatus, sessionId, refreshCounter,
+        hasError, hasSessionIdError, setSessionErrorStatus,
+        cannotStartSession,
+    ]);
 
     return <AnimationPanel
         sessionIdx={sessionIdx}
