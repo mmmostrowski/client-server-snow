@@ -6,6 +6,7 @@ import techbit.snow.proxy.dto.*;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.time.Duration;
 
 @Primary
 @Component
@@ -16,15 +17,16 @@ public final class BinaryStreamDecoder implements StreamDecoder {
     private int framesCounter;
 
     @Override
-    public SnowAnimationMetadata decodeMetadata(DataInputStream dataStream, ServerMetadata serverMetadata) throws IOException {
+    public SnowAnimationMetadata decodeMetadata(DataInputStream dataStream, ServerMetadata serverMetadata, Duration duration) throws IOException {
         readHelloMarker(dataStream);
 
         final int width = dataStream.readInt();
         final int height = dataStream.readInt();
         final int fps = dataStream.readInt();
         final int bufferSizeInFrames = serverMetadata.bufferSizeInFrames(fps);
+        final int totalNumberOfFrames = fps * (int) duration.toSeconds();
 
-        return new SnowAnimationMetadata(width, height, fps, bufferSizeInFrames);
+        return new SnowAnimationMetadata(width, height, fps, bufferSizeInFrames, totalNumberOfFrames);
     }
 
     private void readHelloMarker(DataInputStream inputStream) throws IOException {

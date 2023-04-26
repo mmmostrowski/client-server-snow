@@ -4,6 +4,7 @@ export interface SnowAnimationMetadata {
     height: number,
     fps: number,
     bufferSizeInFrames: number,
+    totalNumberOfFrames: number,
 }
 
 export default SnowAnimationMetadata;

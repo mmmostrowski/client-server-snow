@@ -49,7 +49,6 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
             let background: SnowBackground;
             let lastTimestamp: number;
             let fpsInterval: number;
-            let fps: number;
 
             return new Promise(( accept, reject ) => {
                 stompClientRef.current = startSnowDataStream(startedSession, (data: DataView) => {
@@ -96,21 +95,16 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
 
             function startAnimation(): void {
                 lastTimestamp = Date.now();
-                fps = metadata.fps;
-                fpsInterval = 1000 / fps;
+                fpsInterval = 1000 / metadata.fps;
                 animate();
             }
 
             function animate(): void  {
                 if (stateRef.current !== "playing") {
+                    canvasRef.current.clearBackground();
                     return;
                 }
                 requestAnimationFrame(animate);
-                setSessionStatus("playing", {
-                    animationProgress: 0,
-                    bufferLevel: bufferLevel(),
-                });
-
                 const now = Date.now();
                 const elapsed = now - lastTimestamp;
                 if (elapsed <= fpsInterval) {
@@ -122,6 +116,11 @@ export function useSnowAnimation(sessionIdx: number, canvasRef: MutableRefObject
                 if (!frame) {
                     return;
                 }
+
+                setSessionStatus("playing", {
+                    animationProgress: frame.frameNum * 100 / metadata.totalNumberOfFrames,
+                    bufferLevel: bufferLevel(),
+                });
 
                 drawFrame(frame);
             }

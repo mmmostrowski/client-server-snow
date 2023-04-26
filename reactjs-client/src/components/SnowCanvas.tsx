@@ -49,15 +49,12 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(func
 
         return {
             clearBackground() {
-                whenContext((ctx) => {
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-                });
+                resetView();
             },
             drawChar(x: number, y: number, char: string) {
                 whenContext((ctx) => {
-                    const textOffsetH = Math.floor(scaleFactorV * -0.25);
-                    const textOffsetV = Math.floor(scaleFactorV * 1.9);
+                    const textOffsetH = Math.floor(scaleFactorV * 0);
+                    const textOffsetV = Math.floor(scaleFactorV * 0);
 
                     ctx.fillText(char,
                         viewportX(x) + textOffsetH,
@@ -68,7 +65,7 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(func
             setCurrentFont(color: string, scaleFactor: number) {
                 whenContext((ctx) => {
                     const textHeight = Math.floor(scaleFactorV * scaleFactor);
-                    ctx.font = `${textHeight}px Courier New`;
+                    ctx.font = `bold ${textHeight}px Courier New`;
                     ctx.fillStyle = color;
                 });
             },
@@ -78,12 +75,28 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(func
 
     // scale font to canvas
     useEffect(() => {
+        resetView();
+    }, [ width, height, canvasWidth, canvasHeight, scaleFactorV ]);
+
+    function resetView() {
         whenContext((ctx) => {
+            ctx.fillStyle = '#778';
+            ctx.fillRect(0, 0,
+                canvasRef.current.width,
+                canvasRef.current.height
+            );
+
+            ctx.fillStyle = 'black';
+            ctx.fillRect(
+                canvasOffsetH, canvasOffsetV,
+                canvasRef.current.width - canvasOffsetH * 2,
+                canvasRef.current.height - canvasOffsetV * 2
+            );
+
             const textHeight = Math.floor(scaleFactorV * 2.5);
             ctx.font = `${textHeight}px Courier New`;
         });
-    }, [ canvasWidth, canvasHeight, scaleFactorV ]);
-
+    }
 
     function whenContext(callback: (ctx: CanvasRenderingContext2D) => void ): void {
         const ctx = canvasRef.current?.getContext('2d');

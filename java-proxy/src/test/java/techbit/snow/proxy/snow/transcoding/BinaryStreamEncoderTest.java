@@ -27,7 +27,7 @@ class BinaryStreamEncoderTest {
     @Test
     void whenEncodingMetadata_thenBinaryDataAreInOutput() throws IOException {
         SnowAnimationMetadata metadata = new SnowAnimationMetadata(
-                99, 101, 15, 73
+                99, 101, 15, 73, 987
         );
 
         encoder.encodeMetadata(metadata, out);
@@ -37,6 +37,7 @@ class BinaryStreamEncoderTest {
                 0, 0, 0, 101,
                 0, 0, 0, 15,
                 0, 0, 0, 73,
+                0, 0, 3, -37,
         };
 
         assertArrayEquals(expected, out.toByteArray());

@@ -37,12 +37,14 @@ class BinaryStreamDecoderTest {
         DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(binary));
         SnowAnimationMetadata metadata = decoder.decodeMetadata(
                 inputStream,
-                new ServerMetadata(Duration.ofSeconds(3)));
+                new ServerMetadata(Duration.ofSeconds(3)),
+                Duration.ofSeconds(7));
 
         assertEquals(127, metadata.width());
         assertEquals(65536, metadata.height());
         assertEquals(16777216, metadata.fps());
         assertEquals(50331648, metadata.bufferSizeInFrames());
+        assertEquals(117440512, metadata.totalNumberOfFrames());
     }
 
     @Test
@@ -55,7 +57,9 @@ class BinaryStreamDecoderTest {
 
         assertThrows(IllegalStateException.class, () -> decoder.decodeMetadata(
                 new DataInputStream(new ByteArrayInputStream(binary)),
-                new ServerMetadata(Duration.ofSeconds(8))));
+                new ServerMetadata(Duration.ofSeconds(8)),
+                Duration.ofMinutes(1)
+                ));
     }
 
     @Test

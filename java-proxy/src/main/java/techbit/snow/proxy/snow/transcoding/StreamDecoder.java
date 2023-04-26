@@ -4,10 +4,11 @@ import techbit.snow.proxy.dto.*;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.time.Duration;
 
 public interface StreamDecoder {
 
-    SnowAnimationMetadata decodeMetadata(DataInputStream dataStream, ServerMetadata serverMetadata) throws IOException;
+    SnowAnimationMetadata decodeMetadata(DataInputStream dataStream, ServerMetadata serverMetadata, Duration duration) throws IOException;
 
     SnowBackground decodeBackground(DataInputStream dataInputStream) throws IOException;
 

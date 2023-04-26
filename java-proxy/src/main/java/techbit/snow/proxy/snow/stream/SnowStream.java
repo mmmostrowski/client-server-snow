@@ -105,7 +105,7 @@ public final class SnowStream {
         final DataInputStream dataStream = new DataInputStream(stream);
 
         log.debug("startConsumingSnowData( {} ) | Reading metadata", sessionId);
-        metadata = decoder.decodeMetadata(dataStream, serverMetadata);
+        metadata = decoder.decodeMetadata(dataStream, serverMetadata, phpSnowConfig.duration());
 
         log.debug("startConsumingSnowData( {} ) | Reading background", sessionId);
         background = decoder.decodeBackground(dataStream);

@@ -9,17 +9,13 @@ export default class SnowDecoder {
         let height=data.getInt32(4, false);
         let fps=data.getInt32(8, false);
         let bufferSizeInFrames=data.getInt32(12, false);
+        let totalNumberOfFrames=data.getInt32(16, false);
 
-        return {
-            width: width,
-            height: height,
-            fps: fps,
-            bufferSizeInFrames: bufferSizeInFrames,
-        }
+        return { width, height, fps, bufferSizeInFrames, totalNumberOfFrames }
     }
 
     public decodeBackground(data : DataView): SnowBackground {
-        let ptr=16; // after metadata
+        let ptr=20; // after metadata
 
         let width=data.getInt32(ptr, false);
         if (width <= 0) {
