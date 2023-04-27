@@ -10,10 +10,10 @@ export const snowConstraints = {
 
     minWidth: 40,
     minHeight: 20,
-    defaultWidth: 120,
-    defaultHeight: 60,
-    maxWidth: 200,
-    maxHeight: 150,
+    defaultWidth: 200,
+    defaultHeight: 90,
+    maxWidth: 700,
+    maxHeight: 350,
 
     minFps: 1,
     defaultFps: 33,
