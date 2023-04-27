@@ -15,6 +15,7 @@ function main() {
         echo ''
         echo "To start java-proxy server: java -jar /snow/java-proxy/build/libs/proxy-0.0.1-SNAPSHOT.jar"
         echo "To start java-proxy development: gradle --project-dir /snow/java-proxy bootRun"
+        echo "To test java-proxy: gradle --project-dir /snow/java-proxy clean test"
         echo ''
         echo 'To start reactjs-client server ( please run from host ): ./run snow-client '
         echo 'To start reactjs-client development ( please run from host ): ./run snow-client dev'
