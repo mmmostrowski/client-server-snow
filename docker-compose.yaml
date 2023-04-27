@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  snow-webapp:
+    build:
+      context: .
+      dockerfile: docker/reactjs-client/Dockerfile
+    ports:
+      - "3000:3000"
+  snow-endpoint:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: "snow-server"
+    ports:
+      - "8080:8080"
+

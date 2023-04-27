@@ -9,7 +9,7 @@ function main() {
         echo ''
         echo '--'
         echo ''
-        echo 'To start reactjs-client server: node app.js'
+        echo 'To start reactjs-client server: npm run pack && npm run build && node app.js'
         echo 'To start reactjs-client development: npm run start'
         echo ''
         echo ''
@@ -36,6 +36,10 @@ function installFreshCopyOfNodeModules() {
 }
 
 function installFreshCopyOfNodeBuild() {
+    if [[ ! -e /data/snow-node-build/ ]]; then
+        return;
+    fi
+
     rm -rf /snow/reactjs-client/build/
     cp -rf /data/snow-node-build/ /snow/reactjs-client/build/
 }
