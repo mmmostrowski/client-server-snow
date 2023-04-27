@@ -26,7 +26,7 @@ class WebSocketConfigTest {
 
     @BeforeEach
     void setup() {
-        config = new WebSocketConfig();
+        config = new WebSocketConfig("");
     }
 
 

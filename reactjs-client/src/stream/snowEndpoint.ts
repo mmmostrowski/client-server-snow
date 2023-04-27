@@ -1,6 +1,6 @@
 import { Client, IMessage } from '@stomp/stompjs';
 
-const snowEndpointUrl="http://127.0.0.1:8080"
+const snowEndpointUrl=process.env.REACT_APP_SNOW_ENDPOINT_URL;
 
 export interface SnowAnimationConfiguration {
     presetName: string,
