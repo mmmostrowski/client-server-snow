@@ -59,4 +59,13 @@ class NamedPipesTest {
         assertThrows(IOException.class, () -> namedPipes.destroyAll());
     }
 
+    @Test
+    void whenNoPipesFolder_thenNoErrorOccurs() {
+        if (!folder.toFile().delete()) {
+            throw new RuntimeException("Cannot test properly. Need to be able to delete folder!");
+        }
+
+        assertDoesNotThrow(() -> namedPipes.destroyAll());
+    }
+
 }

@@ -1,6 +1,7 @@
 package techbit.snow.proxy.snow.php;
 
 import jakarta.annotation.Nullable;
+import lombok.Generated;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
@@ -74,6 +75,7 @@ public final class PhpSnowApp {
         return process != null && process.isAlive();
     }
 
+    @Generated
     @SneakyThrows
     private void waitAMoment()  {
         Thread.sleep(300);

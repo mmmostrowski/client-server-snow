@@ -1,6 +1,7 @@
 package techbit.snow.proxy.proxy;
 
 import com.google.common.collect.Maps;
+import lombok.Generated;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,54 +92,55 @@ public final class ProxyService implements ApplicationListener<SnowStream.SnowSt
     }
 
     private SnowStream snowStream(String sessionId, Map<String, String> config) throws IOException {
-        SnowStream stream;
         synchronized (sessionLock(sessionId)) {
             if (session.exists(sessionId)) {
-                log.debug("snowStream( {} ) | Returning existing stream", sessionId);
-                stream = streams.get(sessionId);
-                if (!config.isEmpty()) {
-                    stream.ensureCompatibleWithConfig(configConverter.fromMap(config));
-                }
+                return existingStream(sessionId, config);
             } else {
-                log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, config);
-                stream = snowStreamProvider.create(sessionId, config);
-                stream.startPhpApp();
-                stream.startConsumingSnowData();
-                streams.put(sessionId, stream);
-                session.create(sessionId);
+                return createStream(sessionId, config);
             }
+        }
+    }
+
+    private SnowStream existingStream(String sessionId, Map<String, String> config) {
+        log.debug("snowStream( {} ) | Returning existing stream", sessionId);
+        SnowStream stream = streams.get(sessionId);
+        if (!config.isEmpty()) {
+            stream.ensureCompatibleWithConfig(configConverter.fromMap(config));
         }
         return stream;
     }
 
+    private SnowStream createStream(String sessionId, Map<String, String> config) throws IOException {
+        log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, config);
+        SnowStream stream = snowStreamProvider.create(sessionId, config);
+        stream.startPhpApp();
+        stream.startConsumingSnowData();
+        streams.put(sessionId, stream);
+        session.create(sessionId);
+        return stream;
+    }
+
     private synchronized void removeStream(String sessionId) {
-        synchronized (sessionLock(sessionId)) {
-            if (session.exists(sessionId)) {
-                log.debug("stopStream( {} ) | Removing stream", sessionId);
-                session.delete(sessionId);
-                streams.remove(sessionId);
-            }
-        }
+        log.debug("stopStream( {} ) | Removing stream", sessionId);
+        session.delete(sessionId);
+        streams.remove(sessionId);
     }
 
     public boolean hasSession(String sessionId) {
-        boolean exists;
         synchronized (sessionLock(sessionId)) {
-            exists = session.exists(sessionId);
+            return session.exists(sessionId);
         }
-        return exists;
     }
 
     public boolean isSessionRunning(String sessionId) {
-        boolean isRunning;
         synchronized (sessionLock(sessionId)) {
-            isRunning = session.exists(sessionId) && streams.get(sessionId).isActive();
+            return session.exists(sessionId) && streams.get(sessionId).isActive();
         }
-        return isRunning;
     }
 
     @Override
     @SneakyThrows
+    @Generated
     public void onApplicationEvent(SnowStream.SnowStreamFinishedEvent event) {
         stopSession(event.getSessionId());
     }

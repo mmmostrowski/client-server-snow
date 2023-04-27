@@ -1,7 +1,6 @@
 package techbit.snow.proxy.websocket;
 
 import com.google.common.collect.Maps;
-import lombok.SneakyThrows;
 import org.springframework.context.ApplicationListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -44,7 +43,6 @@ public final class WebsocketsController implements ApplicationListener<SessionDi
     }
 
     @Override
-    @SneakyThrows
     public void onApplicationEvent(SessionDisconnectEvent event) {
         final Principal user = event.getUser();
         if (clients.containsKey(user)) {

@@ -46,7 +46,7 @@ class ProxyServiceTest {
     @Spy
     private Map<String, SnowStream> streams = new HashMap<>();
     @Mock
-    private PhpSnowConfigConverter configProvider;
+    private PhpSnowConfigConverter configConverter;
     @Mock
     private SnowStreamClient snowDataClient;
     @Mock
@@ -56,8 +56,8 @@ class ProxyServiceTest {
 
     @BeforeEach
     void setup() {
-        proxyService = new ProxyService(session, snowFactory, configProvider);
-        proxyServiceSpyStreams = new ProxyService(session, snowFactory, configProvider, streams);
+        proxyService = new ProxyService(session, snowFactory, configConverter);
+        proxyServiceSpyStreams = new ProxyService(session, snowFactory, configConverter, streams);
     }
 
     @Test
@@ -132,6 +132,15 @@ class ProxyServiceTest {
     }
 
     @Test
+    void whenSessionExistsButNotRunning_thenProxyIsNotRunning() {
+        when(session.exists("session-abc")).thenReturn(true);
+        when(streams.get("session-abc")).thenReturn(snowStream);
+        when(snowStream.isActive()).thenReturn(false);
+
+        assertFalse(proxyServiceSpyStreams.isSessionRunning("session-abc"));
+    }
+
+    @Test
     void whenStreamIsActive_thenProxyIsRunning() throws IOException, InterruptedException, ConsumerThreadException {
         when(snowFactory.create("session-abc", configMap)).thenReturn(snowStream);
         when(snowStream.isActive()).thenReturn(true);
@@ -179,7 +188,7 @@ class ProxyServiceTest {
         when(session.exists("session-abc")).thenReturn(true);
         when(streams.get("session-abc")).thenReturn(snowStream);
         when(snowStream.config()).thenReturn(config);
-        when(configProvider.toMap(config)).thenReturn(expected);
+        when(configConverter.toMap(config)).thenReturn(expected);
 
         Map<String, Object> details = proxyServiceSpyStreams.sessionDetails("session-abc");
 
@@ -201,6 +210,38 @@ class ProxyServiceTest {
         proxyServiceSpyStreams.onApplicationEvent(streamFinishedEvent);
 
         verify(snowStream).stop();
+    }
+
+//    @Test
+//    void givenDifferentConfiguration_whenAskForExistingStream_thenThrowException() throws ConsumerThreadException, IOException, InterruptedException {
+//        when(session.exists("session-abc")).thenReturn(true);
+//        when(streams.get("session-abc")).thenReturn(snowStream);
+//
+//        proxyServiceSpyStreams.streamSessionTo("session-abc", out, streamEncoder, Collections.emptyMap());
+//    }
+
+    @Test
+    void givenCustomConfiguration_whenStreamToExisting_thenEnsureIsCompatible() throws ConsumerThreadException, IOException, InterruptedException {
+        Map<String, String> setup = Map.of("key", "val");
+        when(session.exists("session-abc")).thenReturn(true);
+        when(streams.get("session-abc")).thenReturn(snowStream);
+        PhpSnowConfig snowSetup = mock(PhpSnowConfig.class);
+        when(configConverter.fromMap(setup)).thenReturn(snowSetup);
+
+        proxyServiceSpyStreams.streamSessionTo("session-abc", out, streamEncoder, setup);
+
+        verify(snowStream).ensureCompatibleWithConfig(snowSetup);
+    }
+
+    @Test
+    void givenNoCustomConfiguration_whenStreamToExisting_thenNoNeedToEnsureIsCompatible() throws ConsumerThreadException, IOException, InterruptedException {
+        when(session.exists("session-abc")).thenReturn(true);
+        when(streams.get("session-abc")).thenReturn(snowStream);
+        PhpSnowConfig snowSetup = mock(PhpSnowConfig.class);
+
+        proxyServiceSpyStreams.streamSessionTo("session-abc", out, streamEncoder, Collections.emptyMap());
+
+        verify(snowStream, never()).ensureCompatibleWithConfig(snowSetup);
     }
 
 }

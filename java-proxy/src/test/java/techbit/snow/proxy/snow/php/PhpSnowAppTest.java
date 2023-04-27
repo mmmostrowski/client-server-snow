@@ -92,6 +92,16 @@ class PhpSnowAppTest {
     }
 
     @Test
+    void givenProcessInterruption_whenStart_thenIsNotAlive() throws IOException {
+        when(builder.start().isAlive()).thenReturn(true);
+
+        phpSnowApp.start();
+        when(builder.start().isAlive()).thenReturn(false);
+
+        assertFalse(phpSnowApp.isAlive());
+    }
+
+    @Test
     void whenStop_thenIsNotAlive() throws IOException {
         when(builder.start().isAlive()).thenReturn(true);
 

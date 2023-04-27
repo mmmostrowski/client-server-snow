@@ -70,10 +70,24 @@ class ProxyControllerTest {
         when(streaming.isSessionRunning("session-abc")).thenReturn(true);
 
         Map<?, ?> details = controller.startSession(
-                "session-abc", "", request);
+                "session-abc", "/", request);
 
         assertFalse(details.isEmpty());
         assertExpectedDetails(details);
+    }
+
+    @Test
+    void givenCustomConfiguration_whenStartSession_thenStartSessionWithCustomParams() throws IOException {
+        when(streaming.hasSession("session-abc")).thenReturn(true);
+        when(streaming.isSessionRunning("session-abc")).thenReturn(true);
+
+        controller.startSession(
+                "session-abc", "/my1/val1/my2/val2/", request);
+
+        verify(streaming).startSession("session-abc", Map.of(
+                "my1", "val1",
+                "my2", "val2"
+        ));
     }
 
     @Test
@@ -113,9 +127,9 @@ class ProxyControllerTest {
     }
 
     @Test
-    void givenCustomConfigurationWithEmptyKeyValues_whenStreamToClient_thenThrowException() throws InterruptedException, ExecutionException {
+    void givenCustomConfigurationWithEmptyValues_whenStreamToClient_thenThrowException() throws InterruptedException, ExecutionException {
         StreamingResponseBody responseBody = controller.streamTextToClient(
-                "session-abc", "/key1///value1/").get();
+                "session-abc", "/key1//key2/value1/").get();
 
         assertThrows(InvalidRequestException.class, () -> responseBody.writeTo(out));
     }

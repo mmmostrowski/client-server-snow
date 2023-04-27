@@ -60,21 +60,10 @@ public final class SnowStreamWebsocketClient implements SnowStreamClient {
     private void sendToWebsocketClient() {
         messagingTemplate.convertAndSendToUser(clientId, "/stream/", output.toByteArray());
         output.reset();
-//        simulateNetworkProblems();
     }
 
     public void deactivate() {
         isActive = false;
     }
 
-
-//    private void simulateNetworkProblems() {
-//        try {
-//            if (Math.random() > 0.37) {
-//                Thread.sleep(50);
-//            }
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
 }
