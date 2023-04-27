@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.log4j.Log4j2;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,7 +20,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Log4j2
 @RestController
-@CrossOrigin({ "http://127.0.0.1:3000", "http://127.0.0.1:8181" })
 public class ProxyController {
 
     private final ProxyService streaming;
