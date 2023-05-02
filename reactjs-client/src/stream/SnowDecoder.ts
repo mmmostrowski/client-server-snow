@@ -3,7 +3,8 @@ import SnowAnimationMetadata from '../dto/SnowAnimationMetadata';
 import SnowBackground, {NoSnowBackground} from '../dto/SnowBackground';
 import SnowBasis, {NoSnowBasis} from '../dto/SnowBasis';
 
-export default class SnowDecoder {
+export default class SnowDecoder
+{
 
     public decodeHeader(data : DataView): [ SnowAnimationMetadata, SnowBackground ] {
         return [ this.decodeMetadata(data), this.decodeBackground(data) ];

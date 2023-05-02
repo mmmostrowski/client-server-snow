@@ -45,7 +45,7 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
 
         const textHeight = Math.floor(scaleFactor * 2.5);
         ctx.font = `${textHeight}px Courier New`;
-    }, [ canvasOffsetH, canvasOffsetV, scaleFactor ]);
+    }, [ canvasOffsetH, canvasOffsetV, scaleFactor, canvasColor, canvasWorkspaceColor ]);
 
 
     useImperativeHandle(ref, (): SnowCanvasRefHandler => {
@@ -79,7 +79,7 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
         }
 
         function cellY(y : number): number {
-            return (y + 0.93 ) * scaleFactor + canvasOffsetV;
+            return ( y + 1 ) * scaleFactor + canvasOffsetV;
         }
 
     }, [ canvasWidth, canvasHeight, resetView, scaleFactor, canvasOffsetH, canvasOffsetV ]);

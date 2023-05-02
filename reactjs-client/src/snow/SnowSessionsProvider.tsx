@@ -8,8 +8,8 @@ export const SnowSessionsDispatchContext = createContext(null);
 export const snowConstraints = {
     defaultSessionId: "session-abc",
 
-    minWidth: 4,
-    minHeight: 2,
+    minWidth: 40,
+    minHeight: 20,
     defaultWidth: 200,
     defaultHeight: 90,
     maxWidth: 700,
