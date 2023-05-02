@@ -61,6 +61,7 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
         }
     }
 
+
     async function handleStop() {
         if (isLocked) {
             return;
@@ -68,6 +69,7 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
         setSessionStatus('stopped-not-found');
         setPlayAnimation(false);
     }
+
 
     // Periodical session checking
     useEffect(() => {
@@ -80,7 +82,8 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
         return () => {
             clearTimeout(handler);
         };
-    }, [ refreshCounter ]);
+    }, [ refreshCounter, refreshEveryMs ]);
+
 
     // Session checking
     useEffect(() => {
@@ -133,8 +136,7 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
 
         const controller = new AbortController();
 
-        checkStatus()
-            // .then(() => console.log('STATUS CHECKED'));
+        void checkStatus();
 
         return () => {
             controller.abort()

@@ -1,7 +1,7 @@
 import SnowDataFrame from '../dto/SnowDataFrame';
 import SnowAnimationMetadata from '../dto/SnowAnimationMetadata';
-import SnowBackground from '../dto/SnowBackground';
-import SnowBasis from '../dto/SnowBasis';
+import SnowBackground, {NoSnowBackground} from '../dto/SnowBackground';
+import SnowBasis, {NoSnowBasis} from '../dto/SnowBasis';
 
 export default class SnowDecoder {
 
@@ -30,12 +30,7 @@ export default class SnowDecoder {
 
         const width=data.getInt32(ptr, false);
         if (width === 0) {
-            return {
-                isNone: true,
-                width: 0,
-                height: 0,
-                pixels: [],
-            };
+            return NoSnowBackground;
         }
         ptr += 4;
         const height=data.getInt32(ptr, false);
@@ -75,13 +70,7 @@ export default class SnowDecoder {
 
         const numOfPixels = data.getInt32(ptr, false);
         if (numOfPixels === 0) {
-            return {
-                isNone: true,
-                numOfPixels: 0,
-                x: new Uint32Array(),
-                y: new Uint32Array(),
-                pixels: new Uint8Array(),
-            };
+            return NoSnowBasis;
         }
         ptr += 4;
 

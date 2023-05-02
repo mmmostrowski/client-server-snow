@@ -33,6 +33,11 @@ const animationConstraints = {
         size: 10,
         timeoutSec: 2.5,
     },
+
+    canvas: {
+        color: '#778',
+        backgroundColor: 'black',
+    }
 }
 
 interface SnowDrawingProps {
@@ -52,6 +57,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
     function SnowDrawing({ sessionIdx }, ref )
 {
     const canvasRef = useRef<SnowCanvasRefHandler>(null);
+    const { canvas } = animationConstraints;
 
     useImperativeHandle(ref, (): SnowDrawingRefHandler => {
         return {
@@ -119,5 +125,10 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
         };
     });
 
-    return <SnowCanvas sessionIdx={sessionIdx} ref={canvasRef} />;
+    return <SnowCanvas
+        sessionIdx={sessionIdx}
+        ref={canvasRef}
+        canvasColor={canvas.color}
+        canvasWorkspaceColor={canvas.backgroundColor}
+    />;
 });

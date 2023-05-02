@@ -1,17 +1,16 @@
 import * as React from "react";
-import {useEffect, useRef, useState} from "react";
-import {SnowCanvasRefHandler} from "../SnowCanvas";
-import {SnowDrawing, SnowDrawingRefHandler} from "./SnowDrawing";
+import { useEffect, useRef } from "react";
+import { SnowDrawing, SnowDrawingRefHandler } from "./SnowDrawing";
 import {
     SnowAnimationConfiguration, SnowClientHandler,
     StartEndpointResponse,
     startSnowDataStream, startSnowSession,
-    stopSnowDataStream
+    stopSnowDataStream, stopSnowSession
 } from "../../stream/snowEndpoint";
-import SnowBasis from "../../dto/SnowBasis";
+import SnowBasis, {NoSnowBasis} from "../../dto/SnowBasis";
 import SnowDataFrame from "../../dto/SnowDataFrame";
 import SnowAnimationMetadata from "../../dto/SnowAnimationMetadata";
-import SnowBackground from "../../dto/SnowBackground";
+import SnowBackground, {NoSnowBackground} from "../../dto/SnowBackground";
 import SnowDecoder from "../../stream/SnowDecoder";
 import {useSnowSession} from "../../snow/SnowSessionsProvider";
 
@@ -54,31 +53,38 @@ type State = "stopped" | "buffering" | "playing" | "goodbye";
 
 class SnowAnimationController {
 
-    private readonly onFinish: () => void;
-    private readonly onBuffering: (percent: number) => void;
-    private readonly onPlaying: (progress: number, bufferPercent: number) => void;
-    private readonly onError: (error: Error) => void;
+    private onFinish: () => void;
+    private onBuffering: (percent: number) => void;
+    private onPlaying: (progress: number, bufferPercent: number) => void;
+    private onError: (error: Error) => void;
+
+    private readonly sessionId: string;
 
     private canvas: SnowDrawingRefHandler;
     private state: State = "stopped";
-    private firstFrame = true;
+    private firstFrame: boolean = true;
     private metadata: SnowAnimationMetadata;
-    private basis: SnowBasis;
-    private background: SnowBackground;
+    private basis: SnowBasis = NoSnowBasis;
+    private background: SnowBackground = NoSnowBackground;
     private lastTimestamp: number;
     private fpsInterval: number;
-    private buffer = new Array<[SnowDataFrame, SnowBasis]>();
-    private decoder = new SnowDecoder();
+    private buffer: [SnowDataFrame, SnowBasis][];
+    private decoder: SnowDecoder = new SnowDecoder();
     private needsGoodbye: boolean = false;
     private snowHandler: SnowClientHandler;
 
-    constructor(
+    public constructor(sessionId: string) {
+        this.sessionId = sessionId;
+        this.reset();
+    }
+
+    public configure(
         onBuffering: (percent: number) => void,
         onPlaying: (progress: number, bufferPercent: number) => void,
         onFinish: () => void,
         onError: (error: Error) => void,
         canvas: SnowDrawingRefHandler
-    ) {
+    ): void {
         this.onFinish = onFinish;
         this.onBuffering = onBuffering;
         this.onPlaying = onPlaying;
@@ -86,21 +92,50 @@ class SnowAnimationController {
         this.canvas = canvas;
     }
 
-    public async startProcessing(sessionId: string, configuration: SnowAnimationConfiguration, controller?: AbortController) {
+    public async startProcessing(configuration: SnowAnimationConfiguration, controller: AbortController) {
         try {
-            const startedSession = await startSnowSession(sessionId, configuration, controller);
-            await this.startStream(startedSession, this.onServerData.bind(this));
+            if (this.state != 'stopped') {
+                return;
+            }
+            this.startStream(
+                await startSnowSession(this.sessionId, configuration, controller),
+                this.onServerData.bind(this)
+            );
             this.state = "buffering";
         } catch (error) {
             this.onError(error);
         }
     }
 
-    public async stopProcessing() {
+    public async stopProcessing(controller: AbortController) {
+        try {
+            if (this.state == 'stopped') {
+                return;
+            }
+            this.state = "stopped";
+            this.stopStream();
+            await stopSnowSession(this.sessionId, controller);
+        } catch (error) {
+            this.onError(error);
+        } finally {
+            this.reset();
+        }
+    }
 
+    private reset(): void {
+        this.state = "stopped";
+        this.basis = NoSnowBasis;
+        this.background = NoSnowBackground;
+        this.needsGoodbye = false;
+        this.firstFrame = true;
+        this.buffer = new Array<[SnowDataFrame, SnowBasis]>();
     }
 
     private onServerData(data: DataView): void {
+        if (this.state === "stopped") {
+            return;
+        }
+
         if (this.firstFrame) {
             this.firstFrame = false;
             [ this.metadata, this.background ] = this.decoder.decodeHeader(data);
@@ -133,7 +168,7 @@ class SnowAnimationController {
 
     private animate(): void {
         if (this.state === "stopped") {
-            this.animationStep();
+            this.canvas.clear();
             return;
         }
 
@@ -146,11 +181,7 @@ class SnowAnimationController {
         }
     }
 
-    private animationStep() {
-        if (this.state === "stopped") {
-            this.canvas.clear();
-            return;
-        }
+    private animationStep(): void {
         if (this.state === "goodbye") {
             this.canvas.drawGoodbye();
             return;
@@ -159,7 +190,7 @@ class SnowAnimationController {
         if (this.buffer.length === 0) {
             return;
         }
-        const [frame, frameBasis] = this.buffer.shift();
+        const [ frame, frameBasis] = this.buffer.shift();
 
         if (frame.isLast) {
             this.state = "goodbye";
@@ -179,21 +210,21 @@ class SnowAnimationController {
         this.onPlaying(this.animationProgress(frame), this.bufferLevel());
     }
 
-    private animationDraw(frame: SnowDataFrame) {
+    private animationDraw(frame: SnowDataFrame): void {
         this.canvas.clear();
         this.canvas.drawBackground(this.background);
         this.canvas.drawSnow(frame);
         this.canvas.drawBasis(this.basis);
     }
 
-    private startStream(session: StartEndpointResponse, onStart: (data: DataView) => void) {
+    private startStream(session: StartEndpointResponse, onData: (data: DataView) => void): void {
         if (this.snowHandler) {
             throw Error("Please stopStream() first!");
         }
-        this.snowHandler = startSnowDataStream(session, onStart);
+        this.snowHandler = startSnowDataStream(session, onData);
     }
 
-    private stopStream() {
+    private stopStream(): void {
         if (!this.snowHandler) {
             return;
         }
@@ -225,29 +256,34 @@ export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
         onBuffering, onPlaying, onFinish, onError
     } = props;
     const { sessionId} = useSnowSession(sessionIdx);
-    const [ snowController, setController ] = useState<SnowAnimationController>(null);
     const canvasRef = useRef<SnowDrawingRefHandler>(null);
+    const snowControllerRef = useRef<SnowAnimationController>(new SnowAnimationController(sessionId));
 
 
     useEffect(() => {
-        let canvas: SnowDrawingRefHandler = canvasRef.current;
-        setController(new SnowAnimationController(onBuffering, onPlaying, onFinish, onError, canvas));
-    }, []);
-
-
-    useEffect(() => {
+        const snowController = snowControllerRef.current;
         if (!snowController) {
             return;
         }
 
-        if (play) {
-            const abortController = new AbortController();
-            snowController.startProcessing(sessionId, configuration, abortController);
-            return () => { abortController.abort(); };
-        } else {
-            snowController.stopProcessing();
+        snowController.configure(onBuffering, onPlaying, onFinish, onError, canvasRef.current);
+    }, [ onBuffering, onPlaying, onFinish, onError, canvasRef ]);
+
+
+    useEffect(() => {
+        const snowController = snowControllerRef.current;
+        if (!snowController) {
+            return;
         }
-    }, [ play, snowController ]);
+
+        const abortController = new AbortController();
+        if (play) {
+            void snowController.startProcessing(configuration, abortController);
+        } else {
+            void snowController.stopProcessing(abortController);
+        }
+        return () => { abortController.abort() };
+    }, [ play, sessionId, configuration ]);
 
 
     return <SnowDrawing sessionIdx={sessionIdx} ref={canvasRef} />;

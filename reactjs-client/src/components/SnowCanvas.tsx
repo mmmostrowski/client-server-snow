@@ -1,64 +1,52 @@
 import * as React from 'react';
-import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import {useRef, useEffect, forwardRef, useImperativeHandle, useCallback} from 'react';
 import { useSnowSession } from '../snow/SnowSessionsProvider'
 import { useResizeDetector } from 'react-resize-detector';
 
 interface SnowCanvasProps {
     sessionIdx: number,
+    canvasColor: string,
+    canvasWorkspaceColor: string,
 }
 
 export interface SnowCanvasRefHandler {
     clearCanvas(): void;
-    setCurrentFont(color: string, size: string|number, face?: string): void; // TODO: simplify size param
+    setCurrentFont(color: string, size: number, face?: string): void;
     drawChar(x: number, y: number, char: string): void;
     drawTextInCenter(text: string): void;
 }
 
 export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
-    function SnowCanvas({ sessionIdx }, ref )
+    function SnowCanvas({ sessionIdx , canvasWorkspaceColor, canvasColor}, ref )
 {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const { validatedWidth : width, validatedHeight : height } = useSnowSession(sessionIdx);
     const { width : canvasWidth, height : canvasHeight, ref : canvasWrapperRef } = useResizeDetector();
 
-    let canvasOffsetV : number;
-    let canvasOffsetH : number;
-    let workspaceCanvasWidth : number;
-    let workspaceCanvasHeight : number;
+    const isHoriz = canvasHeight * width  > canvasWidth * height;
+    const canvasOffsetH = isHoriz ? 0 : ( canvasWidth - canvasHeight * width / height ) / 2;
+    const canvasOffsetV = !isHoriz ? 0 : ( canvasHeight - canvasWidth * height / width ) / 2;
+    const scaleFactor = isHoriz ? canvasWidth / width : canvasHeight / height;
 
-    // TODO: (canvasHeight * width  > canvasWidth * height) {
-    if (canvasHeight * ( width / height ) > canvasWidth) {
-        workspaceCanvasWidth = canvasWidth;
-        workspaceCanvasHeight = canvasWidth * ( height / width );
-        canvasOffsetH = 0;
-        canvasOffsetV = ( canvasHeight - workspaceCanvasHeight ) / 2;
-    } else {
-        workspaceCanvasHeight = canvasHeight;
-        workspaceCanvasWidth = canvasHeight * ( width / height );
-        canvasOffsetH = ( canvasWidth - workspaceCanvasWidth ) / 2;
-        canvasOffsetV = 0;
-    }
 
-    const scaleFactorH = workspaceCanvasWidth / width;
-    const scaleFactorV = workspaceCanvasHeight / height;
-
-    function resetView(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = '#778';
+    const resetView = useCallback( (ctx: CanvasRenderingContext2D): void => {
+        ctx.fillStyle = canvasColor;
         ctx.fillRect(0, 0,
             canvasRef.current.width,
             canvasRef.current.height
         );
 
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = canvasWorkspaceColor;
         ctx.fillRect(
             canvasOffsetH, canvasOffsetV,
             canvasRef.current.width - canvasOffsetH * 2,
             canvasRef.current.height - canvasOffsetV * 2
         );
 
-        const textHeight = Math.floor(scaleFactorV * 2.5);
+        const textHeight = Math.floor(scaleFactor * 2.5);
         ctx.font = `${textHeight}px Courier New`;
-    }
+    }, [ canvasOffsetH, canvasOffsetV, scaleFactor ]);
+
 
     useImperativeHandle(ref, (): SnowCanvasRefHandler => {
         const ctx: CanvasRenderingContext2D = canvasRef.current?.getContext('2d');
@@ -70,13 +58,9 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
             drawChar(x: number, y: number, char: string): void {
                 ctx.fillText(char, cellX(x), cellY(y));
             },
-            setCurrentFont(color: string, size: string|number, face: string = "Courier New"): void {
-                if (typeof size === 'string') {
-                    ctx.font = size + ' ' + face;
-                } else {
-                    const textHeight = Math.floor(scaleFactorV * size);
-                    ctx.font = `bold ${textHeight}px ${face}`;
-                }
+            setCurrentFont(color: string, size: number, face: string = "Courier New"): void {
+                const textHeight = Math.floor(scaleFactor * size);
+                ctx.font = `bold ${textHeight}px ${face}`;
                 ctx.fillStyle = color;
             },
             drawTextInCenter(text: string): void {
@@ -91,14 +75,15 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
         };
 
         function cellX(x : number): number {
-            return x * scaleFactorH + canvasOffsetH;
+            return x * scaleFactor + canvasOffsetH;
         }
 
         function cellY(y : number): number {
-            return (y + 0.93 ) * scaleFactorV + canvasOffsetV;
+            return (y + 0.93 ) * scaleFactor + canvasOffsetV;
         }
 
-    }, [ scaleFactorH, scaleFactorV, canvasOffsetH, canvasOffsetV ]);
+    }, [ canvasWidth, canvasHeight, resetView, scaleFactor, canvasOffsetH, canvasOffsetV ]);
+
 
     // scale font to canvas size
     useEffect(() => {
@@ -106,7 +91,8 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
         if (ctx) {
             resetView(ctx);
         }
-    }, [ width, height, canvasWidth, canvasHeight ]);
+    }, [ width, height, canvasWidth, canvasHeight, resetView ]);
+
 
     return (
         <div ref={canvasWrapperRef} className="snow-animation-canvas-wrapper" >

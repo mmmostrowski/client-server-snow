@@ -171,7 +171,7 @@ export function useDelayedSnowSession(sessionIdx: number, delayMs: number = 70):
             return;
         }
         isWaitingRef.current = true;
-        const handler = setTimeout(() => {
+        setTimeout(() => {
             setCurrentSession(targetSessionRef.current);
             isWaitingRef.current = false;
         }, delayMs);
