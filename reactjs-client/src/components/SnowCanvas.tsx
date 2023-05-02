@@ -18,7 +18,6 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
     function SnowCanvas({ sessionIdx }, ref )
 {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const ctx: CanvasRenderingContext2D = canvasRef.current?.getContext('2d');
     const { validatedWidth : width, validatedHeight : height } = useSnowSession(sessionIdx);
     const { width : canvasWidth, height : canvasHeight, ref : canvasWrapperRef } = useResizeDetector();
 
@@ -43,7 +42,7 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
     const scaleFactorH = workspaceCanvasWidth / width;
     const scaleFactorV = workspaceCanvasHeight / height;
 
-    function resetView() {
+    function resetView(ctx: CanvasRenderingContext2D): void {
         ctx.fillStyle = '#778';
         ctx.fillRect(0, 0,
             canvasRef.current.width,
@@ -62,9 +61,11 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
     }
 
     useImperativeHandle(ref, (): SnowCanvasRefHandler => {
+        const ctx: CanvasRenderingContext2D = canvasRef.current?.getContext('2d');
+
         return {
-            clearCanvas() {
-                resetView();
+            clearCanvas(): void {
+                resetView(ctx);
             },
             drawChar(x: number, y: number, char: string): void {
                 ctx.fillText(char, cellX(x), cellY(y));
@@ -101,10 +102,11 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
 
     // scale font to canvas size
     useEffect(() => {
+        const ctx: CanvasRenderingContext2D = canvasRef.current?.getContext('2d');
         if (ctx) {
-            resetView();
+            resetView(ctx);
         }
-    }, [ width, height, canvasWidth, canvasHeight, scaleFactorV ]);
+    }, [ width, height, canvasWidth, canvasHeight ]);
 
     return (
         <div ref={canvasWrapperRef} className="snow-animation-canvas-wrapper" >

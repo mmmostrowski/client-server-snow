@@ -52,11 +52,11 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
     function SnowDrawing({ sessionIdx }, ref )
 {
     const canvasRef = useRef<SnowCanvasRefHandler>(null);
-    const canvas = canvasRef.current;
 
     useImperativeHandle(ref, (): SnowDrawingRefHandler => {
         return {
             clear(): void {
+                const canvas = canvasRef.current;
                 canvas.clearCanvas();
             },
             drawBackground(background: SnowBackground): void {
@@ -64,6 +64,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
                     return;
                 }
 
+                const canvas = canvasRef.current;
                 const { width, height, pixels } = background;
                 const font = animationConstraints.backgroundFont;
 
@@ -80,6 +81,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
             },
 
             drawSnow(frame: SnowDataFrame): void {
+                const canvas = canvasRef.current;
                 const { particlesX, particlesY, flakeShapes: flakes, chunkSize } = frame;
                 const font = animationConstraints.snowFont;
                 const flakeShapes = animationConstraints.flakeShapes;
@@ -95,6 +97,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
                     return;
                 }
 
+                const canvas = canvasRef.current;
                 const { numOfPixels, x, y, pixels } = basis;
                 const font = animationConstraints.basisFont;
                 const flakeShapes = animationConstraints.flakeShapes;
@@ -106,6 +109,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
             },
 
             drawGoodbye(): void {
+                const canvas = canvasRef.current;
                 const { text, color, font, size } = animationConstraints.goodbyeText;
 
                 canvas.clearCanvas();

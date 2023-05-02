@@ -47,7 +47,7 @@ export type SessionErrorStatus =
         | "error-cannot-start-existing"
         | "error-cannot-stop";
 
-interface SnowSession {
+export interface SnowSession {
     sessionId: string,
     presetName: string,
     width: string,
@@ -198,7 +198,7 @@ function snowSessionsReducer(sessions: ProcessedSnowSession[], action: DispatchS
             }
             const draft = draftSession(changed, last);
 
-            console.log("changes:", sessionIdChangeAction.changes);
+            // console.log("changes:", sessionIdChangeAction.changes);
 
             return [
                ...sessions.slice(0, idx),

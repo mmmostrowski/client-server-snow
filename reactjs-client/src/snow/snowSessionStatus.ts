@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
-import { useSnowSessionDispatch, SessionStatus, SessionErrorStatus } from './SnowSessionsProvider'
+import {useSnowSessionDispatch, SessionStatus, SessionErrorStatus, SnowSession} from './SnowSessionsProvider'
 
-export type SessionStatusUpdater = (status: SessionStatus, params?: object) => void;
+export type SessionStatusUpdater = (status: SessionStatus, params?: Partial<SnowSession>) => void;
 export type SessionErrorStatusUpdater = (error: Error|string, status?:SessionErrorStatus) => void;
 
 export function useSessionStatusUpdater(sessionIdx: number): SessionStatusUpdater {

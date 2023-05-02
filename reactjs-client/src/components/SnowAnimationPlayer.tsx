@@ -1,12 +1,9 @@
 import * as React from "react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useSnowSession } from '../snow/SnowSessionsProvider';
 import {
-    startSnowSession,
-    stopSnowSession,
     fetchSnowDetails,
     SnowAnimationConfiguration,
-    DetailsEndpointResponse,
 } from '../stream/snowEndpoint';
 import {
     useSessionStatusUpdater,
@@ -38,82 +35,38 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
     const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
     const [ refreshCounter, setRefreshCounter ] = useState<number>(0);
     const [ isLocked, setIsLocked ] = useState(false);
-    const isActive = !hasSessionIdError && !isLocked;
+    const [ playAnimation, setPlayAnimation ] = useState<boolean>(false);
+    const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>(null);
 
-    async function handleStart() {
+    function handleStart() {
+        if (isLocked) {
+            return;
+        }
+        setSessionStatus('initializing');
+        setPlayAnimation(true);
         if (isSessionExists) {
-            await startExisting();
+            setAnimationConfiguration({
+                width: foundWidth,
+                height: foundHeight,
+                fps: foundFps,
+                presetName: foundPresetName,
+            });
         } else {
-            await startNew();
-        }
-
-        async function startExisting() {
-            try {
-                await start({
-                    width: foundWidth,
-                    height: foundHeight,
-                    fps: foundFps,
-                    presetName: foundPresetName,
-                })
-            } catch (error) {
-                if (!isActive) {
-                    return;
-                }
-                setSessionErrorStatus(error, "error-cannot-start-existing");
-            }
-        }
-
-        async function startNew() {
-            try {
-                await start({
-                    width: width,
-                    height: height,
-                    fps: fps,
-                    presetName: presetName,
-                })
-            } catch (error) {
-                if (!isActive) {
-                    return;
-                }
-                setSessionErrorStatus(error, "error-cannot-start-new");
-            }
-        }
-
-        async function start(animationParams: SnowAnimationConfiguration) {
-            if (!isActive) {
-                return Promise.resolve();
-            }
-
-            setSessionStatus('initializing');
-
-            await startSnowSession(sessionId, animationParams);
-
-            setSessionStatus('buffering', {
-                ...animationParams,
-
-                validatedWidth: animationParams.width,
-                validatedHeight: animationParams.height,
-                validatedFps: animationParams.fps,
+            setAnimationConfiguration({
+                width: width,
+                height: height,
+                fps: fps,
+                presetName: presetName,
             });
         }
-
     }
 
     async function handleStop() {
-        try{
-            // stopProcessing({ allowForGoodbye: false });
-            setSessionStatus('stopped-not-found');
-            await stopSnowSession(sessionId)
-        } catch (error) {
-            if (!isActive) {
-                return;
-            }
-            setSessionErrorStatus(error, "error-cannot-stop");
+        if (isLocked) {
+            return;
         }
-    }
-
-    function handleAnimationFinished(): void {
         setSessionStatus('stopped-not-found');
+        setPlayAnimation(false);
     }
 
     // Periodical session checking
@@ -145,7 +98,7 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
         }
 
         async function checkStatus() {
-            console.log("CHECKING DURING STATUS: " + status);
+            // console.log("CHECKING DURING STATUS: " + status);
             try {
                 const data = await fetchSnowDetails(sessionId, controller);
 
@@ -180,7 +133,8 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
 
         const controller = new AbortController();
 
-        checkStatus().then(() => console.log('STATUS CHECKED'));
+        checkStatus()
+            // .then(() => console.log('STATUS CHECKED'));
 
         return () => {
             controller.abort()
@@ -192,12 +146,22 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
     ]);
 
 
-    function handleAnimationBuffering(progress: number) {
-
+    function handleAnimationBuffering(percent: number): void {
+        setSessionStatus('buffering', {
+            bufferLevel: percent,
+            animationProgress: 0,
+        });
     }
 
-    function handleAnimationPlaying(percent: number) {
+    function handleAnimationPlaying(progress: number, bufferPercent: number): void {
+        setSessionStatus('playing', {
+            animationProgress: progress,
+            bufferLevel: bufferPercent,
+        });
+    }
 
+    function handleAnimationError(error: Error): void {
+        setSessionErrorStatus(error);
     }
 
     return (
@@ -208,9 +172,12 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
                 <AnimationControlButtons sessionIdx={sessionIdx} handleStart={handleStart} handleStop={handleStop} />
             </div>
             <SnowAnimation sessionIdx={sessionIdx}
-                           onFinish={handleAnimationFinished}
+                           play={playAnimation}
+                           configuration={animationConfiguration}
+                           onFinish={handleStop}
                            onBuffering={handleAnimationBuffering}
                            onPlaying={handleAnimationPlaying}
+                           onError={handleAnimationError}
             />
             <LinearProgress value={animationProgress}
                             title="Animation progress"
