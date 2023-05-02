@@ -58,7 +58,7 @@ class Console implements IConsole
 
     public function maxX(): float
     {
-        return $this->cols;
+        return $this->cols - 1;
     }
 
     public function minX(): float
@@ -73,7 +73,7 @@ class Console implements IConsole
 
     public function maxY(): float
     {
-        return $this->rows;
+        return $this->rows - 1;
     }
 
     public function minY(): float
