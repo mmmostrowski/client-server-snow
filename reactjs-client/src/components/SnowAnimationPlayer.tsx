@@ -142,7 +142,9 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
                 <AnimationSessionId sessionIdx={sessionIdx} isEditing={(underEdit: boolean) => setIsLocked(underEdit)} />
                 <AnimationControlButtons sessionIdx={sessionIdx} handleStart={handleStart} handleStop={handleStop} />
             </div>
-            <SnowAnimation sessionIdx={sessionIdx}
+            <SnowAnimation sessionId={sessionId}
+                           width={width}
+                           height={height}
                            play={playAnimation}
                            configuration={animationConfiguration}
                            checkEveryMs={1300}

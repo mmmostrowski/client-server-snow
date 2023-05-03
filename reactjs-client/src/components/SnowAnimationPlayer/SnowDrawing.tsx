@@ -41,7 +41,8 @@ const animationConstraints = {
 }
 
 interface SnowDrawingProps {
-    sessionIdx: number,
+    width: number,
+    height: number,
 }
 
 export interface SnowDrawingRefHandler {
@@ -54,7 +55,7 @@ export interface SnowDrawingRefHandler {
 
 
 export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
-    function SnowDrawing({ sessionIdx }, ref )
+    function SnowDrawing({ width, height }, ref )
 {
     const canvasRef = useRef<SnowCanvasRefHandler>(null);
     const { canvas } = animationConstraints;
@@ -126,7 +127,8 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
     });
 
     return <SnowCanvas
-        sessionIdx={sessionIdx}
+        width={width}
+        height={height}
         ref={canvasRef}
         canvasColor={canvas.color}
         canvasWorkspaceColor={canvas.backgroundColor}

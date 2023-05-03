@@ -1,12 +1,12 @@
 import * as React from 'react';
 import {useRef, useEffect, forwardRef, useImperativeHandle, useCallback} from 'react';
-import { useSnowSession } from '../snow/SnowSessionsProvider'
 import { useResizeDetector } from 'react-resize-detector';
 
 interface SnowCanvasProps {
-    sessionIdx: number,
     canvasColor: string,
     canvasWorkspaceColor: string,
+    width: number,
+    height: number,
 }
 
 export interface SnowCanvasRefHandler {
@@ -17,10 +17,9 @@ export interface SnowCanvasRefHandler {
 }
 
 export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
-    function SnowCanvas({ sessionIdx , canvasWorkspaceColor, canvasColor}, ref )
+    function SnowCanvas({ width, height, canvasWorkspaceColor, canvasColor}, ref )
 {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { validatedWidth : width, validatedHeight : height } = useSnowSession(sessionIdx);
     const { width : canvasWidth, height : canvasHeight, ref : canvasWrapperRef } = useResizeDetector();
 
     const isHoriz = canvasHeight * width  > canvasWidth * height;

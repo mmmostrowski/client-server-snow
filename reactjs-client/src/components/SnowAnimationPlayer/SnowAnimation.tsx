@@ -2,7 +2,6 @@ import * as React from "react";
 import {useEffect, useRef} from "react";
 import {SnowDrawing, SnowDrawingRefHandler} from "./SnowDrawing";
 import {SnowAnimationConfiguration} from "../../stream/snowEndpoint";
-import {useSnowSession} from "../../snow/SnowSessionsProvider";
 import {DetailsFromServer, SnowAnimationController} from "../../snow/SnowAnimationController";
 
 
@@ -32,7 +31,7 @@ const animationConstraints = {
 
 
 interface SnowAnimationProps {
-    sessionIdx: number;
+    sessionId: string;
     play: boolean;
     configuration: SnowAnimationConfiguration;
     onFinish: () => void;
@@ -43,16 +42,19 @@ interface SnowAnimationProps {
     onFound: (response: DetailsFromServer, periodicCheck: boolean) => void;
     onNotFound: (periodicCheck: boolean) => void;
     checkEveryMs: number;
+    width: number;
+    height: number;
 }
 
 export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
     const {
-        sessionIdx,
+        sessionId,
         play,
-        configuration, checkEveryMs,
+        configuration,
+        checkEveryMs,
+        width, height,
         onBuffering, onPlaying, onFinish, onError, onChecking, onFound, onNotFound
     } = props;
-    const { sessionId} = useSnowSession(sessionIdx);
     const canvasRef = useRef<SnowDrawingRefHandler>(null);
     const snowControllerRef = useRef<SnowAnimationController>(null);
 
@@ -108,5 +110,5 @@ export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
     }, [ play, configuration ]);
 
 
-    return <SnowDrawing sessionIdx={sessionIdx} ref={canvasRef} />;
+    return <SnowDrawing width={width} height={height} ref={canvasRef} />;
 }
