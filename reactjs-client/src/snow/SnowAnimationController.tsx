@@ -4,6 +4,8 @@ import SnowAnimationMetadata from "../dto/SnowAnimationMetadata";
 import SnowBasis, {NoSnowBasis} from "../dto/SnowBasis";
 import SnowBackground, {NoSnowBackground} from "../dto/SnowBackground";
 import {
+    AbortedEndpointResponse,
+    DetailsEndpointResponse, fetchSnowDetails,
     SnowAnimationConfiguration,
     SnowClientHandler,
     StartEndpointResponse,
@@ -16,6 +18,8 @@ import SnowDataFrame from "../dto/SnowDataFrame";
 
 type BufferFrame = [ SnowDataFrame, SnowBasis ];
 
+export type DetailsFromServer = DetailsEndpointResponse;
+
 export class SnowAnimationController {
     private readonly sessionId: string;
 
@@ -23,6 +27,9 @@ export class SnowAnimationController {
     private onBuffering: (percent: number) => void;
     private onPlaying: (progress: number, bufferPercent: number) => void;
     private onError: (error: Error) => void;
+    private onChecking: (sessionId: string) => void;
+    private onFound: (response: DetailsFromServer) => void;
+    private onNotFound: (response: DetailsFromServer) => void;
 
     private state: "stopped" | "buffering" | "playing" | "goodbye" = "stopped";
     private buffer: BufferFrame[];
@@ -51,22 +58,28 @@ export class SnowAnimationController {
         onPlaying?: (progress: number, bufferPercent: number) => void,
         onFinish?: () => void,
         onError?: (error: Error) => void,
+        onChecking?: (sessionId: string) => void,
+        onFound?: (response: DetailsFromServer) => void,
+        onNotFound?: (response: DetailsFromServer) => void,
         goodbyeTextTimeoutSec?: number,
     }): void {
         if (config.canvas) {
             this.canvas = config.canvas;
         }
 
-        const empty = () => {
-        };
-        this.onBuffering = config.onBuffering ?? empty;
-        this.onPlaying = config.onPlaying ?? empty;
-        this.onFinish = config.onFinish ?? empty;
-        this.onError = config.onError ?? empty;
+        const idle = () => {};
+        this.onFound = config.onFound ?? idle;
+        this.onNotFound = config.onNotFound ?? idle;
+        this.onChecking = config.onChecking ?? idle;
+        this.onBuffering = config.onBuffering ?? idle;
+        this.onPlaying = config.onPlaying ?? idle;
+        this.onFinish = config.onFinish ?? idle;
+        this.onError = config.onError ?? idle;
+
         this.goodbyeTextTimeoutSec = config.goodbyeTextTimeoutSec ?? 2;
     }
 
-    public async startProcessing(configuration: SnowAnimationConfiguration, controller: AbortController) {
+    public async startProcessing(configuration: SnowAnimationConfiguration, controller: AbortController): Promise<void> {
         if (this.state !== 'stopped') {
             throw Error("Need to stopProcessing() first!");
         }
@@ -81,7 +94,7 @@ export class SnowAnimationController {
         }
     }
 
-    public async stopProcessing(controller: AbortController) {
+    public async stopProcessing(controller: AbortController): Promise<void> {
         if (this.state === 'stopped') {
             return;
         }
@@ -97,6 +110,24 @@ export class SnowAnimationController {
             this.onError(error);
         } finally {
             this.reset();
+        }
+    }
+
+    public async checkDetails(abortController: AbortController): Promise<DetailsFromServer> {
+        try {
+            this.onChecking(this.sessionId);
+
+            const response: DetailsEndpointResponse = await fetchSnowDetails(this.sessionId, abortController);
+            if (response === AbortedEndpointResponse) {
+                return;
+            }
+            if (response.running) {
+                this.onFound(response);
+            } else {
+                this.onNotFound(response);
+            }
+        } catch (error) {
+            this.onError(error);
         }
     }
 
@@ -177,10 +208,10 @@ export class SnowAnimationController {
             this.basis = basis;
         }
 
-        this.animationDraw(frame);
+        this.drawAnimationFrame(frame);
     }
 
-    private animationDraw(frame: SnowDataFrame): void {
+    private drawAnimationFrame(frame: SnowDataFrame): void {
         this.canvas.clear();
         this.canvas.drawBackground(this.background);
         this.canvas.drawSnow(frame);
@@ -202,6 +233,9 @@ export class SnowAnimationController {
     }
 
     private startStream(session: StartEndpointResponse, onData: (data: DataView) => void): void {
+        if (session === AbortedEndpointResponse) {
+            return;
+        }
         if (this.streamHandler) {
             throw Error("Please stopStream() first!");
         }
@@ -261,5 +295,4 @@ export class SnowAnimationController {
 
         callback();
     }
-
 }

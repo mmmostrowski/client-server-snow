@@ -112,7 +112,6 @@ export default function App({ maxTabs } : AppProps): JSX.Element {
                                     <SnowAnimationPlayer
                                         key={idx}
                                         sessionIdx={idx}
-                                        refreshEveryMs={1000}
                                     />
                                 </Paper>
                             </div>

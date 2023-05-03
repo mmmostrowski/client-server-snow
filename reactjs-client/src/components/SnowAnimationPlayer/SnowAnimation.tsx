@@ -3,7 +3,7 @@ import {useEffect, useRef} from "react";
 import {SnowDrawing, SnowDrawingRefHandler} from "./SnowDrawing";
 import {SnowAnimationConfiguration} from "../../stream/snowEndpoint";
 import {useSnowSession} from "../../snow/SnowSessionsProvider";
-import {SnowAnimationController} from "../../snow/SnowAnimationController";
+import {DetailsFromServer, SnowAnimationController} from "../../snow/SnowAnimationController";
 
 
 const animationConstraints = {
@@ -39,6 +39,9 @@ interface SnowAnimationProps {
     onBuffering: (percent: number) => void;
     onPlaying: (progress: number, bufferPercent: number) => void;
     onError: (error: Error) => void;
+    onChecking: (sessionId: string) => void;
+    onFound: (response: DetailsFromServer) => void;
+    onNotFound: (response: DetailsFromServer) => void;
 }
 
 export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
@@ -46,44 +49,59 @@ export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
         sessionIdx,
         play,
         configuration,
-        onBuffering, onPlaying, onFinish, onError
+        onBuffering, onPlaying, onFinish, onError, onChecking, onFound, onNotFound
     } = props;
     const { sessionId} = useSnowSession(sessionIdx);
     const canvasRef = useRef<SnowDrawingRefHandler>(null);
     const snowControllerRef = useRef<SnowAnimationController>(new SnowAnimationController(sessionId));
 
 
+    // Bind controller with session
     useEffect(() => {
-        const snowController = snowControllerRef.current;
-        if (!snowController) {
-            return;
-        }
+        const abortController = new AbortController();
+        void snowControllerRef.current.stopProcessing(abortController);
+        snowControllerRef.current = new SnowAnimationController(sessionId);
+        return () => { abortController.abort() };
+    }, [ sessionId ]);
 
-        snowController.configure({
+
+    // Configure controller
+    useEffect(() => {
+        snowControllerRef.current.configure({
             goodbyeTextTimeoutSec: animationConstraints.goodbyeText.timeoutSec,
             canvas: canvasRef.current,
+            onChecking,
+            onFound,
+            onNotFound,
             onBuffering,
             onPlaying,
             onFinish,
             onError,
         });
-    }, [ onBuffering, onPlaying, onFinish, onError, canvasRef ]);
+    }, [ onChecking, onFound, onNotFound, onBuffering, onPlaying, onFinish, onError, canvasRef ]);
 
 
+    // Check session details
     useEffect(() => {
-        const snowController = snowControllerRef.current;
-        if (!snowController) {
-            return;
-        }
+        const abortController = new AbortController();
 
+        void snowControllerRef.current.checkDetails(abortController);
+
+        return () => { abortController.abort() };
+    }, [ sessionId ]);
+
+
+
+    // Start / Stop controller
+    useEffect(() => {
         const abortController = new AbortController();
         if (play) {
-            void snowController.startProcessing(configuration, abortController);
+            void snowControllerRef.current.startProcessing(configuration, abortController);
         } else {
-            void snowController.stopProcessing(abortController);
+            void snowControllerRef.current.stopProcessing(abortController);
         }
         return () => { abortController.abort() };
-    }, [ play, sessionId, configuration ]);
+    }, [ play, configuration ]);
 
 
     return <SnowDrawing sessionIdx={sessionIdx} ref={canvasRef} />;

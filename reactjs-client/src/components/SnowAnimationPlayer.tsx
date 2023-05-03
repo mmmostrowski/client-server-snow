@@ -1,10 +1,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { useSnowSession } from '../snow/SnowSessionsProvider';
-import {
-    fetchSnowDetails,
-    SnowAnimationConfiguration,
-} from '../stream/snowEndpoint';
+import { SnowAnimationConfiguration } from '../stream/snowEndpoint';
 import {
     useSessionStatusUpdater,
     SessionStatusUpdater,
@@ -16,14 +13,19 @@ import AnimationCircularProgress from "./SnowAnimationPlayer/AnimationCircularPr
 import AnimationSessionId from "./SnowAnimationPlayer/AnimationSessionId";
 import AnimationControlButtons from "./SnowAnimationPlayer/AnimationControlButtons";
 import LinearProgress from "@mui/material/LinearProgress";
+import {DetailsFromServer} from "../snow/SnowAnimationController";
 
 
 interface SnowAnimationProps {
     sessionIdx: number,
-    refreshEveryMs?: number
 }
 
-export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : SnowAnimationProps): JSX.Element {
+export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps): JSX.Element {
+    const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
+    const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
+    const [ isLocked, setIsLocked ] = useState(false);
+    const [ playAnimation, setPlayAnimation ] = useState<boolean>(false);
+    const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>(null);
     const {
         status, hasError,
         sessionId, isSessionExists, hasSessionIdError, cannotStartSession,
@@ -31,12 +33,7 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
         validatedWidth: width, validatedHeight: height, validatedFps: fps,
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSnowSession(sessionIdx);
-    const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
-    const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
-    const [ refreshCounter, setRefreshCounter ] = useState<number>(0);
-    const [ isLocked, setIsLocked ] = useState(false);
-    const [ playAnimation, setPlayAnimation ] = useState<boolean>(false);
-    const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>(null);
+
 
     function handleStart() {
         if (isLocked) {
@@ -61,7 +58,6 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
         }
     }
 
-
     async function handleStop() {
         if (isLocked) {
             return;
@@ -69,83 +65,6 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
         setSessionStatus('stopped-not-found');
         setPlayAnimation(false);
     }
-
-
-    // Periodical session checking
-    useEffect(() => {
-        if (refreshEveryMs === undefined) {
-            return;
-        }
-        const handler = setTimeout(() => {
-              setRefreshCounter((c: number) => c + 1);
-        }, refreshEveryMs);
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [ refreshCounter, refreshEveryMs ]);
-
-
-    // Session checking
-    useEffect(() => {
-        if (hasSessionIdError) {
-            setSessionErrorStatus ('Invalid session id');
-            return;
-        }
-
-        if (status === 'buffering' || status === 'initializing' || cannotStartSession) {
-            return;
-        }
-
-        if (status === 'stopped-not-checked' || hasError) {
-            setSessionStatus('checking');
-        }
-
-        async function checkStatus() {
-            // console.log("CHECKING DURING STATUS: " + status);
-            try {
-                const data = await fetchSnowDetails(sessionId, controller);
-
-                if (!data) {
-                    return;
-                }
-
-                if (!data.running) {
-                    if (status === 'checking') {
-                        setSessionStatus('stopped-not-found');
-                    }
-                    if (status === 'playing') {
-                        // stopProcessing({ allowForGoodbye: true });
-                    }
-                    return;
-                }
-
-                if (status === 'checking'
-                    || status === 'stopped-not-found'
-                    || status === 'stopped-not-checked') {
-                    setSessionStatus('stopped-found', {
-                        foundWidth: data.width,
-                        foundHeight: data.height,
-                        foundFps: data.fps,
-                        foundPresetName: data.presetName,
-                    });
-                }
-            } catch( error ) {
-                setSessionErrorStatus(error);
-            }
-        }
-
-        const controller = new AbortController();
-
-        void checkStatus();
-
-        return () => {
-            controller.abort()
-        };
-    }, [
-        status, setSessionStatus, sessionId, refreshCounter,
-        hasError, hasSessionIdError, setSessionErrorStatus,
-        cannotStartSession,
-    ]);
 
 
     function handleAnimationBuffering(percent: number): void {
@@ -166,6 +85,56 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
         setSessionErrorStatus(error);
     }
 
+    function handleChecking(sessionId: string): void {
+        console.log("handleChecking", sessionId, status);
+        if (status === 'stopped-not-checked' || hasError) {
+            setSessionStatus('checking');
+        }
+    }
+
+    function handleSessionFound(response: DetailsFromServer): void {
+        console.log("handleSessionFound", sessionId);
+
+        if (status === 'buffering' || status === 'initializing' || cannotStartSession) {
+            return;
+        }
+
+        if (status === 'checking'
+            || status === 'stopped-not-found'
+            || status === 'stopped-not-checked') {
+            setSessionStatus('stopped-found', {
+                foundWidth: response.width,
+                foundHeight: response.height,
+                foundFps: response.fps,
+                foundPresetName: response.presetName,
+            });
+        }
+    }
+
+    function handleSessionNotFound(): void {
+        console.log("handleSessionNotFound", sessionId);
+
+        if (status === 'buffering' || status === 'initializing' || cannotStartSession) {
+            return;
+        }
+
+        if (status === 'checking') {
+            setSessionStatus('stopped-not-found');
+        }
+        if (status === 'playing') {
+            // stopProcessing({ allowForGoodbye: true });
+        }
+        return;
+    }
+
+    useEffect(() => {
+        if (hasSessionIdError) {
+            setSessionErrorStatus('Invalid session id');
+            return;
+        }
+    }, [ hasSessionIdError, setSessionErrorStatus ]);
+
+
     return (
         <div className="snow-animation" >
             <div className="animation-header">
@@ -180,6 +149,9 @@ export default function SnowAnimationPlayer({ sessionIdx, refreshEveryMs } : Sno
                            onBuffering={handleAnimationBuffering}
                            onPlaying={handleAnimationPlaying}
                            onError={handleAnimationError}
+                           onChecking={handleChecking}
+                           onFound={handleSessionFound}
+                           onNotFound={handleSessionNotFound}
             />
             <LinearProgress value={animationProgress}
                             title="Animation progress"

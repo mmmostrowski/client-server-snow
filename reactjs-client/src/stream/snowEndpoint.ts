@@ -13,6 +13,7 @@ interface EndpointResponse {
     status: boolean,
     sessionId: string,
     running: boolean,
+    message?: string,
 }
 
 export interface DetailsEndpointResponse extends EndpointResponse, SnowAnimationConfiguration {
@@ -27,6 +28,12 @@ export interface DetailsEndpointResponse extends EndpointResponse, SnowAnimation
 export type StartEndpointResponse = DetailsEndpointResponse;
 export type StopEndpointResponse = EndpointResponse;
 
+export const AbortedEndpointResponse: EndpointResponse = {
+    status: false,
+    sessionId: "",
+    running: false,
+    message: "Request has been aborted.",
+}
 
 export function startSnowSession(sessionId: string, config: SnowAnimationConfiguration, controller?: AbortController): Promise<StartEndpointResponse> {
     const url= "/fps/" + config.fps
@@ -64,10 +71,16 @@ function askSnowEndpoint(controller: AbortController, action: string, sessionId:
     const url = `${snowEndpointUrl}/${action}/${sessionId}${subUrl}`;
 
     return fetch(url, { signal: controller?.signal })
-        .then((response) => response.json())
-        .then((data) => {
-            if (!data) {
+        .then((response: Response) => {
+            if (!response) {
                 throw Error("Invalid server response!");
+            }
+            return response;
+        })
+        .then((response: Response) => response.json())
+        .then((data: EndpointResponse) => {
+            if (!data) {
+                throw Error("Invalid server response! JSON Response expected!");
             }
             if (!data.status) {
                 if (data.message) {
@@ -80,7 +93,7 @@ function askSnowEndpoint(controller: AbortController, action: string, sessionId:
         })
         .catch((error: Error) => {
             if (error.name === 'AbortError') {
-                return;
+                return AbortedEndpointResponse;
             }
             console.error(error);
             throw error;
