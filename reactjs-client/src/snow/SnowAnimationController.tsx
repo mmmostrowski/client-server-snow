@@ -47,6 +47,7 @@ export class SnowAnimationController {
     private goodbyeTextTimeoutSec: number;
     private streamHandler: SnowClientHandler;
     private periodicHandler: ReturnType<typeof setInterval> = null;
+    private allowForGoodbye: boolean = true;
 
     public constructor(sessionId: string, decoder: SnowDecoder = new SnowDecoder()) {
         this.sessionId = sessionId;
@@ -65,9 +66,14 @@ export class SnowAnimationController {
         onFound?: (response: DetailsFromServer, periodicCheck: boolean) => void,
         onNotFound?: (periodicCheck: boolean) => void,
         goodbyeTextTimeoutSec?: number,
+        allowForGoodbye?: boolean,
     }): void {
         if (config.canvas) {
             this.canvas = config.canvas;
+        }
+
+        if (config.allowForGoodbye !== undefined) {
+            this.allowForGoodbye = config.allowForGoodbye;
         }
 
         const idle = () => {};
@@ -130,7 +136,7 @@ export class SnowAnimationController {
         this.disallowWhenDestroyed();
 
         this.periodicHandler = setInterval(() => {
-            void this.askServerForDetails(abortController, false);
+            void this.askServerForDetails(abortController, true);
         }, refreshEveryMs);
     }
 
@@ -258,9 +264,16 @@ export class SnowAnimationController {
     }
 
     private sayGoodbye(): void {
-        this.state = "goodbye";
         this.stopStream();
         this.reset();
+
+        if (!this.allowForGoodbye) {
+            this.state = "stopped";
+            this.onFinish();
+            return;
+        }
+
+        this.state = "goodbye";
         setTimeout(() => {
             if (this.state !== "goodbye") {
                 return;

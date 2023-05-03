@@ -42,6 +42,8 @@ interface SnowAnimationProps {
     onFound: (response: DetailsFromServer, periodicCheck: boolean) => void;
     onNotFound: (periodicCheck: boolean) => void;
     checkEveryMs: number;
+    checkingEnabled: boolean;
+    allowForGoodbye: boolean;
     width: number;
     height: number;
 }
@@ -50,8 +52,8 @@ export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
     const {
         sessionId,
         play,
-        configuration,
-        checkEveryMs,
+        configuration, allowForGoodbye,
+        checkEveryMs, checkingEnabled,
         width, height,
         onBuffering, onPlaying, onFinish, onError, onChecking, onFound, onNotFound
     } = props;
@@ -66,9 +68,11 @@ export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
         }
         const abortController = new AbortController();
         snowControllerRef.current = new SnowAnimationController(sessionId);
-        snowControllerRef.current.startPeriodicChecking(abortController, checkEveryMs);
+        if (checkingEnabled) {
+            snowControllerRef.current.startPeriodicChecking(abortController, checkEveryMs);
+        }
         return () => { abortController.abort() };
-    }, [ sessionId, checkEveryMs ]);
+    }, [ sessionId, checkEveryMs, checkingEnabled ]);
 
 
     // Configure controller
@@ -83,18 +87,21 @@ export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
             onPlaying,
             onFinish,
             onError,
+            allowForGoodbye,
         });
-    }, [ onChecking, onFound, onNotFound, onBuffering, onPlaying, onFinish, onError, canvasRef ]);
+    }, [ onChecking, onFound, onNotFound, onBuffering, onPlaying, onFinish, onError, allowForGoodbye ]);
 
 
     // Check session details
     useEffect(() => {
         const abortController = new AbortController();
 
-        void snowControllerRef.current.checkDetails(abortController);
+        if (checkingEnabled) {
+            void snowControllerRef.current.checkDetails(abortController);
+        }
 
         return () => { abortController.abort() };
-    }, [ sessionId ]);
+    }, [ sessionId, checkingEnabled ]);
 
 
 
