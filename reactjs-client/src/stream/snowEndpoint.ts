@@ -35,6 +35,20 @@ export const AbortedEndpointResponse: EndpointResponse = {
     message: "Request has been aborted.",
 }
 
+export const AbortedDetailsEndpointResponse: DetailsEndpointResponse = {
+    ...AbortedEndpointResponse,
+    message: "Request has been aborted.",
+    streamTextUrl: "",
+    streamWebsocketsStompBrokerUrl: "",
+    streamWebsocketsUrl: "",
+    exists: false,
+    duration: 0,
+    presetName: "",
+    width: 0,
+    height: 0,
+    fps: 0,
+};
+
 export function startSnowSession(sessionId: string, config: SnowAnimationConfiguration, controller?: AbortController): Promise<StartEndpointResponse> {
     const url= "/fps/" + config.fps
         + "/width/" + config.width

@@ -39,30 +39,34 @@ interface SnowAnimationProps {
     onBuffering: (percent: number) => void;
     onPlaying: (progress: number, bufferPercent: number) => void;
     onError: (error: Error) => void;
-    onChecking: (sessionId: string) => void;
-    onFound: (response: DetailsFromServer) => void;
-    onNotFound: (response: DetailsFromServer) => void;
+    onChecking: (sessionId: string, periodicCheck: boolean) => void;
+    onFound: (response: DetailsFromServer, periodicCheck: boolean) => void;
+    onNotFound: (periodicCheck: boolean) => void;
+    checkEveryMs: number;
 }
 
 export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
     const {
         sessionIdx,
         play,
-        configuration,
+        configuration, checkEveryMs,
         onBuffering, onPlaying, onFinish, onError, onChecking, onFound, onNotFound
     } = props;
     const { sessionId} = useSnowSession(sessionIdx);
     const canvasRef = useRef<SnowDrawingRefHandler>(null);
-    const snowControllerRef = useRef<SnowAnimationController>(new SnowAnimationController(sessionId));
+    const snowControllerRef = useRef<SnowAnimationController>(null);
 
 
     // Bind controller with session
     useEffect(() => {
+        if (snowControllerRef.current) {
+            snowControllerRef.current.destroy();
+        }
         const abortController = new AbortController();
-        void snowControllerRef.current.stopProcessing(abortController);
         snowControllerRef.current = new SnowAnimationController(sessionId);
+        snowControllerRef.current.startPeriodicChecking(abortController, checkEveryMs);
         return () => { abortController.abort() };
-    }, [ sessionId ]);
+    }, [ sessionId, checkEveryMs ]);
 
 
     // Configure controller

@@ -4,6 +4,7 @@ import SnowAnimationMetadata from "../dto/SnowAnimationMetadata";
 import SnowBasis, {NoSnowBasis} from "../dto/SnowBasis";
 import SnowBackground, {NoSnowBackground} from "../dto/SnowBackground";
 import {
+    AbortedDetailsEndpointResponse,
     AbortedEndpointResponse,
     DetailsEndpointResponse, fetchSnowDetails,
     SnowAnimationConfiguration,
@@ -27,13 +28,14 @@ export class SnowAnimationController {
     private onBuffering: (percent: number) => void;
     private onPlaying: (progress: number, bufferPercent: number) => void;
     private onError: (error: Error) => void;
-    private onChecking: (sessionId: string) => void;
-    private onFound: (response: DetailsFromServer) => void;
-    private onNotFound: (response: DetailsFromServer) => void;
+    private onChecking: (sessionId: string, periodicCheck: boolean) => void;
+    private onFound: (response: DetailsFromServer, periodicCheck: boolean) => void;
+    private onNotFound: (periodicCheck: boolean) => void;
 
     private state: "stopped" | "buffering" | "playing" | "goodbye" = "stopped";
     private buffer: BufferFrame[];
     private metadata: SnowAnimationMetadata;
+    private isDestroyed: boolean = false;
     private basis: SnowBasis = NoSnowBasis;
     private background: SnowBackground = NoSnowBackground;
     private canvas: SnowDrawingRefHandler;
@@ -44,6 +46,7 @@ export class SnowAnimationController {
     private needsGoodbye: boolean;
     private goodbyeTextTimeoutSec: number;
     private streamHandler: SnowClientHandler;
+    private periodicHandler: ReturnType<typeof setInterval> = null;
 
     public constructor(sessionId: string, decoder: SnowDecoder = new SnowDecoder()) {
         this.sessionId = sessionId;
@@ -58,9 +61,9 @@ export class SnowAnimationController {
         onPlaying?: (progress: number, bufferPercent: number) => void,
         onFinish?: () => void,
         onError?: (error: Error) => void,
-        onChecking?: (sessionId: string) => void,
-        onFound?: (response: DetailsFromServer) => void,
-        onNotFound?: (response: DetailsFromServer) => void,
+        onChecking?: (sessionId: string, periodicCheck: boolean) => void,
+        onFound?: (response: DetailsFromServer, periodicCheck: boolean) => void,
+        onNotFound?: (periodicCheck: boolean) => void,
         goodbyeTextTimeoutSec?: number,
     }): void {
         if (config.canvas) {
@@ -79,7 +82,15 @@ export class SnowAnimationController {
         this.goodbyeTextTimeoutSec = config.goodbyeTextTimeoutSec ?? 2;
     }
 
+    public destroy(): void {
+        this.stopPeriodicChecking();
+        this.stopStream();
+        this.isDestroyed = true;
+    }
+
     public async startProcessing(configuration: SnowAnimationConfiguration, controller: AbortController): Promise<void> {
+        this.disallowWhenDestroyed();
+
         if (this.state !== 'stopped') {
             throw Error("Need to stopProcessing() first!");
         }
@@ -95,6 +106,8 @@ export class SnowAnimationController {
     }
 
     public async stopProcessing(controller: AbortController): Promise<void> {
+        this.disallowWhenDestroyed();
+
         if (this.state === 'stopped') {
             return;
         }
@@ -113,19 +126,45 @@ export class SnowAnimationController {
         }
     }
 
-    public async checkDetails(abortController: AbortController): Promise<DetailsFromServer> {
+    public startPeriodicChecking(abortController: AbortController, refreshEveryMs: number): void {
+        this.disallowWhenDestroyed();
+
+        this.periodicHandler = setInterval(() => {
+            void this.askServerForDetails(abortController, false);
+        }, refreshEveryMs);
+    }
+
+    public stopPeriodicChecking(): void {
+        if (this.periodicHandler) {
+            clearInterval(this.periodicHandler);
+            this.periodicHandler = null;
+        }
+    }
+
+    public async checkDetails(abortController: AbortController): Promise<DetailsEndpointResponse> {
+        this.disallowWhenDestroyed();
+
+        const response: DetailsEndpointResponse = await this.askServerForDetails(abortController, false);
+        if (this.isDestroyed) {
+            return AbortedDetailsEndpointResponse;
+        }
+        return response;
+    }
+
+    private async askServerForDetails(abortController: AbortController, periodicCheck: boolean): Promise<DetailsEndpointResponse> {
         try {
-            this.onChecking(this.sessionId);
+            this.onChecking(this.sessionId, periodicCheck);
 
             const response: DetailsEndpointResponse = await fetchSnowDetails(this.sessionId, abortController);
             if (response === AbortedEndpointResponse) {
-                return;
+                return AbortedDetailsEndpointResponse;
             }
             if (response.running) {
-                this.onFound(response);
+                this.onFound(response, periodicCheck);
             } else {
-                this.onNotFound(response);
+                this.onNotFound(periodicCheck);
             }
+            return response;
         } catch (error) {
             this.onError(error);
         }
@@ -141,7 +180,7 @@ export class SnowAnimationController {
     }
 
     private onServerData(data: DataView): void {
-        if (this.state === "stopped" || this.state === 'goodbye') {
+        if (this.state === "stopped" || this.state === 'goodbye' || this.isDestroyed) {
             return;
         }
 
@@ -172,7 +211,7 @@ export class SnowAnimationController {
     }
 
     private animationLoop(): void {
-        if (this.state !== "stopped") {
+        if (this.state !== "stopped" && !this.isDestroyed) {
             requestAnimationFrame(this.animationLoop.bind(this));
         }
         this.synchronizeFps(() => {
@@ -233,7 +272,7 @@ export class SnowAnimationController {
     }
 
     private startStream(session: StartEndpointResponse, onData: (data: DataView) => void): void {
-        if (session === AbortedEndpointResponse) {
+        if (session === AbortedEndpointResponse || this.isDestroyed) {
             return;
         }
         if (this.streamHandler) {
@@ -294,5 +333,11 @@ export class SnowAnimationController {
         }
 
         callback();
+    }
+
+    private disallowWhenDestroyed() {
+        if (this.isDestroyed) {
+            throw Error("Controller has been destroyed and cannot be in use any more.");
+        }
     }
 }

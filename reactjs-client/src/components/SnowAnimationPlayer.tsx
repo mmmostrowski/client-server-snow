@@ -85,14 +85,14 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
         setSessionErrorStatus(error);
     }
 
-    function handleChecking(sessionId: string): void {
+    function handleChecking(sessionId: string, periodicCheck: boolean): void {
         console.log("handleChecking", sessionId, status);
         if (status === 'stopped-not-checked' || hasError) {
             setSessionStatus('checking');
         }
     }
 
-    function handleSessionFound(response: DetailsFromServer): void {
+    function handleSessionFound(response: DetailsFromServer, periodicCheck: boolean): void {
         console.log("handleSessionFound", sessionId);
 
         if (status === 'buffering' || status === 'initializing' || cannotStartSession) {
@@ -111,7 +111,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
         }
     }
 
-    function handleSessionNotFound(): void {
+    function handleSessionNotFound(periodicCheck: boolean): void {
         console.log("handleSessionNotFound", sessionId);
 
         if (status === 'buffering' || status === 'initializing' || cannotStartSession) {
@@ -145,6 +145,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
             <SnowAnimation sessionIdx={sessionIdx}
                            play={playAnimation}
                            configuration={animationConfiguration}
+                           checkEveryMs={1300}
                            onFinish={handleStop}
                            onBuffering={handleAnimationBuffering}
                            onPlaying={handleAnimationPlaying}
