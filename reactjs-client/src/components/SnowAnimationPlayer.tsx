@@ -35,8 +35,6 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSnowSession(sessionIdx);
 
-    console.log("width", width);
-
 
     function handleStart() {
         if (isLocked) {

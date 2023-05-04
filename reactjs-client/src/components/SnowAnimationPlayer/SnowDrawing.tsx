@@ -4,41 +4,8 @@ import SnowDataFrame from "../../dto/SnowDataFrame";
 import SnowBasis from "../../dto/SnowBasis";
 import {SnowCanvas, SnowCanvasRefHandler} from "../SnowCanvas";
 import {forwardRef, useImperativeHandle, useRef} from "react";
+import {animationConstraints} from "../../config/animationContraints";
 
-const animationConstraints = {
-    flakeShapes: [
-        '#', // pressed
-        '*', '*', '*', '*', '*', "'", ".", ",", "`"
-    ],
-
-    snowFont: {
-        color: "white",
-        scale: 1.3,
-    },
-
-    backgroundFont: {
-        color: "lightblue",
-        scale: 1.1,
-    },
-
-    basisFont: {
-        color: "white",
-        scale: 1.1,
-    },
-
-    goodbyeText: {
-        text: "Thank you for watching",
-        color: "lightblue",
-        font: "bold Arial",
-        size: 10,
-        timeoutSec: 2.5,
-    },
-
-    canvas: {
-        color: '#778',
-        backgroundColor: 'black',
-    }
-}
 
 interface SnowDrawingProps {
     width: number,

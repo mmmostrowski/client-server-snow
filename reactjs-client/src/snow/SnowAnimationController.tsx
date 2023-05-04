@@ -108,6 +108,7 @@ export class SnowAnimationController {
         this.stopPeriodicChecking();
         this.stopStream();
         this.isDestroyed = true;
+        this.state = "stopped";
     }
 
     public async startProcessing(configuration: SnowAnimationConfiguration, controller: AbortController): Promise<void> {
@@ -326,11 +327,11 @@ export class SnowAnimationController {
             && this.buffer.length >= this.metadata.bufferSizeInFrames;
     }
 
-    private notifyPlaying(frame: SnowDataFrame) {
+    private notifyPlaying(frame: SnowDataFrame): void {
         this.onPlaying(this.animationProgress(frame), this.bufferLevel());
     }
 
-    private isLastFrame(frame: SnowDataFrame) {
+    private isLastFrame(frame: SnowDataFrame): boolean {
         return frame.frameNum === this.metadata.totalNumberOfFrames;
     }
 
@@ -371,7 +372,7 @@ export class SnowAnimationController {
         callback();
     }
 
-    private disallowWhenDestroyed() {
+    private disallowWhenDestroyed(): void {
         if (this.isDestroyed) {
             throw Error("Controller has been destroyed and cannot be in use any more.");
         }

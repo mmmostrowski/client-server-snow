@@ -201,7 +201,7 @@ function snowSessionsReducer(sessions: ProcessedSnowSession[], action: DispatchS
             }
             const draft = draftSession(changed, last);
 
-            console.log("changes:", sessionIdChangeAction.changes, draft);
+            // console.log("changes:", sessionIdChangeAction.changes, draft);
 
             return [
                ...sessions.slice(0, idx),

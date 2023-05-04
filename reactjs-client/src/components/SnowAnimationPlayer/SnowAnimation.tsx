@@ -3,31 +3,7 @@ import {useEffect, useRef} from "react";
 import {SnowDrawing, SnowDrawingRefHandler} from "./SnowDrawing";
 import {SnowAnimationConfiguration} from "../../stream/snowEndpoint";
 import {DetailsFromServer, SnowAnimationController} from "../../snow/SnowAnimationController";
-
-
-const animationConstraints = {
-    flakeShapes: [
-        '#', // pressed
-        '*', '*', '*', '*', '*', "'", ".", ",", "`"
-    ],
-
-    snowFont: {
-        color: "white",
-        scale: 1.3,
-    },
-
-    backgroundFont: {
-        color: "lightblue",
-        scale: 1.1,
-    },
-
-    goodbyeText: {
-        text: "Thank you for watching",
-        color: "lightblue",
-        font: "bold Arial",
-        timeoutSec: 2.5,
-    },
-}
+import {animationConstraints} from "../../config/animationContraints";
 
 
 interface SnowAnimationProps {
@@ -62,13 +38,15 @@ export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
 
     // Bind controller with session
     useEffect(() => {
-        if (snowControllerRef.current) {
-            snowControllerRef.current.destroy();
-        }
         const abortController = new AbortController();
+
         snowControllerRef.current = new SnowAnimationController(sessionId);
         snowControllerRef.current.startPeriodicChecking(abortController, checkEveryMs);
-        return () => { abortController.abort() };
+
+        return () => {
+            abortController.abort();
+            snowControllerRef.current.destroy();
+        };
     }, [ sessionId, checkEveryMs ]);
 
 
