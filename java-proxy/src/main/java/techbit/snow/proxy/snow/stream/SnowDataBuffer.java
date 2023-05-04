@@ -2,14 +2,12 @@ package techbit.snow.proxy.snow.stream;
 
 import com.google.common.collect.Sets;
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
 import java.util.Set;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
-@Component
 @Scope(SCOPE_PROTOTYPE)
 public final class SnowDataBuffer {
 

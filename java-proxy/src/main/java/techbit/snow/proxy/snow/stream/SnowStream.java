@@ -5,8 +5,6 @@ import lombok.experimental.StandardException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 import techbit.snow.proxy.config.PhpSnowConfig;
 import techbit.snow.proxy.dto.*;
 import techbit.snow.proxy.error.IncompatibleConfigException;
@@ -23,12 +21,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
-
 
 @Log4j2
-@Service
-@Scope(SCOPE_PROTOTYPE)
 public final class SnowStream {
 
     @StandardException

@@ -3,7 +3,8 @@ package techbit.snow.proxy.snow.stream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 import techbit.snow.proxy.config.PhpSnowConfig;
 import techbit.snow.proxy.config.PhpSnowConfigConverter;
 import techbit.snow.proxy.dto.ServerMetadata;
@@ -16,8 +17,11 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
+
 @Primary
-@Component
+@Service
+@Scope(SCOPE_PROTOTYPE)
 public final class SnowStreamFactory {
 
     private final Path pipesDir;

@@ -39,7 +39,7 @@ class ProxyControllerTest {
 
     @BeforeEach
     void setup() {
-        lenient().when(request.getScheme()).thenReturn("http");
+        lenient().when(request.getScheme()).thenReturn("https");
         lenient().when(request.getServerName()).thenReturn("domain.com");
         lenient().when(request.getServerPort()).thenReturn(1234);
         lenient().when(streaming.sessionDetails("session-abc")).thenReturn(Map.of(
@@ -136,12 +136,8 @@ class ProxyControllerTest {
 
     @Test
     void whenStreamDetails_thenValidDetailsResponded() {
-        HttpServletRequest request = mock(HttpServletRequest.class);
         when(streaming.hasSession("session-abc")).thenReturn(true);
         when(streaming.isSessionRunning("session-abc")).thenReturn(true);
-        when(request.getScheme()).thenReturn("http");
-        when(request.getServerName()).thenReturn("domain.com");
-        when(request.getServerPort()).thenReturn(1234);
 
         Map<String, Object> response = controller.streamDetails("session-abc", request);
 
@@ -188,7 +184,7 @@ class ProxyControllerTest {
                 "exists", true,
                 "running", true,
                 "sessionId", "session-abc",
-                "streamTextUrl", "http://domain.com:1234/text/session-abc",
+                "streamTextUrl", "https://domain.com:1234/text/session-abc",
                 "streamWebsocketsStompBrokerUrl", "ws://domain.com:1234/ws/",
                 "streamWebsocketsUrl", "/app/stream/session-abc",
                 "key1", "value1",

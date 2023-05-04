@@ -143,6 +143,6 @@ export function startSnowDataStream(startSessionResponse: StartEndpointResponse,
 }
 
 export function stopSnowDataStream(handler: SnowClientHandler): void {
-    stompClients.get(handler).deactivate();
+    void stompClients.get(handler).deactivate();
     stompClients.delete(handler);
 }

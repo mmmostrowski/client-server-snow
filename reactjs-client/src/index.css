@@ -3,8 +3,8 @@ body,
 #root
 {
     height: 100%;
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
 }
 
 #root {
@@ -31,9 +31,10 @@ body,
     height: calc(100% - 100px);
 }
 
+/*noinspection CssUnusedSymbol*/
 .snow-animation-wrapper > .MuiPaper-root {
-    margin-top: 0px;
-    margin-bottom: 0px;
+    margin-top: 0;
+    margin-bottom: 0;
     width: calc(100% - 15px);
     height: calc(100% - 15px);
 }
@@ -43,6 +44,7 @@ body,
     padding-top: 10px;
 }
 
+/*noinspection CssUnusedSymbol*/
 .snow-animation-header .MuiPaper-root {
     width: calc(100% - 28px);
     margin-left: 10px;
@@ -53,11 +55,13 @@ body,
     height: calc(100% - 20px);
 }
 
+/*noinspection CssUnusedSymbol*/
 .session-id {
     font-size: 20px;
     padding: 20px;
 }
 
+/*noinspection CssUnusedSymbol*/
 .MuiButtonBase-root.MuiIconButton-root.tab-delete-button {
     position: absolute;
     right: 2px;
@@ -69,17 +73,16 @@ body,
     padding: 1px;
 }
 
+/*noinspection CssUnusedSymbol*/
 .MuiButtonBase-root.add-new-session-button {
     font-size: 28px;
-    margin: 5px 2px 4px 9px;
-    padding: 0px;
+    padding: 0;
     border-radius: 6px;
     min-width: 48px;
-    min-height: 0px;
+    min-height: 0;
     text-align: right;
     display: block;
-    margin-right: 6px;
-    margin-left: auto;
+    margin: 5px 6px 4px auto;
 }
 
 .session-id span {
@@ -87,13 +90,15 @@ body,
 }
 
 .animation-header button {
-    margin: 5px 0px 30px 20px;
+    margin: 5px 0 30px 20px;
 }
 
+/*noinspection CssUnusedSymbol*/
 .animation-header button.start-button {
     margin-right: 1px
 }
 
+/*noinspection CssUnusedSymbol*/
 .animation-header button.stop-button {
     margin-left: 1px
 }
@@ -114,6 +119,7 @@ body,
     margin-bottom: 30px;
 }
 
+/*noinspection CssUnusedSymbol*/
 .snow-configuration-wrapper .MuiTextField-root {
     width: 180px;
 }
@@ -125,23 +131,24 @@ body,
     margin-right: 1px
 }
 
+/*noinspection CssUnusedSymbol*/
 .snow-configuration-wrapper > .MuiPaper-root {
-    margin-top: 0px;
+    margin-top: 0;
 }
 
 .snow-animation-circular-progress {
     position: relative;
     display: inline-flex;
     text-align: right;
-    margin-right: 0px;
+    margin-right: 0;
     padding: 8px;
 }
 
 .snow-animation-circular-progress-inside{
-    top: 0px;
-    left: 0px;
-    bottom: 0px;
-    right: 0px;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
     position: absolute;
     display: flex;
     align-items: center;
@@ -158,6 +165,7 @@ body,
     transition: none;
 }
 
+/*noinspection CssUnusedSymbol*/
 .snow-animation .MuiLinearProgress-bar {
     transition: none;
 }

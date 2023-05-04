@@ -12,12 +12,13 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
 @Component
-@SuppressWarnings("unused")
 public final class NamedPipes {
+
+    private final Path pipesDir = Path.of(System.getProperty("user.dir") + "/../.pipes/");
 
     @PostConstruct
     public void destroyAll() throws IOException {
-        final File[] files = pipesDir().toFile().listFiles();
+        final File[] files = pipesDir.toFile().listFiles();
         if (files == null) {
             return;
         }
@@ -33,7 +34,7 @@ public final class NamedPipes {
 
     @Bean
     public Path pipesDir() {
-        return Path.of(System.getProperty("user.dir") + "/../.pipes/");
+        return pipesDir;
     }
 
 }

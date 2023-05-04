@@ -13,12 +13,19 @@ type UserSessionInputProps = TextFieldProps & {
 }
 
 export default function AnimationInput(props: UserSessionInputProps): JSX.Element {
-    const defaults = {
-        onChangeValue: (value: string|number) => {},
-        isEditing: (underEdit: boolean) => {},
+    const {
+        sessionIdx,
+        varName,
+        varValue,
+        onChangeValue,
+        isEditing,
+        ...childProps
+    } = {
+        onChangeValue: () => {},
+        isEditing: () => {},
+        ...props,
     };
 
-    const { sessionIdx, varName, varValue, onChangeValue, isEditing, ...childProps } = { ...defaults, ...props };
     const dispatch = useSnowSessionDispatch(sessionIdx);
     const valueRef = useRef<string|number>(varValue);
     const prevValueRef = useRef<string|number>(varValue);
@@ -53,7 +60,7 @@ export default function AnimationInput(props: UserSessionInputProps): JSX.Elemen
         });
     }
 
-    function handleBlur(e : FocusEvent<HTMLInputElement | HTMLTextAreaElement>): void {
+    function handleBlur(): void {
         isFocused(false);
         updateInput();
     }

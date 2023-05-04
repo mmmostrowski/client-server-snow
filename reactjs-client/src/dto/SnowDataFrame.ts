@@ -7,12 +7,3 @@ export default interface SnowDataFrame {
     particlesY: Float32Array,
     flakeShapes: Uint8Array,
 }
-
-export const LastDataFrame: SnowDataFrame = {
-    isEndOfStream: true,
-    frameNum: -1,
-    chunkSize: 0,
-    particlesX: new Float32Array(0),
-    particlesY: new Float32Array(0),
-    flakeShapes: new Uint8Array(0),
-}
