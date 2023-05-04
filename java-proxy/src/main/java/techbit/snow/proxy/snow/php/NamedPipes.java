@@ -1,7 +1,6 @@
 package techbit.snow.proxy.snow.php;
 
 import jakarta.annotation.PostConstruct;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -14,7 +13,11 @@ import static java.util.stream.Collectors.joining;
 @Component
 public final class NamedPipes {
 
-    private final Path pipesDir = Path.of(System.getProperty("user.dir") + "/../.pipes/");
+    private final Path pipesDir;
+
+    public NamedPipes(Path pipesDir) {
+        this.pipesDir = pipesDir;
+    }
 
     @PostConstruct
     public void destroyAll() throws IOException {
@@ -30,11 +33,6 @@ public final class NamedPipes {
         if (!problematicFiles.isEmpty()) {
             throw new IOException("Cannot delete pipe files: " + problematicFiles);
         }
-    }
-
-    @Bean
-    public Path pipesDir() {
-        return pipesDir;
     }
 
 }

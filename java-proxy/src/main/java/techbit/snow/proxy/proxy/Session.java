@@ -1,9 +1,9 @@
 package techbit.snow.proxy.proxy;
 
+import com.google.common.collect.Sets;
 import org.springframework.stereotype.Service;
 import techbit.snow.proxy.error.InvalidSessionException;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 public final class Session {
 
     private final Pattern sessionIdValidator = Pattern.compile("^[a-z0-9-]+$");
-    private final Set<String> sessions = new HashSet<>();
+    private final Set<String> sessions = Sets.newHashSet();
 
 
     public void create(String sessionId) {

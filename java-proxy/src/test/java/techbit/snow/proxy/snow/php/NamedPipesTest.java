@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
@@ -14,7 +13,6 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NamedPipesTest {
@@ -22,18 +20,11 @@ class NamedPipesTest {
     @TempDir
     public Path folder;
 
-    @Spy
     private NamedPipes namedPipes;
 
     @BeforeEach
     void setup() {
-        when(namedPipes.pipesDir()).thenReturn(folder);
-    }
-
-
-    @Test
-    void whenAskedForPipesDir_thenValidDirectoryPathProvided() {
-        assertDoesNotThrow(() -> namedPipes.pipesDir().toRealPath());
+        namedPipes = new NamedPipes(folder);
     }
 
     @Test

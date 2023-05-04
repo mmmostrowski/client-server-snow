@@ -1,5 +1,6 @@
 package techbit.snow.proxy.proxy;
 
+import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.log4j.Log4j2;
 import org.apache.catalina.connector.ClientAbortException;
@@ -14,7 +15,6 @@ import techbit.snow.proxy.snow.transcoding.PlainTextStreamEncoder;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -92,8 +92,8 @@ public class ProxyController {
         log.debug("streamDetails( {} )", sessionId);
 
         Map<String, Object> map = streaming.hasSession(sessionId)
-                ? new HashMap<>(streaming.sessionDetails(sessionId))
-                : new HashMap<>();
+                ? Maps.newHashMap(streaming.sessionDetails(sessionId))
+                : Maps.newHashMap();
 
         map.putAll(Map.of(
                 "status", true,
@@ -120,7 +120,7 @@ public class ProxyController {
                     "https://domain.com/sessionId/key1/val1/key2/val2/...");
         }
 
-        final Map<String, String> confMap = new HashMap<>();
+        final Map<String, String> confMap = Maps.newHashMap();
         for (int i = 0; i < elements.length; i+=2) {
             final String key = elements[i];
             final String value = elements[i + 1];
