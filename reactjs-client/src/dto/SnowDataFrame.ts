@@ -1,6 +1,6 @@
 
 export default interface SnowDataFrame {
-    isLast: boolean,
+    isEndOfStream: boolean,
     frameNum: number,
     chunkSize: number,
     particlesX: Float32Array,
@@ -9,7 +9,7 @@ export default interface SnowDataFrame {
 }
 
 export const LastDataFrame: SnowDataFrame = {
-    isLast: true,
+    isEndOfStream: true,
     frameNum: -1,
     chunkSize: 0,
     particlesX: new Float32Array(0),

@@ -17,6 +17,7 @@ import techbit.snow.proxy.snow.transcoding.StreamDecoder;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -224,9 +225,11 @@ public final class SnowStream {
         return phpSnowConfig;
     }
 
-    public void ensureCompatibleWithConfig(PhpSnowConfig config) {
+    public void ensureCompatibleWithConfig(String sessionId, PhpSnowConfig config) {
         if (!phpSnowConfig.equals(config)) {
-            throw new IncompatibleConfigException("You cannot change config when animation is running.");
+            throw new IncompatibleConfigException(MessageFormat.format(
+                    "Server is already running session ''{0}'' with different configuration. " +
+                    "You cannot change configuration when animation is running.", sessionId));
         }
     }
 

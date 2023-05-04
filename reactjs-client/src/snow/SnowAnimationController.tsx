@@ -21,6 +21,27 @@ type BufferFrame = [ SnowDataFrame, SnowBasis ];
 
 export type DetailsFromServer = DetailsEndpointResponse;
 
+export class CannotStartError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = this.constructor.name;
+    }
+}
+
+export class CannotStopError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = this.constructor.name;
+    }
+}
+
+export class CannotCheckError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = this.constructor.name;
+    }
+}
+
 export class SnowAnimationController {
     private readonly sessionId: string;
 
@@ -43,11 +64,11 @@ export class SnowAnimationController {
     private lastTimestamp: number;
     private firstFrame: boolean;
     private fpsInterval: number;
-    private needsGoodbye: boolean;
     private goodbyeTextTimeoutSec: number;
     private streamHandler: SnowClientHandler;
     private periodicHandler: ReturnType<typeof setInterval> = null;
-    private allowForGoodbye: boolean = true;
+    private isLastFrameInBuffer: boolean;
+    private checkingEnabled: boolean;
 
     public constructor(sessionId: string, decoder: SnowDecoder = new SnowDecoder()) {
         this.sessionId = sessionId;
@@ -67,15 +88,8 @@ export class SnowAnimationController {
         onNotFound?: (periodicCheck: boolean) => void,
         goodbyeTextTimeoutSec?: number,
         allowForGoodbye?: boolean,
+        checkingEnabled?: boolean,
     }): void {
-        if (config.canvas) {
-            this.canvas = config.canvas;
-        }
-
-        if (config.allowForGoodbye !== undefined) {
-            this.allowForGoodbye = config.allowForGoodbye;
-        }
-
         const idle = () => {};
         this.onFound = config.onFound ?? idle;
         this.onNotFound = config.onNotFound ?? idle;
@@ -85,6 +99,8 @@ export class SnowAnimationController {
         this.onFinish = config.onFinish ?? idle;
         this.onError = config.onError ?? idle;
 
+        this.canvas = config.canvas ?? null;
+        this.checkingEnabled = config.checkingEnabled ?? true;
         this.goodbyeTextTimeoutSec = config.goodbyeTextTimeoutSec ?? 2;
     }
 
@@ -101,13 +117,13 @@ export class SnowAnimationController {
             throw Error("Need to stopProcessing() first!");
         }
         try {
-            this.state = "buffering";
             this.startStream(
                 await startSnowSession(this.sessionId, configuration, controller),
                 this.onServerData.bind(this)
             );
+            this.state = "buffering";
         } catch (error) {
-            this.onError(error);
+            this.onError(new CannotStartError(error.message));
         }
     }
 
@@ -126,7 +142,7 @@ export class SnowAnimationController {
             this.stopStream();
             await stopSnowSession(this.sessionId, controller);
         } catch (error) {
-            this.onError(error);
+            this.onError(new CannotStopError(error.message));
         } finally {
             this.reset();
         }
@@ -159,30 +175,41 @@ export class SnowAnimationController {
 
     private async askServerForDetails(abortController: AbortController, periodicCheck: boolean): Promise<DetailsEndpointResponse> {
         try {
+            if (!this.checkingEnabled) {
+                return AbortedDetailsEndpointResponse;
+            }
+
             this.onChecking(this.sessionId, periodicCheck);
 
             const response: DetailsEndpointResponse = await fetchSnowDetails(this.sessionId, abortController);
-            if (response === AbortedEndpointResponse) {
+            if (!this.checkingEnabled || response === AbortedEndpointResponse) {
                 return AbortedDetailsEndpointResponse;
             }
             if (response.running) {
                 this.onFound(response, periodicCheck);
             } else {
+                if (!this.isLastFrameInBuffer
+                    && (this.state === "playing" || this.state === "buffering"))
+                {
+                    this.state = "stopped";
+                    this.stopStream()
+                    this.onFinish();
+                }
                 this.onNotFound(periodicCheck);
             }
             return response;
         } catch (error) {
-            this.onError(error);
+            this.onError(new CannotCheckError(error.message));
         }
     }
 
     private reset(): void {
         this.firstFrame = true;
         this.lastTimestamp = null;
-        this.needsGoodbye = false;
         this.basis = NoSnowBasis;
         this.background = NoSnowBackground;
         this.buffer = new Array<[SnowDataFrame, SnowBasis]>();
+        this.isLastFrameInBuffer = false;
     }
 
     private onServerData(data: DataView): void {
@@ -199,10 +226,11 @@ export class SnowAnimationController {
         }
 
         const frame: BufferFrame = this.decoder.decodeFrame(data);
-        const [dataFrame] = frame;
         // console.log(frame);
-        if (dataFrame.isLast) {
-            this.needsGoodbye = true;
+
+        const [dataFrame] = frame;
+        if (this.isLastFrame(dataFrame)) {
+            this.isLastFrameInBuffer = true;
         }
 
         this.buffer.push(frame);
@@ -217,20 +245,18 @@ export class SnowAnimationController {
     }
 
     private animationLoop(): void {
-        if (this.state !== "stopped" && !this.isDestroyed) {
-            requestAnimationFrame(this.animationLoop.bind(this));
+        if (this.state === "stopped" || this.isDestroyed) {
+            this.canvas.clear();
+            return;
         }
+
+        requestAnimationFrame(this.animationLoop.bind(this));
         this.synchronizeFps(() => {
             this.animationStep();
         });
     }
 
     private animationStep(): void {
-        if (this.state === "stopped") {
-            this.canvas.clear();
-            return;
-        }
-
         if (this.state === "goodbye") {
             this.canvas.drawGoodbye();
             return;
@@ -244,7 +270,7 @@ export class SnowAnimationController {
     private animateFrame([frame, basis]: BufferFrame): void {
         this.notifyPlaying(frame);
 
-        if (frame.isLast) {
+        if (this.isLastFrame(frame)) {
             this.sayGoodbye();
             return;
         }
@@ -267,12 +293,6 @@ export class SnowAnimationController {
         this.stopStream();
         this.reset();
 
-        if (!this.allowForGoodbye) {
-            this.state = "stopped";
-            this.onFinish();
-            return;
-        }
-
         this.state = "goodbye";
         setTimeout(() => {
             if (this.state !== "goodbye") {
@@ -281,7 +301,6 @@ export class SnowAnimationController {
             this.state = "stopped";
             this.onFinish();
         }, this.goodbyeTextTimeoutSec * 1000);
-        return;
     }
 
     private startStream(session: StartEndpointResponse, onData: (data: DataView) => void): void {
@@ -309,6 +328,10 @@ export class SnowAnimationController {
 
     private notifyPlaying(frame: SnowDataFrame) {
         this.onPlaying(this.animationProgress(frame), this.bufferLevel());
+    }
+
+    private isLastFrame(frame: SnowDataFrame) {
+        return frame.frameNum === this.metadata.totalNumberOfFrames;
     }
 
     private animationProgress(frame: SnowDataFrame): number {

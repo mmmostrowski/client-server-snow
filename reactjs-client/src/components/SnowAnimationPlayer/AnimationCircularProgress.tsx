@@ -6,7 +6,7 @@ import { useDelayedSnowSession } from '../../snow/SnowSessionsProvider'
 
 
 export default function AnimationCircularProgress({ sessionIdx } : { sessionIdx: number }) {
-    const { status, errorMsg, bufferLevel, animationProgress } = useDelayedSnowSession(sessionIdx);
+    const { status, errorMsg, bufferLevel } = useDelayedSnowSession(sessionIdx);
 
     let color : "primary" | "error" | "info" | "success" | "inherit" | "secondary" | "warning" = "primary";
     let progress = 100;
@@ -33,7 +33,8 @@ export default function AnimationCircularProgress({ sessionIdx } : { sessionIdx:
             insideText = "exists"
             title = "Animation session exists on server!"
             break;
-        case "initializing":
+        case "initializing-existing":
+        case "initializing-new":
             color = "primary";
             progress = null;
             insideText = "Init"
@@ -44,7 +45,7 @@ export default function AnimationCircularProgress({ sessionIdx } : { sessionIdx:
             color = "error";
             progress = 100;
             insideText = "error";
-            title = `Error: ${errorMsg}`;
+            title = errorMsg;
             break;
         case "buffering":
             color = "primary";
@@ -58,11 +59,17 @@ export default function AnimationCircularProgress({ sessionIdx } : { sessionIdx:
             insideText = '▶'
             title = `Playing ( buffer ${bufferLevel}% )`
             break;
+        case "error-cannot-stop":
+            color = "error";
+            progress = 100;
+            insideText = "error";
+            title = errorMsg;
+            break;
         case "error":
             color = "error";
             progress = 100;
             insideText = "error";
-            title = `Error: ${errorMsg}`;
+            title = errorMsg;
             break;
     }
 

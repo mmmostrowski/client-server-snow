@@ -105,7 +105,7 @@ public final class ProxyService implements ApplicationListener<SnowStream.SnowSt
         log.debug("snowStream( {} ) | Returning existing stream", sessionId);
         SnowStream stream = streams.get(sessionId);
         if (!config.isEmpty()) {
-            stream.ensureCompatibleWithConfig(configConverter.fromMap(config));
+            stream.ensureCompatibleWithConfig(sessionId, configConverter.fromMap(config));
         }
         return stream;
     }

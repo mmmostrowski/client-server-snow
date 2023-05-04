@@ -37,7 +37,8 @@ export type SessionStatus =
         | "stopped-found"
         | "buffering"
         | "playing"
-        | "initializing"
+        | "initializing-new"
+        | "initializing-existing"
         | "checking"
         | SessionErrorStatus;
 
@@ -76,7 +77,9 @@ interface SnowSessionExtraState {
     cannotStartSession: boolean,
     hasSessionIdError: boolean,
     hasError: boolean,
+    hasConfigError: boolean;
     isStopped: boolean,
+    isInitializing: boolean;
 }
 
 interface ValidatedSnowSession extends SnowSession, SessionErrors {
@@ -198,7 +201,7 @@ function snowSessionsReducer(sessions: ProcessedSnowSession[], action: DispatchS
             }
             const draft = draftSession(changed, last);
 
-            console.log("changes:", sessionIdChangeAction.changes);
+            console.log("changes:", sessionIdChangeAction.changes, draft);
 
             return [
                ...sessions.slice(0, idx),
@@ -297,16 +300,27 @@ function postProcessedSession(session: ValidatedSnowSession): ProcessedSnowSessi
         ...session,
         hasSessionIdError: session.sessionIdError !== null,
         animationProgress: session.status === 'playing' ? session.animationProgress : 0,
+        hasConfigError:
+               session.sessionIdError !== null
+            || session.widthError !== null
+            || session.heightError !== null
+            || session.fpsError !== null
+        ,
+        isInitializing:
+               session.status === 'initializing-new'
+            || session.status === 'initializing-existing',
         isSessionExists:
                session.status === 'stopped-found'
-            || session.status === 'error-cannot-start-existing',
+            || session.status === 'error-cannot-start-existing'
+            || session.status === 'initializing-existing',
         cannotStartSession:
                session.status === 'error-cannot-start-new'
             || session.status === 'error-cannot-start-existing',
         hasError:
                session.status === 'error'
             || session.status === 'error-cannot-start-new'
-            || session.status === 'error-cannot-start-existing',
+            || session.status === 'error-cannot-start-existing'
+            || session.status === 'error-cannot-stop',
         isStopped:
                session.status === 'stopped-not-checked'
             || session.status === 'stopped-not-found'

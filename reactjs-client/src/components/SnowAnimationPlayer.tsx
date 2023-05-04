@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { useSnowSession } from '../snow/SnowSessionsProvider';
+import {useSnowSession, useSnowSessionDispatch} from '../snow/SnowSessionsProvider';
 import { SnowAnimationConfiguration } from '../stream/snowEndpoint';
 import {
     useSessionStatusUpdater,
@@ -13,7 +13,7 @@ import AnimationCircularProgress from "./SnowAnimationPlayer/AnimationCircularPr
 import AnimationSessionId from "./SnowAnimationPlayer/AnimationSessionId";
 import AnimationControlButtons from "./SnowAnimationPlayer/AnimationControlButtons";
 import LinearProgress from "@mui/material/LinearProgress";
-import {DetailsFromServer} from "../snow/SnowAnimationController";
+import {CannotStartError, CannotStopError, DetailsFromServer} from "../snow/SnowAnimationController";
 
 
 interface SnowAnimationProps {
@@ -23,18 +23,19 @@ interface SnowAnimationProps {
 export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps): JSX.Element {
     const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
     const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
+    const dispatch = useSnowSessionDispatch(sessionIdx);
     const [ isLocked, setIsLocked ] = useState(false);
     const [ playAnimation, setPlayAnimation ] = useState<boolean>(false);
-    const [ allowForGoodbye , setAllowForGoodbye ] = useState<boolean>(false);
     const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>(null);
     const {
-        status, hasError,
+        status, hasError, hasConfigError,
         sessionId, isSessionExists, hasSessionIdError, cannotStartSession,
-        presetName, animationProgress,
+        presetName, animationProgress, isInitializing,
         validatedWidth: width, validatedHeight: height, validatedFps: fps,
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSnowSession(sessionIdx);
-    const checkingEnabled = !hasSessionIdError;
+
+    console.log("width", width);
 
 
     function handleStart() {
@@ -43,11 +44,12 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
         }
         setPlayAnimation(true);
         if (isSessionExists) {
-            setSessionStatus('initializing', {
+            setSessionStatus('initializing-existing', {
                 fps: '' + foundFps,
                 width: '' + foundWidth,
                 height: '' + foundHeight,
             });
+            dispatch({ type: 'accept-or-reject-session-changes' });
             setAnimationConfiguration({
                 width: foundWidth,
                 height: foundHeight,
@@ -55,7 +57,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
                 presetName: foundPresetName,
             });
         } else {
-            setSessionStatus('initializing');
+            setSessionStatus('initializing-new');
             setAnimationConfiguration({
                 width: width,
                 height: height,
@@ -63,15 +65,16 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
                 presetName: presetName,
             });
         }
-
     }
 
     async function handleStop() {
         if (isLocked) {
             return;
         }
-        setSessionStatus('stopped-not-found');
         setPlayAnimation(false);
+        if (status !== 'error-cannot-stop') {
+            setSessionStatus('stopped-not-found');
+        }
     }
 
 
@@ -79,6 +82,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
         setSessionStatus('buffering', {
             bufferLevel: percent,
             animationProgress: 0,
+
         });
     }
 
@@ -90,22 +94,33 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
     }
 
     function handleAnimationError(error: Error): void {
-        setSessionErrorStatus(error);
+        setPlayAnimation(false);
+        if (error instanceof CannotStartError) {
+            if (isSessionExists) {
+                setSessionErrorStatus(error, 'error-cannot-start-existing');
+            } else {
+                setSessionErrorStatus(error, 'error-cannot-start-new');
+            }
+        } else if (error instanceof CannotStopError) {
+            setSessionErrorStatus(error, 'error-cannot-stop');
+        } else {
+            setSessionErrorStatus(error);
+        }
     }
 
-    function handleChecking(): void {
+    function handleChecking(sessionId: string, periodicCheck: boolean): void {
+        if ((periodicCheck && cannotStartSession) || hasSessionIdError) {
+            return;
+        }
+
         if (status === 'stopped-not-checked' || hasError) {
             setSessionStatus('checking');
         }
     }
 
-    function handleSessionFound(response: DetailsFromServer, periodicCheck: boolean): void {
-        if (status === 'buffering' || status === 'initializing' || cannotStartSession) {
+    function handleSessionFound(response: DetailsFromServer): void {
+        if (status === 'buffering' || isInitializing || cannotStartSession || hasSessionIdError) {
             return;
-        }
-
-        if (!periodicCheck) {
-            setAllowForGoodbye(true);
         }
 
         if (status === 'checking'
@@ -121,19 +136,13 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
         }
     }
 
-    function handleSessionNotFound(periodicCheck: boolean): void {
-        if (status === 'buffering' || status === 'initializing' || cannotStartSession) {
+    function handleSessionNotFound(): void {
+        if (status === 'buffering' || isInitializing || cannotStartSession || hasSessionIdError) {
             return;
         }
 
         if (status === 'checking' || status === 'stopped-found') {
             setSessionStatus('stopped-not-found');
-        }
-        console.log("handleSessionNotFound", sessionId, status, periodicCheck);
-        if (status === 'playing' && periodicCheck) {
-            setAllowForGoodbye(false);
-            setSessionStatus('stopped-not-found');
-            setPlayAnimation(false);
         }
     }
 
@@ -152,13 +161,12 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
                 <AnimationControlButtons sessionIdx={sessionIdx} handleStart={handleStart} handleStop={handleStop} />
             </div>
             <SnowAnimation sessionId={sessionId}
-                           width={width}
-                           height={height}
+                           width={isSessionExists ? foundWidth : width}
+                           height={isSessionExists ? foundHeight : height}
                            play={playAnimation}
                            configuration={animationConfiguration}
+                           checkingEnabled={!hasConfigError}
                            checkEveryMs={1300}
-                           checkingEnabled={checkingEnabled}
-                           allowForGoodbye={allowForGoodbye}
                            onFinish={handleStop}
                            onBuffering={handleAnimationBuffering}
                            onPlaying={handleAnimationPlaying}

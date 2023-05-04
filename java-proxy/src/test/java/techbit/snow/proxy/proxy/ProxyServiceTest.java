@@ -212,14 +212,6 @@ class ProxyServiceTest {
         verify(snowStream).stop();
     }
 
-//    @Test
-//    void givenDifferentConfiguration_whenAskForExistingStream_thenThrowException() throws ConsumerThreadException, IOException, InterruptedException {
-//        when(session.exists("session-abc")).thenReturn(true);
-//        when(streams.get("session-abc")).thenReturn(snowStream);
-//
-//        proxyServiceSpyStreams.streamSessionTo("session-abc", out, streamEncoder, Collections.emptyMap());
-//    }
-
     @Test
     void givenCustomConfiguration_whenStreamToExisting_thenEnsureIsCompatible() throws ConsumerThreadException, IOException, InterruptedException {
         Map<String, String> setup = Map.of("key", "val");
@@ -230,7 +222,7 @@ class ProxyServiceTest {
 
         proxyServiceSpyStreams.streamSessionTo("session-abc", out, streamEncoder, setup);
 
-        verify(snowStream).ensureCompatibleWithConfig(snowSetup);
+        verify(snowStream).ensureCompatibleWithConfig("session-abc", snowSetup);
     }
 
     @Test
@@ -241,7 +233,7 @@ class ProxyServiceTest {
 
         proxyServiceSpyStreams.streamSessionTo("session-abc", out, streamEncoder, Collections.emptyMap());
 
-        verify(snowStream, never()).ensureCompatibleWithConfig(snowSetup);
+        verify(snowStream, never()).ensureCompatibleWithConfig("session-abc", snowSetup);
     }
 
 }

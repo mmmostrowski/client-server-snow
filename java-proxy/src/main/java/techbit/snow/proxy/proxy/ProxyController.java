@@ -35,7 +35,7 @@ public class ProxyController {
     @GetMapping({ "/", "/start", "/start/", "/text", "/text/", "/stop", "/stop/", "/details/", "/details" })
     public void insufficientParams() {
         throw new InvalidRequestException(
-                "Invalid url! Url Should follow pattern: http://domain.com/<action>/<session-id>");
+                "Invalid url! Url Should follow pattern: https://domain.com/<action>/<session-id>");
     }
 
     @GetMapping("/start/{sessionId}/{*configuration}")
@@ -114,14 +114,10 @@ public class ProxyController {
         }
 
         final String[] elements = configuration.substring(1).split("/");
-        if ((elements.length & 1 ) != 0) {
+        boolean hasOddNumberOfElements = (elements.length & 1) != 0;
+        if (hasOddNumberOfElements || stream(elements).anyMatch(String::isBlank)) {
             throw new InvalidRequestException("Please provide request in form: " +
-                    "http://domain.com/sessionId/key1/val1/key2/val2/...");
-        }
-
-        if (stream(elements).anyMatch(String::isBlank)) {
-            throw new InvalidRequestException(
-                    "Please provide request in form: http://domain.com/sessionId/key1/val1/key2/val2/...");
+                    "https://domain.com/sessionId/key1/val1/key2/val2/...");
         }
 
         final Map<String, String> confMap = new HashMap<>();

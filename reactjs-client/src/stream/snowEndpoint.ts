@@ -106,8 +106,11 @@ function askSnowEndpoint(controller: AbortController, action: string, sessionId:
             return data;
         })
         .catch((error: Error) => {
-            if (error.name === 'AbortError') {
-                return AbortedEndpointResponse;
+            switch(error.name) {
+                case 'AbortError':
+                    return AbortedEndpointResponse;
+                case 'TypeError':
+                    error = new Error("Server error!");
             }
             console.error(error);
             throw error;

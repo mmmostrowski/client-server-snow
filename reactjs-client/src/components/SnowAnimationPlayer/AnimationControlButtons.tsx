@@ -22,7 +22,8 @@ export default function AnimationControlButtons(props: AnimationControlButtonsPr
 
     const isStopActive: boolean =
            status === "buffering"
-        || status === "playing";
+        || status === "playing"
+        || status === "error-cannot-stop";
 
     return (
         <>

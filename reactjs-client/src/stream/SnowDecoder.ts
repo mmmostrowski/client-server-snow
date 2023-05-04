@@ -63,7 +63,7 @@ export default class SnowDecoder
             ptr += 9;
         }
 
-        return { isLast, frameNum, chunkSize, particlesX, particlesY, flakeShapes };
+        return { isEndOfStream: isLast, frameNum, chunkSize, particlesX, particlesY, flakeShapes };
     }
 
     private decodeBasis(data : DataView, frameChunkSize: number): SnowBasis {

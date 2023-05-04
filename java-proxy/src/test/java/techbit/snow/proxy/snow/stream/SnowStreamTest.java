@@ -89,14 +89,14 @@ class SnowStreamTest extends SnowStreamBaseTest {
     void whenCompatibleConfig_thenNoErrorOccurs() {
         PhpSnowConfig snowConfig = new PhpSnowConfig(
                 "testingPreset", 87, 76, Duration.ofMinutes(11), 21);
-        assertDoesNotThrow(() -> snowStream.ensureCompatibleWithConfig(snowConfig));
+        assertDoesNotThrow(() -> snowStream.ensureCompatibleWithConfig("session-abc", snowConfig));
     }
 
     @Test
     void whenIncompatibleConfig_thenThrowException() {
         PhpSnowConfig snowConfig = new PhpSnowConfig(
                 "changedTestingPreset", 87, 76, Duration.ofMinutes(11), 21);
-        assertThrows(IncompatibleConfigException.class, () -> snowStream.ensureCompatibleWithConfig(snowConfig));
+        assertThrows(IncompatibleConfigException.class, () -> snowStream.ensureCompatibleWithConfig("session-abc", snowConfig));
     }
 
     @Test
