@@ -255,7 +255,7 @@ class SnowDataBufferTest {
         buffer.push(frame(2));
         buffer.push(SnowDataFrame.LAST);
 
-        assertThrows(IllegalArgumentException.class, () -> buffer.push(frame(3)));
+        assertThrows(IllegalStateException.class, () -> buffer.push(frame(3)));
     }
 
     @Test

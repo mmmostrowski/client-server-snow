@@ -40,11 +40,8 @@ public final class BlockingBag<K, V> {
             if (!map.containsKey(key)) {
                 lock.wait();
             }
-            final V result = map.get(key);
-            if (result == null) {
-                throw new ItemNoLongerExistsException("Item was present but has been removed: " + key);
-            }
-            return result;
+            return get(key).orElseThrow(() ->
+                    new ItemNoLongerExistsException("Item was present but has been removed: " + key));
         }
     }
 
