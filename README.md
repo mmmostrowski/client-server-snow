@@ -2,9 +2,7 @@
 
 Simple PHP app producing a snow in the terminal.
 
-<p align="center">
-  <img src="app/assets/screenshot.png" alt="PHP Snow Screenshot"/>
-</p>
+<img src="app/assets/screenshot.png" alt="PHP Snow Screenshot" style="display: block; margin: 0 auto" />
 
 ### Quick run
 

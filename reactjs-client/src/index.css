@@ -31,7 +31,6 @@ body,
     height: calc(100% - 100px);
 }
 
-/*noinspection CssUnusedSymbol*/
 .snow-animation-wrapper > .MuiPaper-root {
     margin-top: 0;
     margin-bottom: 0;
@@ -44,7 +43,6 @@ body,
     padding-top: 10px;
 }
 
-/*noinspection CssUnusedSymbol*/
 .snow-animation-header .MuiPaper-root {
     width: calc(100% - 28px);
     margin-left: 10px;
@@ -55,13 +53,11 @@ body,
     height: calc(100% - 20px);
 }
 
-/*noinspection CssUnusedSymbol*/
 .session-id {
     font-size: 20px;
     padding: 20px;
 }
 
-/*noinspection CssUnusedSymbol*/
 .MuiButtonBase-root.MuiIconButton-root.tab-delete-button {
     position: absolute;
     right: 2px;
@@ -73,7 +69,6 @@ body,
     padding: 1px;
 }
 
-/*noinspection CssUnusedSymbol*/
 .MuiButtonBase-root.add-new-session-button {
     font-size: 28px;
     padding: 0;
@@ -93,12 +88,10 @@ body,
     margin: 5px 0 30px 20px;
 }
 
-/*noinspection CssUnusedSymbol*/
 .animation-header button.start-button {
     margin-right: 1px
 }
 
-/*noinspection CssUnusedSymbol*/
 .animation-header button.stop-button {
     margin-left: 1px
 }
@@ -119,7 +112,6 @@ body,
     margin-bottom: 30px;
 }
 
-/*noinspection CssUnusedSymbol*/
 .snow-configuration-wrapper .MuiTextField-root {
     width: 180px;
 }
@@ -131,7 +123,6 @@ body,
     margin-right: 1px
 }
 
-/*noinspection CssUnusedSymbol*/
 .snow-configuration-wrapper > .MuiPaper-root {
     margin-top: 0;
 }
@@ -165,7 +156,6 @@ body,
     transition: none;
 }
 
-/*noinspection CssUnusedSymbol*/
 .snow-animation .MuiLinearProgress-bar {
     transition: none;
 }
