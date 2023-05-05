@@ -2,7 +2,7 @@ import * as React from "react";
 import TextField from '@mui/material/TextField';
 import { TextFieldProps } from '@mui/material';
 import { useEffect, useRef, MutableRefObject, FocusEvent } from "react";
-import { useSnowSessionDispatch } from '../../snow/SnowSessionsProvider'
+import { useSessionDispatch } from '../../snow/SessionsProvider'
 
 type UserSessionInputProps = TextFieldProps & {
     sessionIdx: number,
@@ -26,7 +26,7 @@ export default function AnimationInput(props: UserSessionInputProps): JSX.Elemen
         ...props,
     };
 
-    const dispatch = useSnowSessionDispatch(sessionIdx);
+    const dispatch = useSessionDispatch(sessionIdx);
     const valueRef = useRef<string|number>(varValue);
     const prevValueRef = useRef<string|number>(varValue);
     const needSyncRef = useRef<boolean>(true);

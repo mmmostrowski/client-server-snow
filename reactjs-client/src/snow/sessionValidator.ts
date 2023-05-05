@@ -1,5 +1,5 @@
 
-export function validateSnowSessionId(sessionId : string): string|null {
+export function validateSessionId(sessionId : string): string|null {
     if (sessionId === "") {
         return "Cannot be empty";
     }

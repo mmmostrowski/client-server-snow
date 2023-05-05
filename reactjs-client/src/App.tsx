@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, forwardRef, useEffect, MouseEvent, HTMLProps } from 'react';
-import { useSnowSessions } from './snow/SnowSessionsProvider'
+import { useSessions } from './snow/SessionsProvider'
 import { useSessionsManager } from './snow/snowSessionManager'
 import SnowAnimationPlayer from './components/SnowAnimationPlayer'
 import SnowConfiguration from './components/SnowConfiguration'
@@ -17,7 +17,7 @@ interface AppProps {
 
 export default function App({ maxTabs } : AppProps): JSX.Element {
     const [ currentTab, setCurrentTab ] = useState(0);
-    const sessions = useSnowSessions();
+    const sessions = useSessions();
     const { createNewSession, deleteSession } = useSessionsManager();
 
     useUrlUpdater(currentTab);
@@ -124,7 +124,7 @@ export default function App({ maxTabs } : AppProps): JSX.Element {
 }
 
 function useUrlUpdater(currentTab: number) {
-    const sessions = useSnowSessions();
+    const sessions = useSessions();
     const currentSessionId = sessions[currentTab]?.validatedSessionId;
 
     useEffect(() => {

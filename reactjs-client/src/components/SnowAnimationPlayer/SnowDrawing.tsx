@@ -4,7 +4,7 @@ import SnowDataFrame from "../../dto/SnowDataFrame";
 import SnowBasis from "../../dto/SnowBasis";
 import {SnowCanvas, SnowCanvasRefHandler} from "../SnowCanvas";
 import {forwardRef, useImperativeHandle, useRef} from "react";
-import {animationConstraints} from "../../config/animationContraints";
+import {animationConfig} from "../../config/animation";
 
 
 interface SnowDrawingProps {
@@ -25,7 +25,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
     function SnowDrawing({ width, height }, ref )
 {
     const canvasRef = useRef<SnowCanvasRefHandler>(null);
-    const { canvas } = animationConstraints;
+    const { canvas } = animationConfig;
 
     useImperativeHandle(ref, (): SnowDrawingRefHandler => {
         return {
@@ -40,7 +40,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
 
                 const canvas = canvasRef.current;
                 const { width, height, pixels } = background;
-                const font = animationConstraints.backgroundFont;
+                const font = animationConfig.backgroundFont;
 
                 canvas.setCurrentFont(font.color, font.scale);
                 for (let y = 0; y < height; ++y) {
@@ -57,8 +57,8 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
             drawSnow(frame: SnowDataFrame): void {
                 const canvas = canvasRef.current;
                 const { particlesX, particlesY, flakeShapes: flakes, chunkSize } = frame;
-                const font = animationConstraints.snowFont;
-                const flakeShapes = animationConstraints.flakeShapes;
+                const font = animationConfig.snowFont;
+                const flakeShapes = animationConfig.flakeShapes;
 
                 canvas.setCurrentFont(font.color, font.scale);
                 for (let i = 0; i < chunkSize; ++i) {
@@ -73,8 +73,8 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
 
                 const canvas = canvasRef.current;
                 const { numOfPixels, x, y, pixels } = basis;
-                const font = animationConstraints.basisFont;
-                const flakeShapes = animationConstraints.flakeShapes;
+                const font = animationConfig.basisFont;
+                const flakeShapes = animationConfig.flakeShapes;
 
                 canvas.setCurrentFont(font.color, font.scale);
                 for (let i = 0; i < numOfPixels; ++i) {
@@ -84,7 +84,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
 
             drawGoodbye(): void {
                 const canvas = canvasRef.current;
-                const { text, color, font, size } = animationConstraints.goodbyeText;
+                const { text, color, font, size } = animationConfig.goodbyeText;
 
                 canvas.clearCanvas();
                 canvas.setCurrentFont(color, size, font);

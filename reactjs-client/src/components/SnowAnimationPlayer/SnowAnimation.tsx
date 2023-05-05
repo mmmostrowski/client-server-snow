@@ -3,7 +3,7 @@ import {useEffect, useRef} from "react";
 import {SnowDrawing, SnowDrawingRefHandler} from "./SnowDrawing";
 import {SnowAnimationConfiguration} from "../../stream/snowEndpoint";
 import {DetailsFromServer, SnowAnimationController} from "../../snow/SnowAnimationController";
-import {animationConstraints} from "../../config/animationContraints";
+import {animationConfig} from "../../config/animation";
 
 
 interface SnowAnimationProps {
@@ -53,7 +53,7 @@ export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
     // Configure controller
     useEffect(() => {
         snowControllerRef.current.configure({
-            goodbyeTextTimeoutSec: animationConstraints.goodbyeText.timeoutSec,
+            goodbyeTextTimeoutSec: animationConfig.goodbyeText.timeoutSec,
             canvas: canvasRef.current,
             onChecking,
             onFound,

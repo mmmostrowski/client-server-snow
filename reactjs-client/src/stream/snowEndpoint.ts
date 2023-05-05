@@ -1,4 +1,4 @@
-import { Client, IMessage } from '@stomp/stompjs';
+import {Client, IFrame, IMessage} from '@stomp/stompjs';
 
 const snowEndpointUrl=process.env.REACT_APP_SNOW_ENDPOINT_URL;
 
@@ -49,73 +49,76 @@ export const AbortedDetailsEndpointResponse: DetailsEndpointResponse = {
     fps: 0,
 };
 
-export function startSnowSession(sessionId: string, config: SnowAnimationConfiguration, controller?: AbortController): Promise<StartEndpointResponse> {
+export async function startSnowSession(sessionId: string, config: SnowAnimationConfiguration, controller?: AbortController)
+    : Promise<StartEndpointResponse>
+{
     const url= "/fps/" + config.fps
         + "/width/" + config.width
         + "/height/" + config.height
         + "/presetName/" + config.presetName;
 
-    return askSnowEndpoint(controller, 'start', sessionId, url)
-            .then(( response: StartEndpointResponse ) => {
-                if (!response.running) {
-                    throw Error("Server did not start animation!");
-                }
-                return response;
-            }) as Promise<StartEndpointResponse>;
-}
-
-export function fetchSnowDetails(sessionId: string, controller?: AbortController): Promise<DetailsEndpointResponse> {
-    if (!sessionId) {
-        return Promise.reject(new Error("Session id is missing!"));
+    const response = await askSnowEndpoint(controller, 'start', sessionId, url);
+    if (!response.running) {
+        throw Error("Server did not start animation!");
     }
-    return askSnowEndpoint(controller, 'details', sessionId) as Promise<DetailsEndpointResponse>;
+    return response as StartEndpointResponse;
 }
 
-export function stopSnowSession(sessionId: string, controller?: AbortController): Promise<StopEndpointResponse>{
-    return askSnowEndpoint(controller, 'stop', sessionId)
-            .then(( response: StartEndpointResponse ) => {
-                if (response.running) {
-                    throw Error("Server did not stop animation!");
-                }
-                return response;
-            }) as Promise<StartEndpointResponse>;
+export async function fetchSnowDetails(sessionId: string, controller?: AbortController): Promise<DetailsEndpointResponse> {
+    return await askSnowEndpoint(controller, 'details', sessionId) as DetailsEndpointResponse;
 }
 
-function askSnowEndpoint(controller: AbortController, action: string, sessionId: string, subUrl: string = ""): Promise<EndpointResponse> {
-    const url = `${snowEndpointUrl}/${action}/${sessionId}${subUrl}`;
-
-    return fetch(url, { signal: controller?.signal })
-        .then((response: Response) => {
-            if (!response) {
-                throw Error("Invalid server response!");
-            }
-            return response;
-        })
-        .then((response: Response) => response.json())
-        .then((data: EndpointResponse) => {
-            if (!data) {
-                throw Error("Invalid server response! JSON Response expected!");
-            }
-            if (!data.status) {
-                if (data.message) {
-                    throw Error("Server respond with error: " + data.message);
-                }
-                throw Error("Server respond with error!");
-            }
-            // console.log(url, data);
-            return data;
-        })
-        .catch((error: Error) => {
-            switch(error.name) {
-                case 'AbortError':
-                    return AbortedEndpointResponse;
-                case 'TypeError':
-                    error = new Error("Server error!");
-            }
-            console.error(error);
-            throw error;
-        });
+export async function stopSnowSession(sessionId: string, controller?: AbortController): Promise<StopEndpointResponse> {
+    const response = await askSnowEndpoint(controller, 'stop', sessionId);
+    if (response.running) {
+        throw Error("Server did not stop animation!");
+    }
+    return response as StopEndpointResponse;
 }
+
+async function askSnowEndpoint(controller: AbortController, action: string, sessionId: string, subUrl: string = "")
+    : Promise<EndpointResponse>
+{
+    if (!sessionId) {
+        throw Error("Session id is missing!");
+    }
+
+    if (!action) {
+        throw Error("Action is missing!");
+    }
+
+    const data: EndpointResponse = await fetchEndpoint(controller,
+        `${snowEndpointUrl}/${action}/${sessionId}${subUrl}`);
+
+    if (!data) {
+        throw Error("Invalid server response! JSON Response expected!");
+    }
+
+    if (data.status === false) {
+        throw Error(data.message
+            ? "Server respond with error: " + data.message
+            : "Server respond with error!" );
+    }
+
+    return data;
+}
+
+async function fetchEndpoint(controller: AbortController, url: string): Promise<EndpointResponse> {
+    try{
+        const response: Response = await fetch(url, { signal: controller?.signal });
+        return await response.json() as EndpointResponse;
+    } catch (error) {
+        console.error(error);
+        switch(error.name) {
+            case 'AbortError':
+                return AbortedEndpointResponse;
+            case 'TypeError':
+                error = new Error("Server error!");
+        }
+        throw error;
+    }
+}
+
 
 export type SnowClientHandler = number;
 const stompClients = new Map<SnowClientHandler, Client>();
@@ -124,8 +127,8 @@ let stompClientsCounter = 0;
 export function startSnowDataStream(startSessionResponse: StartEndpointResponse, handleMessage: (data: DataView) => void): SnowClientHandler {
     const stompClient = new Client({
         brokerURL: startSessionResponse.streamWebsocketsStompBrokerUrl,
-        onConnect: (frame) => {
-            let userId = frame.headers['user-name'];
+        onConnect: (frame: IFrame) => {
+            const userId = frame.headers['user-name'];
 
             stompClient.subscribe('/user/' + userId + '/stream/',
                 (message: IMessage) => handleMessage(new DataView(message.binaryBody.buffer)));
@@ -135,9 +138,10 @@ export function startSnowDataStream(startSessionResponse: StartEndpointResponse,
             });
         },
     });
+
     stompClient.activate();
 
-    const handler = ++stompClientsCounter;
+    const handler: SnowClientHandler = stompClientsCounter++;
     stompClients.set(handler, stompClient);
     return handler;
 }

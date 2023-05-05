@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import {useSnowSession, useSnowSessionDispatch} from '../snow/SnowSessionsProvider';
+import {useSession, useSessionDispatch} from '../snow/SessionsProvider';
 import { SnowAnimationConfiguration } from '../stream/snowEndpoint';
 import {
     useSessionStatusUpdater,
@@ -23,7 +23,7 @@ interface SnowAnimationProps {
 export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps): JSX.Element {
     const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
     const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
-    const dispatch = useSnowSessionDispatch(sessionIdx);
+    const dispatch = useSessionDispatch(sessionIdx);
     const [ isLocked, setIsLocked ] = useState(false);
     const [ playAnimation, setPlayAnimation ] = useState<boolean>(false);
     const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>(null);
@@ -33,7 +33,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
         presetName, animationProgress, isInitializing,
         validatedWidth: width, validatedHeight: height, validatedFps: fps,
         foundWidth, foundHeight, foundFps, foundPresetName,
-    } = useSnowSession(sessionIdx);
+    } = useSession(sessionIdx);
 
 
     function handleStart() {

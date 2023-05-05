@@ -1,5 +1,5 @@
 
-export const animationConstraints = {
+export const animationConfig = {
     flakeShapes: [
         '#', // pressed
         '*', '*', '*', '*', '*', "'", ".", ",", "`"

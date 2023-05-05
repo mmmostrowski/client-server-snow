@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useSnowSessions, useSnowSessionsDispatch } from './SnowSessionsProvider'
+import { useSessions, useSessionsDispatch } from './SessionsProvider'
 
 type SessionsManager = {
     createNewSession: () => void,
@@ -7,16 +7,22 @@ type SessionsManager = {
 }
 
 export function useSessionsManager(): SessionsManager {
-    const sessions = useSnowSessions();
-    const dispatch = useSnowSessionsDispatch();
+    const sessions = useSessions();
+    const dispatch = useSessionsDispatch();
     const createdCounter = useRef<number>(1);
 
     function uniqueSessionId(): string {
-        let newSessionId: string;
         do {
-            newSessionId = 'session-' + createdCounter.current++;
-        } while( sessions.map(s => s.sessionId).indexOf(newSessionId) !== -1);
-        return newSessionId;
+            const newSessionId = 'session-' + createdCounter.current++;
+
+            const isUniqueName = sessions
+                .map(s => s.sessionId)
+                .indexOf(newSessionId) === -1;
+
+            if (isUniqueName) {
+                return newSessionId;
+            }
+        } while( true );
     }
 
     return {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useSnowSession } from '../../snow/SnowSessionsProvider'
+import { useSession } from '../../snow/SessionsProvider'
 import AnimationInput from './AnimationInput'
 
 
@@ -12,7 +12,7 @@ export default function AnimationSessionId({ sessionIdx, isEditing } : Animation
     const {
         status, hasError, isStopped,
         sessionId, sessionIdError, hasSessionIdError,
-    } = useSnowSession(sessionIdx);
+    } = useSession(sessionIdx);
     const isSessionIdInputActive: boolean =
            isStopped
         || hasError

@@ -1,6 +1,6 @@
 import * as React from "react";
 import Button from '@mui/material/Button';
-import { useSnowSession, useDelayedSnowSession } from '../../snow/SnowSessionsProvider'
+import { useSession, useDelayedSession } from '../../snow/SessionsProvider'
 
 
 interface AnimationControlButtonsProps {
@@ -11,8 +11,8 @@ interface AnimationControlButtonsProps {
 
 export default function AnimationControlButtons(props: AnimationControlButtonsProps): JSX.Element {
     const { sessionIdx, handleStart, handleStop } = props;
-    const { isStopped, isSessionExists } = useSnowSession(sessionIdx);
-    const { status } = useDelayedSnowSession(sessionIdx);
+    const { isStopped, isSessionExists } = useSession(sessionIdx);
+    const { status } = useDelayedSession(sessionIdx);
 
     const isStartActive: boolean =
            isStopped

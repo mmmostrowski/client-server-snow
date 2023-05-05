@@ -5,11 +5,11 @@ import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
 import AnimationInput from './SnowAnimationPlayer/AnimationInput'
 import {
-    snowConstraints,
-    useDelayedSnowSession,
-    useSnowSessionDispatch,
-    useSnowSession
-} from '../snow/SnowSessionsProvider'
+    useDelayedSession,
+    useSessionDispatch,
+    useSession
+} from '../snow/SessionsProvider'
+import {applicationConfig} from "../config/application";
 
 interface SnowConfigurationProps {
     sessionIdx: number
@@ -23,9 +23,9 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
         fps: userFps,
         presetName: userPresetName,
         foundWidth, foundHeight, foundFps, foundPresetName,
-    } = useSnowSession(sessionIdx);
-    const { status, widthError, heightError, fpsError } = useDelayedSnowSession(sessionIdx);
-    const dispatch = useSnowSessionDispatch(sessionIdx);
+    } = useSession(sessionIdx);
+    const { status, widthError, heightError, fpsError } = useDelayedSession(sessionIdx);
+    const dispatch = useSessionDispatch(sessionIdx);
     const width = isSessionExists ? foundWidth : userWidth;
     const height = isSessionExists ? foundHeight : userHeight;
     const fps = isSessionExists ? foundFps : userFps;
@@ -58,7 +58,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
                     sx={{ width: 180 }} >
 
                     { !isAvailable && <MenuItem key="?" value="?">?</MenuItem> }
-                    { isAvailable && Object.entries(snowConstraints.presets).map(([presetName, presetLabel]) =>
+                    { isAvailable && Object.entries(applicationConfig.presets).map(([presetName, presetLabel]) =>
                             <MenuItem key={presetName} value={presetName}>{presetLabel}</MenuItem>
                     ) }
 

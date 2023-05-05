@@ -1,11 +1,11 @@
 import { useCallback } from 'react'
-import {useSnowSessionDispatch, SessionStatus, SessionErrorStatus, SnowSession} from './SnowSessionsProvider'
+import {useSessionDispatch, SessionStatus, SessionErrorStatus, DraftSession} from './SessionsProvider'
 
-export type SessionStatusUpdater = (status: SessionStatus, params?: Partial<SnowSession>) => void;
+export type SessionStatusUpdater = (status: SessionStatus, params?: Partial<DraftSession>) => void;
 export type SessionErrorStatusUpdater = (error: Error|string, status?:SessionErrorStatus) => void;
 
 export function useSessionStatusUpdater(sessionIdx: number): SessionStatusUpdater {
-    const dispatch = useSnowSessionDispatch(sessionIdx);
+    const dispatch = useSessionDispatch(sessionIdx);
     return useCallback(( status: SessionStatus, params?: object ) => {
         dispatch({
             type : 'session-changed',
@@ -21,16 +21,11 @@ export function useSessionErrorStatusUpdater(sessionIdx: number): SessionErrorSt
     const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
 
     return useCallback(( error: Error|string, status:SessionErrorStatus = "error" ) => {
-        if (typeof error === "string") {
-            setSessionStatus(status, {
-                errorMsg: error,
-            });
-        } else {
-            console.error(error);
-            setSessionStatus(status, {
-                errorMsg: error.message,
-            });
-        }
+        setSessionStatus(status, {
+            errorMsg: typeof error === "string"
+                ? error
+                : error.message
+        });
     }, [ setSessionStatus ]);
 }
 
