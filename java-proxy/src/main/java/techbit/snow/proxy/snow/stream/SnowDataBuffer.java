@@ -77,21 +77,18 @@ public final class SnowDataBuffer {
     }
 
     public SnowDataFrame nextFrame(SnowDataFrame frame) throws InterruptedException {
-        if (frame == SnowDataFrame.LAST) {
-            return SnowDataFrame.LAST;
-        }
-        return nextFrameAfter(frame.frameNum());
+        return frame == SnowDataFrame.LAST
+                ? SnowDataFrame.LAST
+                : nextFrameAfter(frame.frameNum());
     }
 
     @SuppressWarnings("RedundantThrows")
     private SnowDataFrame nextFrameAfter(int frame) throws InterruptedException {
         final int nextFrame = frame + 1;
 
-        if (destroyed || nextFrame > lastValidFrameNum) {
-            return SnowDataFrame.LAST;
-        }
-
-        return getFrame(nextFrame).orElseGet(() -> waitForFrame(nextFrame));
+        return destroyed || nextFrame > lastValidFrameNum
+                ? SnowDataFrame.LAST
+                : getFrame(nextFrame).orElseGet(() -> waitForFrame(nextFrame));
     }
 
     private Optional<SnowDataFrame> getFrame(int frame) {
