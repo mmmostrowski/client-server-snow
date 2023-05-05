@@ -1,9 +1,12 @@
 package techbit.snow.proxy.snow.stream;
 
 import com.google.common.collect.Sets;
+import lombok.Generated;
+import lombok.SneakyThrows;
 import org.springframework.context.annotation.Scope;
 import techbit.snow.proxy.dto.SnowDataFrame;
 
+import java.util.Optional;
 import java.util.Set;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
@@ -80,35 +83,35 @@ public final class SnowDataBuffer {
         return nextFrameAfter(frame.frameNum());
     }
 
-    private SnowDataFrame nextFrameAfter(int frameNum) throws InterruptedException {
-        final int nextFrameNum = frameNum + 1;
+    @SuppressWarnings("RedundantThrows")
+    private SnowDataFrame nextFrameAfter(int frame) throws InterruptedException {
+        final int nextFrame = frame + 1;
 
-        if (destroyed || nextFrameNum > lastValidFrameNum) {
+        if (destroyed || nextFrame > lastValidFrameNum) {
             return SnowDataFrame.LAST;
         }
 
-        waitForContent();
-        try{
-            synchronized(framesLock) {
-                final SnowDataFrame result = isBehind(nextFrameNum)
-                        ? frames.get(tailFrameNum)
-                        : frames.get(nextFrameNum);
-                if (result != null) {
-                    return result;
-                }
-            }
+        return getFrame(nextFrame).orElseGet(() -> waitForFrame(nextFrame));
+    }
 
-            synchronized (removeFramesLock) {
-                return isBehind(nextFrameNum)
-                        ? frames.take(tailFrameNum)
-                        : frames.take(nextFrameNum);
-            }
-        } catch (BlockingBag.ItemNoLongerExistsException e) {
-            return SnowDataFrame.LAST;
+    private Optional<SnowDataFrame> getFrame(int frame) {
+        return isBehind(frame)
+                ? frames.get(tailFrameNum)
+                : frames.get(frame);
+    }
+
+    @Generated
+    @SneakyThrows
+    private SnowDataFrame waitForFrame(int frame) {
+        waitForInitialFrame();
+        synchronized (removeFramesLock) {
+            return isBehind(frame)
+                    ? frames.take(tailFrameNum)
+                    : frames.take(frame);
         }
     }
 
-    private void waitForContent() throws InterruptedException {
+    private void waitForInitialFrame() throws InterruptedException {
         synchronized (framesLock) {
             if (numOfFrames == 0) {
                 framesLock.wait();

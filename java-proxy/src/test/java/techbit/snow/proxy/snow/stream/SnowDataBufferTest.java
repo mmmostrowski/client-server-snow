@@ -10,6 +10,7 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.snow.stream.BlockingBag.ItemNoLongerExistsException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -284,7 +285,7 @@ class SnowDataBufferTest {
     }
 
     @Test
-    void givenClientWaitingForNextFrame_whenBufferIsDestroyed_thenClientReceiveLastFrame() throws Throwable {
+    void givenClientWaitingForNextFrame_whenBufferIsDestroyed_thenThrowException() throws Throwable {
         buffer = new SnowDataBuffer(10, new BlockingBag<>());
 
         TestFramework.runOnce(new MultithreadedTestCase() {
@@ -299,10 +300,8 @@ class SnowDataBufferTest {
             void thread2() throws InterruptedException {
                 SnowDataFrame frame1 = buffer.firstFrame();
                 assertTick(1);
-                SnowDataFrame frame2 = buffer.nextFrame(frame1);
+                Assertions.assertThrows(ItemNoLongerExistsException.class, () -> buffer.nextFrame(frame1));
                 assertTick(2);
-
-                Assertions.assertEquals(SnowDataFrame.LAST, frame2);
             }
         }, 10, 100);
     }

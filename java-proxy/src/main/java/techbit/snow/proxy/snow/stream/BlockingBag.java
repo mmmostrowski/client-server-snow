@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -15,7 +16,7 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 public final class BlockingBag<K, V> {
 
     @StandardException
-    public static class ItemNoLongerExistsException extends Exception {}
+    public static class ItemNoLongerExistsException extends RuntimeException {}
 
     private final Map<K, V> map = Maps.newConcurrentMap();
     private final Map<K, Object> locks = Maps.newConcurrentMap();
@@ -29,8 +30,8 @@ public final class BlockingBag<K, V> {
         }
     }
 
-    public V get(K key) {
-        return map.get(key);
+    public Optional<V> get(K key) {
+        return Optional.ofNullable(map.get(key));
     }
 
     public V take(K key) throws InterruptedException, ItemNoLongerExistsException {
