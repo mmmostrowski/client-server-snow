@@ -45,32 +45,33 @@ export class CannotCheckError extends Error {
 export class SnowAnimationController {
     private readonly sessionId: string;
 
-    private onFinish: () => void;
     private onBuffering: (percent: number) => void;
     private onPlaying: (progress: number, bufferPercent: number) => void;
-    private onError: (error: Error) => void;
     private onChecking: (sessionId: string, periodicCheck: boolean) => void;
     private onFound: (response: DetailsFromServer, periodicCheck: boolean) => void;
     private onNotFound: (periodicCheck: boolean) => void;
+    private onError: (error: Error) => void;
+    private onFinish: () => void;
 
     private state: "stopped" | "buffering" | "playing" | "goodbye" = "stopped";
     private buffer: BufferFrame[];
-    private metadata: SnowAnimationMetadata;
-    private isDestroyed: boolean = false;
-    private basis: SnowBasis = NoSnowBasis;
-    private background: SnowBackground = NoSnowBackground;
-    private canvas: SnowDrawingRefHandler;
+    private isDestroyed: boolean;
     private decoder: SnowDecoder;
-    private lastTimestamp: number;
-    private firstFrame: boolean;
     private fpsInterval: number;
-    private goodbyeTextTimeoutSec: number;
-    private streamHandler: SnowClientHandler;
-    private periodicHandler: ReturnType<typeof setInterval> = null;
-    private isLastFrameInBuffer: boolean;
+    private firstFrame: boolean;
+    private lastTimestamp: number;
     private checkingEnabled: boolean;
+    private isLastFrameInBuffer: boolean;
+    private goodbyeTextTimeoutSec: number;
+    private basis: SnowBasis;
+    private background: SnowBackground;
+    private canvas: SnowDrawingRefHandler;
+    private metadata: SnowAnimationMetadata;
+    private streamHandler: SnowClientHandler;
+    private periodicHandler: ReturnType<typeof setInterval>;
 
     public constructor(sessionId: string, decoder: SnowDecoder = new SnowDecoder()) {
+        this.isDestroyed = false;
         this.sessionId = sessionId;
         this.decoder = decoder;
         this.configure({});
@@ -79,16 +80,16 @@ export class SnowAnimationController {
 
     public configure(config: {
         canvas?: SnowDrawingRefHandler,
+        checkingEnabled?: boolean,
+        allowForGoodbye?: boolean,
+        goodbyeTextTimeoutSec?: number,
         onBuffering?: (percent: number) => void,
         onPlaying?: (progress: number, bufferPercent: number) => void,
-        onFinish?: () => void,
-        onError?: (error: Error) => void,
         onChecking?: (sessionId: string, periodicCheck: boolean) => void,
         onFound?: (response: DetailsFromServer, periodicCheck: boolean) => void,
         onNotFound?: (periodicCheck: boolean) => void,
-        goodbyeTextTimeoutSec?: number,
-        allowForGoodbye?: boolean,
-        checkingEnabled?: boolean,
+        onError?: (error: Error) => void,
+        onFinish?: () => void,
     }): void {
         const idle = () => {};
         this.onFound = config.onFound ?? idle;
@@ -106,9 +107,8 @@ export class SnowAnimationController {
 
     public destroy(): void {
         this.stopPeriodicChecking();
-        this.stopStream();
         this.isDestroyed = true;
-        this.state = "stopped";
+        this.turnOff();
     }
 
     public async startProcessing(configuration: SnowAnimationConfiguration, controller: AbortController): Promise<void> {
@@ -139,13 +139,10 @@ export class SnowAnimationController {
             return;
         }
         try {
-            this.state = "stopped";
-            this.stopStream();
+            this.turnOff();
             await stopSnowSession(this.sessionId, controller);
         } catch (error) {
             this.onError(new CannotStopError(error.message));
-        } finally {
-            this.reset();
         }
     }
 
@@ -192,8 +189,7 @@ export class SnowAnimationController {
                 if (!this.isLastFrameInBuffer
                     && (this.state === "playing" || this.state === "buffering"))
                 {
-                    this.state = "stopped";
-                    this.stopStream()
+                    this.turnOff();
                     this.onFinish();
                 }
                 this.onNotFound(periodicCheck);
@@ -204,13 +200,19 @@ export class SnowAnimationController {
         }
     }
 
+    private turnOff() {
+        this.state = "stopped";
+        this.stopStream();
+        this.reset();
+    }
+
     private reset(): void {
         this.firstFrame = true;
         this.lastTimestamp = null;
         this.basis = NoSnowBasis;
         this.background = NoSnowBackground;
-        this.buffer = new Array<[SnowDataFrame, SnowBasis]>();
         this.isLastFrameInBuffer = false;
+        this.buffer = new Array<[SnowDataFrame, SnowBasis]>();
     }
 
     private onServerData(data: DataView): void {
@@ -222,21 +224,24 @@ export class SnowAnimationController {
 
         if (this.firstFrame) {
             this.firstFrame = false;
-            [this.metadata, this.background] = this.decoder.decodeHeader(data);
+            [ this.metadata, this.background ] = this.decoder.decodeHeader(data);
             return;
         }
 
         const frame: BufferFrame = this.decoder.decodeFrame(data);
+        this.buffer.push(frame);
         // console.log(frame);
 
-        const [dataFrame] = frame;
-        if (this.isLastFrame(dataFrame)) {
+        if (this.isLastFrame(frame[0])) {
             this.isLastFrameInBuffer = true;
         }
 
-        this.buffer.push(frame);
-        if (this.isBufferFullyLoaded()) {
-            this.startAnimation();
+        if (this.isBufferOverflowed()) {
+            if (this.state === "buffering") {
+                this.startAnimation();
+            } else {
+                this.buffer.shift();
+            }
         }
     }
 
@@ -291,8 +296,7 @@ export class SnowAnimationController {
     }
 
     private sayGoodbye(): void {
-        this.stopStream();
-        this.reset();
+        this.turnOff();
 
         this.state = "goodbye";
         setTimeout(() => {
@@ -322,9 +326,8 @@ export class SnowAnimationController {
         this.streamHandler = null;
     }
 
-    private isBufferFullyLoaded(): boolean {
-        return this.state === "buffering"
-            && this.buffer.length >= this.metadata.bufferSizeInFrames;
+    private isBufferOverflowed(): boolean {
+        return this.buffer.length > this.metadata.bufferSizeInFrames + 1;
     }
 
     private notifyPlaying(frame: SnowDataFrame): void {
@@ -374,7 +377,7 @@ export class SnowAnimationController {
 
     private disallowWhenDestroyed(): void {
         if (this.isDestroyed) {
-            throw Error("Controller has been destroyed and cannot be in use any more.");
+            throw Error("You cannot use destroyed controller!");
         }
     }
 }

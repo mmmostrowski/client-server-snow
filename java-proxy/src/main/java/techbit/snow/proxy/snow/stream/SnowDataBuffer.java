@@ -90,18 +90,19 @@ public final class SnowDataBuffer {
         waitForContent();
         try{
             synchronized(framesLock) {
-                if (isBehind(nextFrameNum)) {
-                    return frames.take(tailFrameNum);
+                final SnowDataFrame result = isBehind(nextFrameNum)
+                        ? frames.get(tailFrameNum)
+                        : frames.get(nextFrameNum);
+                if (result != null) {
+                    return result;
                 }
             }
 
-            final SnowDataFrame result;
             synchronized (removeFramesLock) {
-                result = isBehind(nextFrameNum)
+                return isBehind(nextFrameNum)
                         ? frames.take(tailFrameNum)
                         : frames.take(nextFrameNum);
             }
-            return result;
         } catch (BlockingBag.ItemNoLongerExistsException e) {
             return SnowDataFrame.LAST;
         }

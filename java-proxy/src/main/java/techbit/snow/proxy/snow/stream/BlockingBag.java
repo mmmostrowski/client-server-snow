@@ -1,13 +1,11 @@
 package techbit.snow.proxy.snow.stream;
 
 import com.google.common.collect.Maps;
-import jakarta.annotation.Nonnull;
 import lombok.experimental.StandardException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
-import java.util.Objects;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -23,7 +21,7 @@ public final class BlockingBag<K, V> {
     private final Map<K, Object> locks = Maps.newConcurrentMap();
 
 
-    public void put(@Nonnull K key, @Nonnull V value) {
+    public void put(K key, V value) {
         final Object lock = lockFor(key);
         synchronized (lock) {
             map.put(key, value);
@@ -31,7 +29,11 @@ public final class BlockingBag<K, V> {
         }
     }
 
-    public @Nonnull V take(@Nonnull K key) throws InterruptedException, ItemNoLongerExistsException {
+    public V get(K key) {
+        return map.get(key);
+    }
+
+    public V take(K key) throws InterruptedException, ItemNoLongerExistsException {
         final Object lock = lockFor(key);
         final V result;
         synchronized (lock) {
@@ -42,12 +44,11 @@ public final class BlockingBag<K, V> {
             if (result == null) {
                 throw new ItemNoLongerExistsException("Item was present but has been removed: " + key);
             }
-            Objects.requireNonNull(result);
         }
         return result;
     }
 
-    public void remove(@Nonnull K key) {
+    public void remove(K key) {
         final Object lock = lockFor(key);
         synchronized (lock) {
             map.remove(key);
@@ -60,7 +61,7 @@ public final class BlockingBag<K, V> {
         locks.keySet().forEach(this::remove);
     }
 
-    private Object lockFor(@Nonnull K key) {
+    private Object lockFor(K key) {
         return locks.computeIfAbsent(key, k -> new Object());
     }
 }
