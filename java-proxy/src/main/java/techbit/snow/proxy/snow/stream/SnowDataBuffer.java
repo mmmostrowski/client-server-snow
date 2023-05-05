@@ -88,10 +88,10 @@ public final class SnowDataBuffer {
 
         return destroyed || nextFrame > lastValidFrameNum
                 ? SnowDataFrame.LAST
-                : getFrame(nextFrame).orElseGet(() -> waitForFrame(nextFrame));
+                : quickGetFrame(nextFrame).orElseGet(() -> waitForFrame(nextFrame));
     }
 
-    private Optional<SnowDataFrame> getFrame(int frame) {
+    private Optional<SnowDataFrame> quickGetFrame(int frame) {
         return isBehind(frame)
                 ? frames.get(tailFrameNum)
                 : frames.get(frame);
