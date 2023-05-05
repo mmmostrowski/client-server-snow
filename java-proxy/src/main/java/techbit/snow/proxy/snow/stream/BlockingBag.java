@@ -35,17 +35,16 @@ public final class BlockingBag<K, V> {
 
     public V take(K key) throws InterruptedException, ItemNoLongerExistsException {
         final Object lock = lockFor(key);
-        final V result;
         synchronized (lock) {
             if (!map.containsKey(key)) {
                 lock.wait();
             }
-            result = map.get(key);
+            final V result = map.get(key);
             if (result == null) {
                 throw new ItemNoLongerExistsException("Item was present but has been removed: " + key);
             }
+            return result;
         }
-        return result;
     }
 
     public void remove(K key) {

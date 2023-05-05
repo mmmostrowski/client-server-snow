@@ -58,7 +58,7 @@ class NamedPipeTest {
     void givenNoPipeFile_whenDestroying_thenNoErrorOccurs() {
         Assertions.assertTrue(pipePath.toFile().delete());
 
-        assertDoesNotThrow(() -> namedPipe.destroy());
+        assertDoesNotThrow(namedPipe::destroy);
     }
 
     @Test

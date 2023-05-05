@@ -47,7 +47,7 @@ class NamedPipesTest {
         Files.createFile(folder.resolve("z"));
         Assertions.assertTrue(folder.toFile().setWritable(false));
 
-        assertThrows(IOException.class, () -> namedPipes.destroyAll());
+        assertThrows(IOException.class, namedPipes::destroyAll);
     }
 
     @Test
@@ -56,7 +56,7 @@ class NamedPipesTest {
             throw new RuntimeException("Cannot test properly. Need to be able to delete folder!");
         }
 
-        assertDoesNotThrow(() -> namedPipes.destroyAll());
+        assertDoesNotThrow(namedPipes::destroyAll);
     }
 
 }

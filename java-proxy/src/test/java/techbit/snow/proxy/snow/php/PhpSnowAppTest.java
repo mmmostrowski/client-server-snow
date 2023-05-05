@@ -76,7 +76,7 @@ class PhpSnowAppTest {
         when(process.getInputStream()).thenReturn(stream);
         when(stream.readAllBytes()).thenReturn(new byte[] { 'b', 'u', 'g', 'g', 'y' } );
 
-        Exception exception = Assertions.assertThrows(Exception.class, () -> phpSnowApp.start());
+        Exception exception = Assertions.assertThrows(Exception.class, phpSnowApp::start);
 
         assertTrue(exception.getMessage().contains("buggy"));
     }
