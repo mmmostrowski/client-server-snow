@@ -41,7 +41,7 @@ public final class SnowDataBuffer {
         }
 
         if (lastValidFrameNum != Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("You cannot push more frames to snow buffer after last frame is pushed!");
+            throw new IllegalStateException("You cannot push more frames to snow buffer after last frame is pushed!");
         }
 
         if (frame == SnowDataFrame.LAST) {
@@ -51,8 +51,7 @@ public final class SnowDataBuffer {
         }
 
         if (numOfFrames == 0) {
-            numOfFrames = 1;
-            tailFrameNum = 1;
+            tailFrameNum = numOfFrames = 1;
             synchronized(framesLock) {
                 frames.put(++headFrameNum, frame);
                 framesLock.notifyAll();
@@ -119,11 +118,8 @@ public final class SnowDataBuffer {
     public void destroy() {
         destroyed = true;
         synchronized (framesLock) {
-            numOfFrames = 0;
-            tailFrameNum = 0;
-            headFrameNum = 0;
+            numOfFrames = headFrameNum = tailFrameNum = 0;
             frames.removeAll();
-
             framesLock.notifyAll();
         }
     }
@@ -147,11 +143,9 @@ public final class SnowDataBuffer {
 
     public void waitUntilAllClientsUnregister() throws InterruptedException {
         synchronized (noMoreClientsLock) {
-            if (clients.isEmpty()) {
-                return;
+            if (!clients.isEmpty()) {
+                noMoreClientsLock.wait();
             }
-
-            noMoreClientsLock.wait();
         }
     }
 
