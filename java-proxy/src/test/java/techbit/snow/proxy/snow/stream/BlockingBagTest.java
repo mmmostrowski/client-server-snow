@@ -7,8 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import techbit.snow.proxy.snow.stream.BlockingBag.ItemNoLongerExistsException;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("unused")
 class BlockingBagTest {
@@ -20,7 +19,27 @@ class BlockingBagTest {
         bag = new BlockingBag<>();
     }
 
-    
+
+    @Test
+    public void whenValueNotPresent_thenClientGetsEmptyResponse() {
+        assertTrue(bag.get(1234).isEmpty());
+    }
+
+    @Test
+    public void whenItemIsInBag_thenClientCanGetIt() {
+        bag.put(12, "value");
+
+        assertEquals("value", bag.get(12).orElseThrow());
+    }
+
+    @Test
+    public void whenItemIsRemovedFromBag_thenClientGetsEmptyResponse() {
+        bag.put(12, "value");
+        bag.remove(12);
+
+        assertTrue(bag.get(12).isEmpty());
+    }
+
     @Test
     public void whenItemIsInBag_thenItCanBeTaken() throws Exception {
         bag.put(12, "value");
