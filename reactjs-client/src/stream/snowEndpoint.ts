@@ -35,20 +35,6 @@ export const AbortedEndpointResponse: EndpointResponse = {
     message: "Request has been aborted.",
 }
 
-export const AbortedDetailsEndpointResponse: DetailsEndpointResponse = {
-    ...AbortedEndpointResponse,
-    message: "Request has been aborted.",
-    streamTextUrl: "",
-    streamWebsocketsStompBrokerUrl: "",
-    streamWebsocketsUrl: "",
-    exists: false,
-    duration: 0,
-    presetName: "",
-    width: 0,
-    height: 0,
-    fps: 0,
-};
-
 export async function startSnowSession(sessionId: string, config: SnowAnimationConfiguration, controller?: AbortController)
     : Promise<StartEndpointResponse>
 {
@@ -124,9 +110,9 @@ export type SnowClientHandler = number;
 const stompClients = new Map<SnowClientHandler, Client>();
 let stompClientsCounter = 0;
 
-export function startSnowDataStream(startSessionResponse: StartEndpointResponse, handleMessage: (data: DataView) => void): SnowClientHandler {
+export function startSnowDataStream(startResponse: StartEndpointResponse, handleMessage: (data: DataView) => void): SnowClientHandler {
     const stompClient = new Client({
-        brokerURL: startSessionResponse.streamWebsocketsStompBrokerUrl,
+        brokerURL: startResponse.streamWebsocketsStompBrokerUrl,
         onConnect: (frame: IFrame) => {
             const userId = frame.headers['user-name'];
 
@@ -134,7 +120,7 @@ export function startSnowDataStream(startSessionResponse: StartEndpointResponse,
                 (message: IMessage) => handleMessage(new DataView(message.binaryBody.buffer)));
 
             stompClient.publish({
-                destination: startSessionResponse.streamWebsocketsUrl,
+                destination: startResponse.streamWebsocketsUrl,
             });
         },
     });

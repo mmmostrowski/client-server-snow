@@ -1,6 +1,5 @@
 
 export default interface SnowBasis {
-    isNone: boolean,
     numOfPixels: number,
     x: Uint32Array,
     y: Uint32Array,
@@ -8,7 +7,6 @@ export default interface SnowBasis {
 }
 
 export const NoSnowBasis: SnowBasis = {
-    isNone: true,
     numOfPixels: 0,
     x: new Uint32Array(0),
     y: new Uint32Array(0),

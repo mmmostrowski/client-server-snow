@@ -1,12 +1,12 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import {useSession, useSessionDispatch} from '../snow/SessionsProvider';
-import { SnowAnimationConfiguration } from '../stream/snowEndpoint';
+import {SnowAnimationConfiguration} from '../stream/snowEndpoint';
 import {
-    useSessionStatusUpdater,
+    SessionErrorStatusUpdater,
     SessionStatusUpdater,
     useSessionErrorStatusUpdater,
-    SessionErrorStatusUpdater
+    useSessionStatusUpdater
 } from '../snow/snowSessionStatus';
 import SnowAnimation from "./SnowAnimationPlayer/SnowAnimation";
 import AnimationCircularProgress from "./SnowAnimationPlayer/AnimationCircularProgress";
@@ -16,11 +16,11 @@ import LinearProgress from "@mui/material/LinearProgress";
 import {CannotStartError, CannotStopError, DetailsFromServer} from "../snow/SnowAnimationController";
 
 
-interface SnowAnimationProps {
+interface Props {
     sessionIdx: number,
 }
 
-export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps): JSX.Element {
+export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element {
     const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
     const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
     const dispatch = useSessionDispatch(sessionIdx);
@@ -80,7 +80,6 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
         setSessionStatus('buffering', {
             bufferLevel: percent,
             animationProgress: 0,
-
         });
     }
 
@@ -165,13 +164,13 @@ export default function SnowAnimationPlayer({ sessionIdx } : SnowAnimationProps)
                            configuration={animationConfiguration}
                            checkingEnabled={!hasConfigError}
                            checkEveryMs={1300}
-                           onFinish={handleStop}
-                           onBuffering={handleAnimationBuffering}
-                           onPlaying={handleAnimationPlaying}
-                           onError={handleAnimationError}
                            onChecking={handleChecking}
                            onFound={handleSessionFound}
                            onNotFound={handleSessionNotFound}
+                           onBuffering={handleAnimationBuffering}
+                           onPlaying={handleAnimationPlaying}
+                           onError={handleAnimationError}
+                           onFinish={handleStop}
             />
             <LinearProgress value={animationProgress}
                             title="Animation progress"

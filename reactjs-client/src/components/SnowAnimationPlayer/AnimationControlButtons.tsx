@@ -1,15 +1,15 @@
 import * as React from "react";
 import Button from '@mui/material/Button';
-import { useSession, useDelayedSession } from '../../snow/SessionsProvider'
+import {useDelayedSession, useSession} from '../../snow/SessionsProvider'
 
 
-interface AnimationControlButtonsProps {
+interface Props {
     sessionIdx: number,
     handleStart: () => void,
     handleStop: () => void,
 }
 
-export default function AnimationControlButtons(props: AnimationControlButtonsProps): JSX.Element {
+export default function AnimationControlButtons(props: Props): JSX.Element {
     const { sessionIdx, handleStart, handleStop } = props;
     const { isStopped, isSessionExists } = useSession(sessionIdx);
     const { status } = useDelayedSession(sessionIdx);
@@ -30,15 +30,15 @@ export default function AnimationControlButtons(props: AnimationControlButtonsPr
             <Button
                 className="start-button"
                 variant="contained"
-                title={isSessionExists ? "Active animation found on server. Attach to it!" : "Start new animation on server!"}
                 onClick={handleStart}
+                title={isSessionExists ? "Active animation found on server. Attach to it!" : "Start new animation on server!"}
                 disabled={!isStartActive}>{isSessionExists ? "Play" : "Start"}</Button>
 
             <Button
                 className="stop-button"
                 variant="contained"
-                title="Stop animation on server!"
                 onClick={handleStop}
+                title="Stop animation on server!"
                 disabled={!isStopActive}>Stop</Button>
         </>
     );

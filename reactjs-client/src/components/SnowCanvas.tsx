@@ -1,8 +1,8 @@
 import * as React from 'react';
-import {useRef, useEffect, forwardRef, useImperativeHandle, useCallback} from 'react';
-import { useResizeDetector } from 'react-resize-detector';
+import {forwardRef, useCallback, useEffect, useImperativeHandle, useRef} from 'react';
+import {useResizeDetector} from 'react-resize-detector';
 
-interface SnowCanvasProps {
+interface Props {
     canvasColor: string,
     canvasWorkspaceColor: string,
     width: number,
@@ -16,7 +16,7 @@ export interface SnowCanvasRefHandler {
     drawTextInCenter(text: string): void;
 }
 
-export const SnowCanvas = forwardRef<SnowCanvasRefHandler, SnowCanvasProps>(
+export const SnowCanvas = forwardRef<SnowCanvasRefHandler, Props>(
     function SnowCanvas({ width, height, canvasWorkspaceColor, canvasColor}, ref )
 {
     const canvasRef = useRef<HTMLCanvasElement>(null);

@@ -1,6 +1,6 @@
 import * as React from "react";
-import { useSession } from '../../snow/SessionsProvider'
-import AnimationInput from './AnimationInput'
+import {useSession} from '../../snow/SessionsProvider'
+import DebouncedInput from './DebouncedInput'
 
 
 interface AnimationSessionIdProps {
@@ -18,7 +18,7 @@ export default function AnimationSessionId({ sessionIdx, isEditing } : Animation
         || hasError
         || status === "checking";
 
-    return <AnimationInput
+    return <DebouncedInput
         sessionIdx={sessionIdx}
         varName="sessionId"
         varValue={sessionId}

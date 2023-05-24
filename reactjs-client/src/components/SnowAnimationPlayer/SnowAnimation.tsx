@@ -6,7 +6,7 @@ import {DetailsFromServer, SnowAnimationController} from "../../snow/SnowAnimati
 import {animationConfig} from "../../config/animation";
 
 
-interface SnowAnimationProps {
+interface Props {
     sessionId: string;
     play: boolean;
     configuration: SnowAnimationConfiguration;
@@ -23,7 +23,7 @@ interface SnowAnimationProps {
     height: number;
 }
 
-export default function SnowAnimation(props: SnowAnimationProps): JSX.Element {
+export default function SnowAnimation(props: Props): JSX.Element {
     const {
         sessionId,
         play,

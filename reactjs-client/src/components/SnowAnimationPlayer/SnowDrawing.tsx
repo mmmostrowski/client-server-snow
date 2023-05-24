@@ -1,13 +1,13 @@
 import * as React from "react";
-import SnowBackground from "../../dto/SnowBackground";
-import SnowDataFrame from "../../dto/SnowDataFrame";
-import SnowBasis from "../../dto/SnowBasis";
-import {SnowCanvas, SnowCanvasRefHandler} from "../SnowCanvas";
 import {forwardRef, useImperativeHandle, useRef} from "react";
+import SnowBackground, {NoSnowBackground} from "../../dto/SnowBackground";
+import SnowDataFrame from "../../dto/SnowDataFrame";
+import SnowBasis, {NoSnowBasis} from "../../dto/SnowBasis";
+import {SnowCanvas, SnowCanvasRefHandler} from "../SnowCanvas";
 import {animationConfig} from "../../config/animation";
 
 
-interface SnowDrawingProps {
+interface Props {
     width: number,
     height: number,
 }
@@ -21,7 +21,7 @@ export interface SnowDrawingRefHandler {
 }
 
 
-export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
+export const SnowDrawing = forwardRef<SnowDrawingRefHandler, Props>(
     function SnowDrawing({ width, height }, ref )
 {
     const canvasRef = useRef<SnowCanvasRefHandler>(null);
@@ -34,7 +34,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
                 canvas.clearCanvas();
             },
             drawBackground(background: SnowBackground): void {
-                if (background.isNone) {
+                if (background === NoSnowBackground) {
                     return;
                 }
 
@@ -67,7 +67,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, SnowDrawingProps>(
             },
 
             drawBasis(basis: SnowBasis): void {
-                if (basis.isNone) {
+                if (basis === NoSnowBasis) {
                     return;
                 }
 

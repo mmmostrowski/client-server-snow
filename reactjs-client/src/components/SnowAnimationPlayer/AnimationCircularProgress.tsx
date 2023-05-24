@@ -2,10 +2,13 @@ import * as React from "react";
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import { useDelayedSession } from '../../snow/SessionsProvider'
+import {useDelayedSession} from '../../snow/SessionsProvider'
 
+interface Props {
+    sessionIdx: number
+}
 
-export default function AnimationCircularProgress({ sessionIdx } : { sessionIdx: number }) {
+export default function AnimationCircularProgress({ sessionIdx } : Props) {
     const { status, errorMsg, bufferLevel } = useDelayedSession(sessionIdx);
 
     let color : "primary" | "error" | "info" | "success" | "inherit" | "secondary" | "warning" = "primary";

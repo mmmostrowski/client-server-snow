@@ -1,10 +1,10 @@
 import * as React from "react";
+import {FocusEvent, MutableRefObject, useEffect, useRef} from "react";
 import TextField from '@mui/material/TextField';
-import { TextFieldProps } from '@mui/material';
-import { useEffect, useRef, MutableRefObject, FocusEvent } from "react";
-import { useSessionDispatch } from '../../snow/SessionsProvider'
+import {TextFieldProps} from '@mui/material';
+import {useSessionDispatch} from '../../snow/SessionsProvider'
 
-type UserSessionInputProps = TextFieldProps & {
+type Props = TextFieldProps & {
     sessionIdx: number,
     varName: string,
     varValue: string|number,
@@ -12,7 +12,7 @@ type UserSessionInputProps = TextFieldProps & {
     isEditing?: (underEdit: boolean) => void,
 }
 
-export default function AnimationInput(props: UserSessionInputProps): JSX.Element {
+export default function DebouncedInput(props: Props): JSX.Element {
     const {
         sessionIdx,
         varName,

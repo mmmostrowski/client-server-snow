@@ -49,7 +49,7 @@ export default class SnowDecoder
             }
         }
 
-        return { isNone: false, width, height, pixels }
+        return { width, height, pixels }
     }
 
     private decodeDataFrame(data : DataView): SnowDataFrame {
@@ -105,6 +105,6 @@ export default class SnowDecoder
             ptr += 1;
         }
 
-        return { isNone: false, numOfPixels, x, y, pixels };
+        return { numOfPixels, x, y, pixels };
     }
 }

@@ -251,11 +251,10 @@ function applyChangesToSession(validatedSession: ValidatedSession): Session {
     const numOfErrors = Object.values(sessionErrors(validatedSession))
          .filter( value => value !== null )
          .length;
-    if (numOfErrors === 0) {
-        return commitChangesToSession(validatedSession);
-    } else {
-        return revertChangesFromSession(validatedSession);
-    }
+
+    return numOfErrors === 0
+        ? commitChangesToSession(validatedSession)
+        : revertChangesFromSession(validatedSession);
 }
 
 function commitChangesToSession(draft: DraftSession): Session {

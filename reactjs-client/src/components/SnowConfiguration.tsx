@@ -3,12 +3,8 @@ import Container from '@mui/material/Container';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
-import AnimationInput from './SnowAnimationPlayer/AnimationInput'
-import {
-    useDelayedSession,
-    useSessionDispatch,
-    useSession
-} from '../snow/SessionsProvider'
+import DebouncedInput from './SnowAnimationPlayer/DebouncedInput'
+import {useDelayedSession, useSession, useSessionDispatch} from '../snow/SessionsProvider'
 import {applicationConfig} from "../config/application";
 
 interface SnowConfigurationProps {
@@ -120,7 +116,7 @@ type ConfigNumberFieldProps = {
 function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
     const { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText } = props;
 
-    return <AnimationInput
+    return <DebouncedInput
         sessionIdx={sessionIdx}
         varName={varName}
         varValue={isAvailable ? value : '?'}
