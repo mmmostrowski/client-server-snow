@@ -12,7 +12,7 @@ public record SnowDataFrame(
 ) {
 
     public static final SnowDataFrame LAST = new SnowDataFrame(
-            -1, 0, new float[] {}, new float[] {}, new byte[] {}, SnowBasis.NONE);
+            -1, 0, new float[]{}, new float[]{}, new byte[]{}, SnowBasis.NONE);
 
 
     public SnowDataFrame(int frameNum, int chunkSize, float[] x, float[] y, byte[] flakeShapes) {
@@ -32,9 +32,11 @@ public record SnowDataFrame(
     public float x(int idx) {
         return particlesX[idx];
     }
+
     public float y(int idx) {
         return particlesY[idx];
     }
+
     public byte flakeShape(int idx) {
         return flakeShapes[idx];
     }

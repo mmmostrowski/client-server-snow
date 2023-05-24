@@ -95,7 +95,7 @@ class ProxyControllerTest {
         when(streaming.hasSession("session-abc")).thenReturn(true);
         when(streaming.isSessionRunning("session-abc")).thenReturn(true);
 
-        Map<?,?> details = controller.streamDetails(
+        Map<?, ?> details = controller.streamDetails(
                 "session-abc", request);
 
         assertExpectedDetails(details);

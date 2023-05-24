@@ -2,9 +2,14 @@ package techbit.snow.proxy.dto;
 
 import java.util.Arrays;
 
-public record SnowBasis(int numOfPixels, int[] x, int[] y, byte[] pixels) {
+public record SnowBasis(
+        int numOfPixels,
+        int[] x,
+        int[] y,
+        byte[] pixels
+) {
     public static final SnowBasis NONE = new SnowBasis(
-            0, new int[] {}, new int[] {}, new byte[] {});
+            0, new int[]{}, new int[]{}, new byte[]{});
 
     public int x(int i) {
         return x[i];

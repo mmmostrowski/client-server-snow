@@ -25,22 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Log4j2
 public final class SnowStream {
 
-    @StandardException
-    public static class ConsumerThreadException extends Exception { }
-
-    public class SnowStreamFinishedEvent extends ApplicationEvent {
-
-        public SnowStreamFinishedEvent(Object source) {
-            super(source);
-        }
-
-        public String getSessionId() {
-            return sessionId;
-        }
-    }
-
     private final NamedPipe pipe;
-
     private final String sessionId;
     private final PhpSnowApp phpSnowApp;
     private final SnowDataBuffer buffer;
@@ -49,15 +34,14 @@ public final class SnowStream {
     private final PhpSnowConfig phpSnowConfig;
     private final Semaphore consumerGoingDownLock = new Semaphore(0);
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(
+            new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
+    );
     private volatile ConsumerThreadException consumerException;
     private volatile boolean destroyed = false;
     private volatile boolean running = false;
     private SnowAnimationMetadata metadata;
     private SnowBackground background;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(
-            new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
-    );
-
     public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
                       ServerMetadata serverMetadata, NamedPipe pipe, PhpSnowApp phpSnowApp,
                       SnowDataBuffer buffer, StreamDecoder decoder, ApplicationEventPublisher applicationEventPublisher
@@ -147,8 +131,7 @@ public final class SnowStream {
     }
 
     public void streamTo(SnowStreamClient client)
-            throws IOException, InterruptedException, ConsumerThreadException
-    {
+            throws IOException, InterruptedException, ConsumerThreadException {
         throwConsumerExceptionIfAny();
 
         if (!isActive()) {
@@ -223,7 +206,7 @@ public final class SnowStream {
         if (!phpSnowConfig.equals(config)) {
             throw new IncompatibleConfigException(MessageFormat.format(
                     "Server is already running session ''{0}'' with different configuration. " +
-                    "You cannot change configuration when animation is running.", sessionId));
+                            "You cannot change configuration when animation is running.", sessionId));
         }
     }
 
@@ -243,5 +226,20 @@ public final class SnowStream {
 
     SnowStreamFinishedEvent createSnowStreamFinishedEvent() {
         return new SnowStreamFinishedEvent(this);
+    }
+
+    @StandardException
+    public static class ConsumerThreadException extends Exception {
+    }
+
+    public class SnowStreamFinishedEvent extends ApplicationEvent {
+
+        public SnowStreamFinishedEvent(Object source) {
+            super(source);
+        }
+
+        public String getSessionId() {
+            return sessionId;
+        }
     }
 }

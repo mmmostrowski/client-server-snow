@@ -40,9 +40,9 @@ public final class ErrorHandler implements ErrorController {
                 PrintWriter pw = new PrintWriter(sw);
                 exception.printStackTrace(pw);
                 exceptionDetails = exception + "\n\n" + sw;
-            } else if ( exception.getCause() instanceof UserException ) {
+            } else if (exception.getCause() instanceof UserException) {
                 message = exception.getCause().getMessage();
-            } else if ( exception.getCause() instanceof ConstraintViolationException ) {
+            } else if (exception.getCause() instanceof ConstraintViolationException) {
                 message = exception.getCause().getMessage();
             }
         }

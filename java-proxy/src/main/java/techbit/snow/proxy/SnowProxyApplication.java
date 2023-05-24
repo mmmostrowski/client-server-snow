@@ -13,31 +13,31 @@ import java.nio.file.Path;
 @SuppressWarnings("unused")
 public class SnowProxyApplication {
 
-	private final String developerMode;
+    public static void main(String[] args) {
+        SpringApplication.run(SnowProxyApplication.class, args);
+    }
 
-	public SnowProxyApplication(
-			@Value("${phpsnow.developer-mode:PRODUCTION}") String developerMode)
-	{
-		this.developerMode = developerMode;
-	}
+    private final String developerMode;
 
-	public static void main(String[] args) {
-		SpringApplication.run(SnowProxyApplication.class, args);
-	}
+    public SnowProxyApplication(
+            @Value("${phpsnow.developer-mode:PRODUCTION}") String developerMode)
+    {
+        this.developerMode = developerMode;
+    }
 
-	@Bean
-	public String applicationPid() {
-		return System.getProperty("PID");
-	}
+    @Bean
+    public String applicationPid() {
+        return System.getProperty("PID");
+    }
 
-	@Bean
-	public boolean isDeveloperMode() {
-		return developerMode.equalsIgnoreCase("develop");
-	}
+    @Bean
+    public boolean isDeveloperMode() {
+        return developerMode.equalsIgnoreCase("develop");
+    }
 
-	@Bean
-	public Path pipesDir() {
-		return Path.of(System.getProperty("user.dir") + "/../.pipes/");
-	}
+    @Bean
+    public Path pipesDir() {
+        return Path.of(System.getProperty("user.dir") + "/../.pipes/");
+    }
 
 }

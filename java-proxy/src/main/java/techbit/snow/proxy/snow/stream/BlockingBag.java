@@ -15,12 +15,8 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 public final class BlockingBag<K, V> {
 
-    @StandardException
-    public static class ItemNoLongerExistsException extends RuntimeException {}
-
     private final Map<K, V> map = Maps.newConcurrentMap();
     private final Map<K, Object> locks = Maps.newConcurrentMap();
-
 
     public void put(K key, V value) {
         final Object lock = lockFor(key);
@@ -60,5 +56,9 @@ public final class BlockingBag<K, V> {
 
     private Object lockFor(K key) {
         return locks.computeIfAbsent(key, k -> new Object());
+    }
+
+    @StandardException
+    public static class ItemNoLongerExistsException extends RuntimeException {
     }
 }

@@ -26,6 +26,7 @@ import static techbit.snow.proxy.snow.stream.TestingFrames.frame;
 
 abstract public class SnowStreamBaseTest {
 
+    protected final SnowDataBuffer buffer;
     @Mock
     protected NamedPipe pipe;
     @Mock
@@ -39,7 +40,6 @@ abstract public class SnowStreamBaseTest {
     @Mock
     protected ApplicationEventPublisher eventPublisher;
     protected SnowStreamSimpleClient client;
-    protected final SnowDataBuffer buffer;
     protected ServerMetadata serverMetadata;
     protected PhpSnowConfig snowConfig;
     protected SnowStream snowStream;

@@ -14,13 +14,13 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 @Scope(SCOPE_PROTOTYPE)
 public final class SnowDataBuffer {
 
-    private volatile int lastValidFrameNum = Integer.MAX_VALUE;
     private final BlockingBag<Integer, SnowDataFrame> frames;
     private final Set<Object> clients = Sets.newHashSet();
     private final Object noMoreClientsLock = new Object();
     private final Object removeFramesLock = new Object();
     private final Object framesLock = new Object();
     private final int maxNumOfFrames;
+    private volatile int lastValidFrameNum = Integer.MAX_VALUE;
     private volatile int numOfFrames;
     private volatile int tailFrameNum;
     private volatile int headFrameNum;
@@ -52,17 +52,17 @@ public final class SnowDataBuffer {
 
         if (numOfFrames == 0) {
             tailFrameNum = numOfFrames = 1;
-            synchronized(framesLock) {
+            synchronized (framesLock) {
                 frames.put(++headFrameNum, frame);
                 framesLock.notifyAll();
             }
         } else if (numOfFrames < maxNumOfFrames) {
-            synchronized(framesLock) {
+            synchronized (framesLock) {
                 ++numOfFrames;
                 frames.put(++headFrameNum, frame);
             }
         } else {
-            synchronized(framesLock) {
+            synchronized (framesLock) {
                 frames.put(++headFrameNum, frame);
                 synchronized (removeFramesLock) {
                     frames.remove(tailFrameNum++);

@@ -14,7 +14,6 @@ import java.time.Duration;
 
 @EnableAsync
 @Configuration
-@SuppressWarnings("NullableProblems")
 public class AsyncConfiguration implements AsyncConfigurer {
 
     private final Duration timeout;

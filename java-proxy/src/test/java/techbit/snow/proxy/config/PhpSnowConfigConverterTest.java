@@ -114,7 +114,7 @@ class PhpSnowConfigConverterTest {
     @Test
     void givenValidConfigMap_whenConvertFromMap_thenReturnsConfigObject() {
         PhpSnowConfig config = converter.fromMap(Map.of(
-            "presetName", "redefinedPresetName",
+                "presetName", "redefinedPresetName",
                 "fps", "13",
                 "width", "113",
                 "height", "73",
@@ -139,7 +139,7 @@ class PhpSnowConfigConverterTest {
         assertEquals(999, map.get("width"));
         assertEquals(888, map.get("height"));
         assertEquals(66, map.get("fps"));
-        assertEquals(86400L, ((BigDecimal)map.get("duration")).longValue());
+        assertEquals(86400L, ((BigDecimal) map.get("duration")).longValue());
     }
 
 

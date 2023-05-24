@@ -77,7 +77,7 @@ public final class PhpSnowApp {
 
     @Generated
     @SneakyThrows
-    private void waitAMoment()  {
+    private void waitAMoment() {
         Thread.sleep(300);
     }
 

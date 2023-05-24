@@ -108,6 +108,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
         TestFramework.runOnce(new MultithreadedTestCase() {
             final Semaphore readyToStream = new Semaphore(0);
+
             void thread1() throws IOException {
                 when(phpSnow.isAlive()).thenReturn(true);
                 snowStream.startConsumingSnowData();
@@ -144,6 +145,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
         TestFramework.runOnce(new MultithreadedTestCase() {
             final Semaphore readyToStream = new Semaphore(0);
+
             void thread1() throws IOException {
                 when(phpSnow.isAlive()).thenReturn(true);
                 snowStream.startConsumingSnowData();
@@ -311,7 +313,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
     }
 
     private void testUsingFiveStreamingThreads() throws Throwable {
-        TestFramework.runOnce( new MultithreadedTestCase() {
+        TestFramework.runOnce(new MultithreadedTestCase() {
             final Semaphore readyToStream = new Semaphore(0);
 
             void threadConsumer() throws IOException, InterruptedException {

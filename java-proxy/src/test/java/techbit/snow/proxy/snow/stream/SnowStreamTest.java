@@ -327,12 +327,12 @@ class SnowStreamTest extends SnowStreamBaseTest {
 
         InOrder inOrder = inOrder(encoder);
 
-        inOrder.verify(encoder).encodeBasis(basis( 1), outputStream);
+        inOrder.verify(encoder).encodeBasis(basis(1), outputStream);
         inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
-        inOrder.verify(encoder).encodeBasis(basis( 2), outputStream);
+        inOrder.verify(encoder).encodeBasis(basis(2), outputStream);
         inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
         inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
-        inOrder.verify(encoder).encodeBasis(basis( 3), outputStream);
+        inOrder.verify(encoder).encodeBasis(basis(3), outputStream);
         inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
         inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
         inOrder.verify(encoder).encodeBasis(SnowBasis.NONE, outputStream);
@@ -444,7 +444,8 @@ class SnowStreamTest extends SnowStreamBaseTest {
 
     @Test
     void whenConsumerThreadIsThrowingException_thenPassExceptionToClient() throws IOException, InterruptedException {
-        final RuntimeException customException = new RuntimeException("Custom Test Exception Passed Properly") {};
+        final RuntimeException customException = new RuntimeException("Custom Test Exception Passed Properly") {
+        };
         when(phpSnow.isAlive()).thenReturn(true);
         doNothing().when(buffer).push(any(SnowDataFrame.class));
         doThrow(customException).when(buffer).push(frame(3));

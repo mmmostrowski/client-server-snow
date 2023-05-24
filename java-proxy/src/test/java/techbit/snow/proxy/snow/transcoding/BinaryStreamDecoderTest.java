@@ -27,7 +27,7 @@ class BinaryStreamDecoderTest {
 
     @Test
     void givenBinaryMetadata_whenDecoding_thenCreatesValidEntity() throws IOException {
-        byte[] binary = new byte[] {
+        byte[] binary = new byte[]{
                 'h', 'e', 'l', 'l', 'o', '-', 'p', 'h', 'p', '-', 's', 'n', 'o', 'w',
                 0x0, 0x0, 0x0, 0x7F, // width
                 0x0, 0x1, 0x0, 0x0,  // height
@@ -49,7 +49,7 @@ class BinaryStreamDecoderTest {
 
     @Test
     void givenMetadataWithoutMarker_whenDecoding_thenExceptionIsThrown() {
-        byte[] binary = new byte[] {
+        byte[] binary = new byte[]{
                 0x0, 0x0, 0x0, 0x7F, // width
                 0x0, 0x1, 0x0, 0x0,  // height
                 0x1, 0x0, 0x0, 0x0,  // fps
@@ -59,12 +59,12 @@ class BinaryStreamDecoderTest {
                 new DataInputStream(new ByteArrayInputStream(binary)),
                 new ServerMetadata(Duration.ofSeconds(8)),
                 Duration.ofMinutes(1)
-                ));
+        ));
     }
 
     @Test
     void givenEmptyBackground_whenDecoding_thenCreatesValidEntity() throws IOException {
-        byte[] binary = new byte[] {
+        byte[] binary = new byte[]{
                 0x0,
         };
 
@@ -76,7 +76,7 @@ class BinaryStreamDecoderTest {
 
     @Test
     void givenBinaryBackgroundData_whenDecoding_thenCreatesValidEntity() throws IOException {
-        byte[] binary = new byte[] {
+        byte[] binary = new byte[]{
                 0x1,                  // hasBackground
                 0x0, 0x0, 0x0, 0x2,   // canvas width
                 0x0, 0x0, 0x0, 0x2,   // canvas height
@@ -90,16 +90,16 @@ class BinaryStreamDecoderTest {
 
         assertEquals(2, background.width());
         assertEquals(2, background.height());
-        assertArrayEquals(new byte[][] {
+        assertArrayEquals(new byte[][]{
                 // y0  y1
-                new byte[] { 3, 7, }, // x0
-                new byte[] { 5, 9, }, // x1
+                new byte[]{3, 7,}, // x0
+                new byte[]{5, 9,}, // x1
         }, background.pixels());
     }
 
     @Test
     void givenBinaryFrameData_whenDecoding_thenCreatesValidEntity() throws IOException {
-        byte[] binary = new byte[] {
+        byte[] binary = new byte[]{
                 0x0, 0x0, 0x0, 0x1,   // frame num
                 0x0, 0x0, 0x0, 0x2,   // chunk size
                 // chunk 0
@@ -131,7 +131,7 @@ class BinaryStreamDecoderTest {
 
     @Test
     void givenFrameNumOutOfSequence_whenDecodingFrame_thenThrowsException() {
-        byte[] binary = new byte[] {
+        byte[] binary = new byte[]{
                 0x0, 0x0, 0x0, 0x11,  // invalid frame num
         };
 
@@ -141,7 +141,7 @@ class BinaryStreamDecoderTest {
 
     @Test
     void givenEmptyBasisData_whenDecoding_thenCreatesValidEntity() throws IOException {
-        byte[] binary = new byte[] {
+        byte[] binary = new byte[]{
                 0x0, 0x0, 0x0, 0x0,  // zero basis pixels
         };
 
@@ -153,7 +153,7 @@ class BinaryStreamDecoderTest {
 
     @Test
     void givenBinaryBasisData_whenDecoding_thenCreatesValidEntity() throws IOException {
-        byte[] binary = new byte[] {
+        byte[] binary = new byte[]{
                 0x0, 0x0, 0x0, 0x2,  // two pixels
 
                 0x0, 0x0, 0x0, 0x9,  // pixel 1 X
@@ -175,12 +175,12 @@ class BinaryStreamDecoderTest {
         assertEquals(768, basis.x(1));
         assertEquals(0, basis.y(0));
         assertEquals(3, basis.y(1));
-        assertArrayEquals(new int[] { 0, 3 }, basis.y());
+        assertArrayEquals(new int[]{0, 3}, basis.y());
     }
 
     @Test
     void givenLastFrame_whenDecodingFrame_thenCreatesValidEntity() throws IOException {
-        byte[] binary = new byte[] {
+        byte[] binary = new byte[]{
                 -1, -1, -1, -1,  // last frame num
         };
 

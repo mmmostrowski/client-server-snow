@@ -59,7 +59,7 @@ class BlockingBagTest {
     @Test
     void whenPuttingTwoItemsToBag_thenNoBlockingOccurs() throws Throwable {
         TestFramework.runOnce(new MultithreadedTestCase() {
-            public void thread1()  {
+            public void thread1() {
                 bag.put(1, "one");
                 bag.put(2, "two");
                 assertTick(0);

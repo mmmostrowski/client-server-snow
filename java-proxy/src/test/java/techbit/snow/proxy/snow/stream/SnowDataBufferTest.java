@@ -222,7 +222,7 @@ class SnowDataBufferTest {
     void whenFramesAddedInWrongOrder_thenExceptionIsThrown() {
         buffer.push(frame(1));
 
-        assertThrows(IllegalArgumentException.class, () -> buffer.push(frame(3)) );
+        assertThrows(IllegalArgumentException.class, () -> buffer.push(frame(3)));
     }
 
     @Test
@@ -233,7 +233,7 @@ class SnowDataBufferTest {
         buffer.push(SnowDataFrame.LAST);
 
         assertEquals(SnowDataFrame.LAST, buffer.nextFrame(frame(3)));
-        assertEquals(SnowDataFrame.LAST,  buffer.nextFrame(SnowDataFrame.LAST));
+        assertEquals(SnowDataFrame.LAST, buffer.nextFrame(SnowDataFrame.LAST));
     }
 
     @Test

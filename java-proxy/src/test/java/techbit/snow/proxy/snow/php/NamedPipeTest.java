@@ -42,7 +42,7 @@ class NamedPipeTest {
 
     @Test
     void givenPipeFile_whenReadingInputStream_thenProvidesValidContent() throws IOException {
-        try(InputStream stream = namedPipe.inputStream()) {
+        try (InputStream stream = namedPipe.inputStream()) {
             assertArrayEquals("fake-content".getBytes(), stream.readAllBytes());
         }
     }
@@ -78,7 +78,7 @@ class NamedPipeTest {
             }
 
             void thread2() throws IOException {
-                try(InputStream input = namedPipe.inputStream()) {
+                try (InputStream input = namedPipe.inputStream()) {
                     assertTick(1);
                     Assertions.assertArrayEquals("new-content".getBytes(), input.readAllBytes());
                 }
@@ -90,7 +90,7 @@ class NamedPipeTest {
     void givenNoPipeFile_whenWaitingForItTooLong_thenThrowException() {
         Assertions.assertTrue(pipePath.toFile().delete());
 
-        try(MockedStatic<FileUtils> fileUtils = mockStatic(FileUtils.class)) {
+        try (MockedStatic<FileUtils> fileUtils = mockStatic(FileUtils.class)) {
             fileUtils.when(() -> FileUtils.waitFor(any(), anyInt())).thenReturn(false);
 
             assertThrows(IllegalStateException.class, namedPipe::inputStream);

@@ -32,7 +32,7 @@ class BinaryStreamEncoderTest {
 
         encoder.encodeMetadata(metadata, out);
 
-        byte[] expected = new byte[] {
+        byte[] expected = new byte[]{
                 0, 0, 0, 99,
                 0, 0, 0, 101,
                 0, 0, 0, 15,
@@ -46,16 +46,16 @@ class BinaryStreamEncoderTest {
     @Test
     void givenBackground_whenEncoding_thenValidBinaryDataInOutput() throws IOException {
         SnowBackground background = new SnowBackground(4, 4,
-            new byte[][] {
-                new byte[] { 1, 2, 3, 4 },
-                new byte[] { 5, 6, 7, 8 },
-                new byte[] { 9, 10, 11, 12 },
-                new byte[] { 13, 14, 15, 16 },
-            });
+                new byte[][]{
+                        new byte[]{1, 2, 3, 4},
+                        new byte[]{5, 6, 7, 8},
+                        new byte[]{9, 10, 11, 12},
+                        new byte[]{13, 14, 15, 16},
+                });
 
         encoder.encodeBackground(background, out);
 
-        byte[] expected = new byte[] {
+        byte[] expected = new byte[]{
                 0, 0, 0, 4, 0, 0, 0, 4,
                 1, 2, 3, 4,
                 5, 6, 7, 8,
@@ -70,7 +70,7 @@ class BinaryStreamEncoderTest {
     void givenNoBackground_whenEncoding_thenZeroInOutput() throws IOException {
         encoder.encodeBackground(SnowBackground.NONE, out);
 
-        byte[] expected = new byte[] {
+        byte[] expected = new byte[]{
                 0, 0, 0, 0,
         };
 
@@ -81,14 +81,14 @@ class BinaryStreamEncoderTest {
     void givenDataFrame_whenEncoding_thenValidBinaryDataInOutput() throws IOException {
         SnowDataFrame frame = new SnowDataFrame(
                 78, 2,
-                new float[] { 103, 22.5f },
-                new float[] { 0.5f, 11f },
-                new byte[] { 99, 88 }
+                new float[]{103, 22.5f},
+                new float[]{0.5f, 11f},
+                new byte[]{99, 88}
         );
 
         encoder.encodeFrame(frame, out);
 
-        byte[] expected = new byte[] {
+        byte[] expected = new byte[]{
                 0, 0, 0, 78,
                 0, 0, 0, 2,
 
@@ -108,14 +108,14 @@ class BinaryStreamEncoderTest {
     @Test
     void givenBasis_whenEncoding_thenValidBinaryDataInOutput() throws IOException {
         SnowBasis basis = new SnowBasis(5,
-            new int[] { 1, 2, 3, 4, 5 },
-            new int[] { 5, 4, 3, 2, 1 },
-            new byte[] { 11, 12, 13, 14, 15 }
+                new int[]{1, 2, 3, 4, 5},
+                new int[]{5, 4, 3, 2, 1},
+                new byte[]{11, 12, 13, 14, 15}
         );
 
         encoder.encodeBasis(basis, out);
 
-        byte[] expected = new byte[] {
+        byte[] expected = new byte[]{
                 0, 0, 0, 5,
 
                 0, 0, 0, 1,
@@ -140,7 +140,7 @@ class BinaryStreamEncoderTest {
     void givenNoBasis_whenEncoding_thenZeroInOutput() throws IOException {
         encoder.encodeBasis(SnowBasis.NONE, out);
 
-        byte[] expected = new byte[] {
+        byte[] expected = new byte[]{
                 0, 0, 0, 0,
         };
 

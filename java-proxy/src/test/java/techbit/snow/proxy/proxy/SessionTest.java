@@ -45,7 +45,7 @@ class SessionTest {
     @Test
     void whenNonExistentSessionDeleted_thenExceptionIsThrown() {
         assertThrows(InvalidSessionException.class,
-            () -> sessions.delete("not-exists"));
+                () -> sessions.delete("not-exists"));
     }
 
     @Test

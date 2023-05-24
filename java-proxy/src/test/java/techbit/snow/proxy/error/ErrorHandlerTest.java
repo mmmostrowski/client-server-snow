@@ -41,8 +41,8 @@ class ErrorHandlerTest {
         Map<String, Object> response = new ErrorHandler(true).error(request);
 
         assertEquals("Stub", response.get("message"));
-        assertTrue(((String)response.get("exceptionDetails")).contains("java.lang.Exception: Stub"));
-        assertTrue(((String)response.get("exceptionDetails")).contains("at "));
+        assertTrue(((String) response.get("exceptionDetails")).contains("java.lang.Exception: Stub"));
+        assertTrue(((String) response.get("exceptionDetails")).contains("at "));
     }
 
     @Test
@@ -61,7 +61,8 @@ class ErrorHandlerTest {
     @Test
     void givenProductionMode_whenUserExceptionOccurs_thenItIsTransmittedToUser() {
         when(request.getAttribute(RequestDispatcher.ERROR_EXCEPTION)).thenReturn(
-                new Exception(new UserException("Stub") {}));
+                new Exception(new UserException("Stub") {
+                }));
 
         Map<String, Object> response = new ErrorHandler(false).error(request);
 

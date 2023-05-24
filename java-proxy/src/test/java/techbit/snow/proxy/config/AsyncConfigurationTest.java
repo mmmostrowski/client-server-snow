@@ -31,7 +31,7 @@ class AsyncConfigurationTest {
 
     @Test
     void whenProvidingAsyncExecutor_thenItIsProperlyConfigured() {
-        try(MockedConstruction<?> mocked = mockConstruction(ThreadPoolTaskExecutor.class)) {
+        try (MockedConstruction<?> mocked = mockConstruction(ThreadPoolTaskExecutor.class)) {
 
             conf.getAsyncExecutor();
 

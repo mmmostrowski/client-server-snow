@@ -54,13 +54,13 @@ class WebsocketsControllerTest {
 
     @Test
     void givenUnknownSession_whenStream_thenThrowException() {
-        Assertions.assertThrows(InvalidSessionException.class, () -> controller.stream( "session-id", user));
+        Assertions.assertThrows(InvalidSessionException.class, () -> controller.stream("session-id", user));
     }
 
     @Test
     void givenUnknownSession_whenSessionDisconnectEventOccurs_thenNoErrorOccurs() {
         when(sessionDisconnectEvent.getUser()).thenReturn(user);
-        assertDoesNotThrow(() ->controller.onApplicationEvent(sessionDisconnectEvent));
+        assertDoesNotThrow(() -> controller.onApplicationEvent(sessionDisconnectEvent));
     }
 
     @Test
@@ -69,7 +69,7 @@ class WebsocketsControllerTest {
         when(proxyService.hasSession("session-id")).thenReturn(true);
         when(sessionDisconnectEvent.getUser()).thenReturn(user);
 
-        controller.stream( "session-id", user);
+        controller.stream("session-id", user);
         controller.onApplicationEvent(sessionDisconnectEvent);
 
         verify(client).deactivate();

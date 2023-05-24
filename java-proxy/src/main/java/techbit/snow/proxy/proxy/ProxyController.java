@@ -32,7 +32,7 @@ public class ProxyController {
         this.textStreamEncoder = textStreamEncoder;
     }
 
-    @GetMapping({ "/", "/start", "/start/", "/text", "/text/", "/stop", "/stop/", "/details/", "/details" })
+    @GetMapping({"/", "/start", "/start/", "/text", "/text/", "/stop", "/stop/", "/details/", "/details"})
     public void insufficientParams() {
         throw new InvalidRequestException(
                 "Invalid url! Url Should follow pattern: https://domain.com/<action>/<session-id>");
@@ -81,9 +81,9 @@ public class ProxyController {
         streaming.stopSession(sessionId);
 
         return Map.of(
-            "status", true,
-            "sessionId", sessionId,
-            "running", false
+                "status", true,
+                "sessionId", sessionId,
+                "running", false
         );
     }
 
@@ -121,7 +121,7 @@ public class ProxyController {
         }
 
         final Map<String, String> confMap = Maps.newHashMap();
-        for (int i = 0; i < elements.length; i+=2) {
+        for (int i = 0; i < elements.length; i += 2) {
             final String key = elements[i];
             final String value = elements[i + 1];
 

@@ -74,7 +74,7 @@ class PhpSnowAppTest {
         when(process.exitValue()).thenReturn(100);
         when(process.getErrorStream()).thenReturn(stream);
         when(process.getInputStream()).thenReturn(stream);
-        when(stream.readAllBytes()).thenReturn(new byte[] { 'b', 'u', 'g', 'g', 'y' } );
+        when(stream.readAllBytes()).thenReturn(new byte[]{'b', 'u', 'g', 'g', 'y'});
 
         Exception exception = Assertions.assertThrows(Exception.class, phpSnowApp::start);
 

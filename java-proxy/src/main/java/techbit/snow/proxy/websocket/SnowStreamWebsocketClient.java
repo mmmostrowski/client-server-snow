@@ -14,10 +14,10 @@ import java.io.IOException;
 public final class SnowStreamWebsocketClient implements SnowStreamClient {
 
     private final String clientId;
-    private boolean isActive = true;
     private final StreamEncoder encoder;
     private final ByteArrayOutputStream output;
     private final SimpMessagingTemplate messagingTemplate;
+    private boolean isActive = true;
 
     public SnowStreamWebsocketClient(String clientId, SimpMessagingTemplate messagingTemplate, StreamEncoder encoder) {
         this(clientId, messagingTemplate, encoder, new ByteArrayOutputStream());

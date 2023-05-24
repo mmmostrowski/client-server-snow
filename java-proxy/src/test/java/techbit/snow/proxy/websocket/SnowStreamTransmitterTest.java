@@ -39,7 +39,7 @@ class SnowStreamWebsocketClientTest {
 
     @BeforeEach
     void setup() {
-        byteArray = new byte[] { 1, 2, 3 };
+        byteArray = new byte[]{1, 2, 3};
 
         client = new SnowStreamWebsocketClient("client-id", messagingTemplate, encoder, output);
     }

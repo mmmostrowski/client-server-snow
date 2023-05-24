@@ -1,6 +1,12 @@
 package techbit.snow.proxy.dto;
 
-public record SnowAnimationMetadata (int width, int height, int fps, int bufferSizeInFrames, int totalNumberOfFrames) {
+public record SnowAnimationMetadata(
+        int width,
+        int height,
+        int fps,
+        int bufferSizeInFrames,
+        int totalNumberOfFrames)
+{
 
     @Override
     public String toString() {

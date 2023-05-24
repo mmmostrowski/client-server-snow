@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static techbit.snow.proxy.snow.stream.TestingFrames.*;
 
-@ExtendWith( MockitoExtension.class)
+@ExtendWith(MockitoExtension.class)
 class SnowDataFrameTest {
 
     @Test

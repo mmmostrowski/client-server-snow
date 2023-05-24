@@ -68,7 +68,7 @@ public final class BinaryStreamEncoder implements StreamEncoder {
 
     private byte[] toBytes(int[] integers) {
         if (integers.length == 0) {
-            return new byte[] {};
+            return new byte[]{};
         }
         ByteBuffer byteBuffer = ByteBuffer.allocate(integers.length * 4);
         IntBuffer intBuffer = byteBuffer.asIntBuffer();
