@@ -12,7 +12,7 @@ type Props = TextFieldProps & {
     isEditing?: (underEdit: boolean) => void,
 }
 
-export default function DebouncedInput(props: Props): JSX.Element {
+export default function AnimationDebouncedInput(props: Props): JSX.Element {
     const {
         sessionIdx,
         varName,

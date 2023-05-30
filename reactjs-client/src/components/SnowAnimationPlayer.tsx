@@ -4,8 +4,10 @@ import {useSession, useSessionDispatch} from '../snow/SessionsProvider';
 import {SnowAnimationConfiguration} from '../stream/snowEndpoint';
 import {
     SessionErrorStatusUpdater,
+    SessionPlayingStatusUpdater,
     SessionStatusUpdater,
     useSessionErrorStatusUpdater,
+    useSessionPlayingStatusUpdater,
     useSessionStatusUpdater
 } from '../snow/snowSessionStatus';
 import SnowAnimation from "./SnowAnimationPlayer/SnowAnimation";
@@ -23,17 +25,29 @@ interface Props {
 export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element {
     const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(sessionIdx);
     const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
+    const setSessionPlayingStatus: SessionPlayingStatusUpdater = useSessionPlayingStatusUpdater(sessionIdx);
     const dispatch = useSessionDispatch(sessionIdx);
+    const { isStopped } = useSession(sessionIdx);
     const [ isLocked, setIsLocked ] = useState(false);
-    const [ playAnimation, setPlayAnimation ] = useState<boolean>(false);
+    const [ playAnimation, setPlayAnimation ] = useState<boolean>(!isStopped);
     const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>(null);
     const {
         status, hasError, hasConfigError,
-        sessionId, isSessionExists, hasSessionIdError, cannotStartSession,
-        presetName, animationProgress, isInitializing,
+        isSessionExists, hasSessionIdError, cannotStartSession,
+        presetName, isInitializing, animationProgressRef,
         validatedWidth: width, validatedHeight: height, validatedFps: fps,
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSession(sessionIdx);
+    const [ animationProgress, setAnimationProgress ] = useState<number>(animationProgressRef.current);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setAnimationProgress(animationProgressRef.current);
+        }, 10);
+        return () => {
+            clearInterval(timer);
+        };
+    }, []);
 
 
     function handleStart() {
@@ -76,18 +90,16 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
     }
 
 
-    function handleAnimationBuffering(percent: number): void {
-        setSessionStatus('buffering', {
-            bufferLevel: percent,
-            animationProgress: 0,
-        });
+    function handleAnimationBuffering(bufferPercent: number): void {
+        setSessionStatus('buffering');
+        setSessionPlayingStatus(0, bufferPercent);
     }
 
-    function handleAnimationPlaying(progress: number, bufferPercent: number): void {
-        setSessionStatus('playing', {
-            animationProgress: progress,
-            bufferLevel: bufferPercent,
-        });
+    function handleAnimationPlaying(progressPercent: number, bufferPercent: number): void {
+        if (progressPercent === 0) {
+            setSessionStatus('playing');
+        }
+        setSessionPlayingStatus(progressPercent, bufferPercent);
     }
 
     function handleAnimationError(error: Error): void {
@@ -149,7 +161,6 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
         }
     }, [ hasSessionIdError, setSessionErrorStatus]);
 
-
     return (
         <div className="snow-animation" >
             <div className="animation-header">
@@ -157,7 +168,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
                 <AnimationSessionId sessionIdx={sessionIdx} isEditing={(underEdit: boolean) => setIsLocked(underEdit)} />
                 <AnimationControlButtons sessionIdx={sessionIdx} handleStart={handleStart} handleStop={handleStop} />
             </div>
-            <SnowAnimation sessionId={sessionId}
+            <SnowAnimation sessionIdx={sessionIdx}
                            width={isSessionExists ? foundWidth : width}
                            height={isSessionExists ? foundHeight : height}
                            play={playAnimation}

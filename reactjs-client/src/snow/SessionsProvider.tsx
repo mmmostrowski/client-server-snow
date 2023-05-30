@@ -12,6 +12,7 @@ import {
 } from "react";
 import {validateNumberBetween, validateSessionId} from './sessionValidator';
 import {applicationConfig} from "../config/application";
+import {SnowAnimationController} from "./SnowAnimationController";
 
 export const SessionsContext = createContext([]);
 export const SessionsDispatchContext = createContext(null);
@@ -31,8 +32,8 @@ export interface DraftSession {
     width: string,
     height: string,
     fps: string,
-    animationProgress: number,
-    bufferLevel: number,
+    animationProgressRef: { current: number },
+    bufferLevelRef: { current: number },
     status: SessionStatus,
     errorMsg: string|null,
 
@@ -40,6 +41,8 @@ export interface DraftSession {
     foundWidth: number|null,
     foundHeight: number|null,
     foundFps: number|null,
+
+    snowController: SnowAnimationController
 }
 
 interface SessionErrors {
@@ -212,6 +215,7 @@ function sessionsReducer(sessions: Session[], action: DispatchAction): Session[]
 function createNewSession(sessionId: string): Session {
     return commitChangesToSession({
         sessionId : sessionId,
+        snowController: new SnowAnimationController(sessionId),
 
         presetName: applicationConfig.defaultPreset,
         width: '' + applicationConfig.defaultWidth,
@@ -219,8 +223,8 @@ function createNewSession(sessionId: string): Session {
         fps: '' + applicationConfig.defaultFps,
 
         status: "stopped-not-checked",
-        animationProgress: 0,
-        bufferLevel: 0,
+        animationProgressRef: { current: 0 },
+        bufferLevelRef: { current: 0 },
         errorMsg: "",
 
         foundPresetName: null,
@@ -286,7 +290,7 @@ function sessionPostprocessing(session: ValidatedSession): Session {
     return {
         ...session,
         hasSessionIdError: session.sessionIdError !== null,
-        animationProgress: session.status === 'playing' ? session.animationProgress : 0,
+        animationProgressRef: session.status === 'playing' ? session.animationProgressRef : { current: 0 },
         hasConfigError:
                session.sessionIdError !== null
             || session.widthError !== null

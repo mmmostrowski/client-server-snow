@@ -1,4 +1,5 @@
 import * as React from "react";
+import {useEffect, useState} from "react";
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -9,7 +10,18 @@ interface Props {
 }
 
 export default function AnimationCircularProgress({ sessionIdx } : Props) {
-    const { status, errorMsg, bufferLevel } = useDelayedSession(sessionIdx);
+    const { status, errorMsg, bufferLevelRef } = useDelayedSession(sessionIdx);
+
+    const [ bufferLevel, setBufferLevel ] = useState<number>(bufferLevelRef.current);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setBufferLevel(bufferLevelRef.current);
+        }, 10);
+        return () => {
+            clearInterval(timer);
+        };
+    }, []);
 
     let color : "primary" | "error" | "info" | "success" | "inherit" | "secondary" | "warning" = "primary";
     let progress = 100;

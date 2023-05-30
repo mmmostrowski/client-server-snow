@@ -2,12 +2,13 @@ import * as React from "react";
 import {useEffect, useRef} from "react";
 import {SnowDrawing, SnowDrawingRefHandler} from "./SnowDrawing";
 import {SnowAnimationConfiguration} from "../../stream/snowEndpoint";
-import {DetailsFromServer, SnowAnimationController} from "../../snow/SnowAnimationController";
+import {DetailsFromServer} from "../../snow/SnowAnimationController";
 import {animationConfig} from "../../config/animation";
+import {useSession} from "../../snow/SessionsProvider";
 
 
 interface Props {
-    sessionId: string;
+    sessionIdx: number;
     play: boolean;
     configuration: SnowAnimationConfiguration;
     onFinish: () => void;
@@ -25,7 +26,7 @@ interface Props {
 
 export default function SnowAnimation(props: Props): JSX.Element {
     const {
-        sessionId,
+        sessionIdx,
         play,
         configuration,
         checkingEnabled, checkEveryMs,
@@ -33,26 +34,23 @@ export default function SnowAnimation(props: Props): JSX.Element {
         onBuffering, onPlaying, onFinish, onError, onChecking, onFound, onNotFound
     } = props;
     const canvasRef = useRef<SnowDrawingRefHandler>(null);
-    const snowControllerRef = useRef<SnowAnimationController>(null);
+    const { snowController } = useSession(sessionIdx);
 
 
     // Bind controller with session
     useEffect(() => {
-        const abortController = new AbortController();
 
-        snowControllerRef.current = new SnowAnimationController(sessionId);
-        snowControllerRef.current.startPeriodicChecking(abortController, checkEveryMs);
+        snowController.startPeriodicChecking(checkEveryMs);
 
         return () => {
-            abortController.abort();
-            snowControllerRef.current.destroy();
+            snowController.haltProcessing();
         };
-    }, [ sessionId, checkEveryMs ]);
+    }, [ snowController, checkEveryMs ]);
 
 
     // Configure controller
     useEffect(() => {
-        snowControllerRef.current.configure({
+        snowController.configure({
             goodbyeTextTimeoutSec: animationConfig.goodbyeText.timeoutSec,
             canvas: canvasRef.current,
             onChecking,
@@ -71,22 +69,19 @@ export default function SnowAnimation(props: Props): JSX.Element {
     useEffect(() => {
         const abortController = new AbortController();
 
-        void snowControllerRef.current.checkDetails(abortController);
+        void snowController.checkDetails(abortController);
 
         return () => { abortController.abort() };
-    }, [ sessionId ]);
-
+    }, [ snowController ]);
 
 
     // Start / Stop controller
     useEffect(() => {
-        const abortController = new AbortController();
         if (play) {
-            void snowControllerRef.current.startProcessing(configuration, abortController);
+            void snowController.startProcessing(configuration);
         } else {
-            void snowControllerRef.current.stopProcessing(abortController);
+            void snowController.stopProcessing();
         }
-        return () => { abortController.abort() };
     }, [ play, configuration ]);
 
 

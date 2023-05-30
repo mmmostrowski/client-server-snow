@@ -48,6 +48,7 @@ export class SnowAnimationController {
     private metadata: SnowAnimationMetadata;
     private streamHandler: SnowClientHandler;
     private periodicHandler: ReturnType<typeof setInterval>;
+    private abortController = new AbortController();
 
     public constructor(sessionId: string, decoder: SnowDecoder = new SnowDecoder()) {
         this.isDestroyed = false;
@@ -85,12 +86,16 @@ export class SnowAnimationController {
     }
 
     public destroy(): void {
+        this.abortController.abort()
         this.stopPeriodicChecking();
         this.isDestroyed = true;
         this.turnOff();
     }
 
-    public async startProcessing(configuration: SnowAnimationConfiguration, controller: AbortController): Promise<void> {
+    public async startProcessing(configuration: SnowAnimationConfiguration): Promise<void> {
+        if (this.state !== 'stopped') {
+            return;
+        }
         this.disallowWhenDestroyed();
 
         if (this.state !== 'stopped') {
@@ -98,16 +103,17 @@ export class SnowAnimationController {
         }
         try {
             this.startStream(
-                await startSnowSession(this.sessionId, configuration, controller),
+                await startSnowSession(this.sessionId, configuration, this.abortController),
                 this.onServerData.bind(this)
             );
             this.state = "buffering";
         } catch (error) {
+            console.error(error);
             this.onError(new CannotStartError(error.message));
         }
     }
 
-    public async stopProcessing(controller: AbortController): Promise<void> {
+    public async stopProcessing(): Promise<void> {
         this.disallowWhenDestroyed();
 
         if (this.state === 'stopped') {
@@ -119,17 +125,22 @@ export class SnowAnimationController {
         }
         try {
             this.turnOff();
-            await stopSnowSession(this.sessionId, controller);
+            await stopSnowSession(this.sessionId, this.abortController);
         } catch (error) {
+            console.error(error);
             this.onError(new CannotStopError(error.message));
         }
     }
 
-    public startPeriodicChecking(abortController: AbortController, refreshEveryMs: number): void {
+    public haltProcessing(): void {
+
+    }
+
+    public startPeriodicChecking(refreshEveryMs: number): void {
         this.disallowWhenDestroyed();
 
         this.periodicHandler = setInterval(() => {
-            void this.askServerForDetails(abortController, true);
+            void this.askServerForDetails(this.abortController, true);
         }, refreshEveryMs);
     }
 
@@ -140,10 +151,10 @@ export class SnowAnimationController {
         }
     }
 
-    public async checkDetails(abortController: AbortController): Promise<void> {
+    public async checkDetails(abortController?: AbortController): Promise<void> {
         this.disallowWhenDestroyed();
 
-        await this.askServerForDetails(abortController, false);
+        await this.askServerForDetails(abortController ?? this.abortController, false);
     }
 
     private async askServerForDetails(abortController: AbortController, periodicCheck: boolean): Promise<void> {
@@ -170,6 +181,7 @@ export class SnowAnimationController {
                 this.onNotFound(periodicCheck);
             }
         } catch (error) {
+            console.error(error);
             this.onError(new CannotCheckError(error.message));
         }
     }

@@ -30,68 +30,79 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, Props>(
     useImperativeHandle(ref, (): SnowDrawingRefHandler => {
         return {
             clear(): void {
-                const canvas = canvasRef.current;
-                canvas.clearCanvas();
+                onCanvas((canvas: SnowCanvasRefHandler): void => {
+                    canvas.clearCanvas();
+                });
             },
             drawBackground(background: SnowBackground): void {
-                if (background === NoSnowBackground) {
-                    return;
-                }
-
-                const canvas = canvasRef.current;
-                const { width, height, pixels } = background;
-                const font = animationConfig.backgroundFont;
-
-                canvas.setCurrentFont(font.color, font.scale);
-                for (let y = 0; y < height; ++y) {
-                    for (let x = 0; x < width; ++x) {
-                        const char = pixels[x][y];
-                        if (char === 0) {
-                            continue;
-                        }
-                        canvas.drawChar(x, y, String.fromCharCode(char));
+                onCanvas((canvas: SnowCanvasRefHandler): void => {
+                    if (background === NoSnowBackground) {
+                        return;
                     }
-                }
+
+                    const { width, height, pixels } = background;
+                    const font = animationConfig.backgroundFont;
+
+                    canvas.setCurrentFont(font.color, font.scale);
+                    for (let y = 0; y < height; ++y) {
+                        for (let x = 0; x < width; ++x) {
+                            const char = pixels[x][y];
+                            if (char === 0) {
+                                continue;
+                            }
+                            canvas.drawChar(x, y, String.fromCharCode(char));
+                        }
+                    }
+                });
             },
 
             drawSnow(frame: SnowDataFrame): void {
-                const canvas = canvasRef.current;
-                const { particlesX, particlesY, flakeShapes: flakes, chunkSize } = frame;
-                const font = animationConfig.snowFont;
-                const flakeShapes = animationConfig.flakeShapes;
+                onCanvas((canvas: SnowCanvasRefHandler): void => {
+                    const { particlesX, particlesY, flakeShapes: flakes, chunkSize } = frame;
+                    const font = animationConfig.snowFont;
+                    const flakeShapes = animationConfig.flakeShapes;
 
-                canvas.setCurrentFont(font.color, font.scale);
-                for (let i = 0; i < chunkSize; ++i) {
-                    canvas.drawChar(particlesX[i], particlesY[i], flakeShapes[flakes[i]]);
-                }
+                    canvas.setCurrentFont(font.color, font.scale);
+                    for (let i = 0; i < chunkSize; ++i) {
+                        canvas.drawChar(particlesX[i], particlesY[i], flakeShapes[flakes[i]]);
+                    }
+                });
             },
 
             drawBasis(basis: SnowBasis): void {
-                if (basis === NoSnowBasis) {
-                    return;
-                }
+                onCanvas((canvas: SnowCanvasRefHandler): void => {
+                    if (basis === NoSnowBasis) {
+                        return;
+                    }
 
-                const canvas = canvasRef.current;
-                const { numOfPixels, x, y, pixels } = basis;
-                const font = animationConfig.basisFont;
-                const flakeShapes = animationConfig.flakeShapes;
+                    const { numOfPixels, x, y, pixels } = basis;
+                    const font = animationConfig.basisFont;
+                    const flakeShapes = animationConfig.flakeShapes;
 
-                canvas.setCurrentFont(font.color, font.scale);
-                for (let i = 0; i < numOfPixels; ++i) {
-                    canvas.drawChar(x[i], y[i], flakeShapes[pixels[i]]);
-                }
+                    canvas.setCurrentFont(font.color, font.scale);
+                    for (let i = 0; i < numOfPixels; ++i) {
+                        canvas.drawChar(x[i], y[i], flakeShapes[pixels[i]]);
+                    }
+                });
             },
 
             drawGoodbye(): void {
-                const canvas = canvasRef.current;
-                const { text, color, font, size } = animationConfig.goodbyeText;
+                onCanvas((canvas: SnowCanvasRefHandler): void => {
+                    const { text, color, font, size } = animationConfig.goodbyeText;
 
-                canvas.clearCanvas();
-                canvas.setCurrentFont(color, size, font);
-                canvas.drawTextInCenter(text);
+                    canvas.clearCanvas();
+                    canvas.setCurrentFont(color, size, font);
+                    canvas.drawTextInCenter(text);
+                });
             },
         };
     });
+
+    function onCanvas(callback: (canvas: SnowCanvasRefHandler) => void) {
+        if (canvasRef.current !== null) {
+            callback(canvasRef.current);
+        }
+    }
 
     return <SnowCanvas
         width={width}

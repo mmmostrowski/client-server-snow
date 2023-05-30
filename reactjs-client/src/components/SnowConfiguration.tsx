@@ -3,7 +3,7 @@ import Container from '@mui/material/Container';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
-import DebouncedInput from './SnowAnimationPlayer/DebouncedInput'
+import AnimationDebouncedInput from './SnowAnimationPlayer/AnimationDebouncedInput'
 import {useDelayedSession, useSession, useSessionDispatch} from '../snow/SessionsProvider'
 import {applicationConfig} from "../config/application";
 
@@ -116,7 +116,7 @@ type ConfigNumberFieldProps = {
 function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
     const { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText } = props;
 
-    return <DebouncedInput
+    return <AnimationDebouncedInput
         sessionIdx={sessionIdx}
         varName={varName}
         varValue={isAvailable ? value : '?'}
