@@ -13,7 +13,7 @@ interface Props {
     configuration: SnowAnimationConfiguration;
     onFinish: () => void;
     onBuffering: (percent: number) => void;
-    onPlaying: (progress: number, bufferPercent: number) => void;
+    onPlaying: (firstFrame: boolean, progress: number, bufferPercent: number) => void;
     onError: (error: Error) => void;
     onChecking: (sessionId: string, periodicCheck: boolean) => void;
     onFound: (response: DetailsFromServer, periodicCheck: boolean) => void;
@@ -34,7 +34,7 @@ export default function SnowAnimation(props: Props): JSX.Element {
         onBuffering, onPlaying, onFinish, onError, onChecking, onFound, onNotFound
     } = props;
     const canvasRef = useRef<SnowDrawingRefHandler>(null);
-    const { snowController } = useSession(sessionIdx);
+    const { snowController, sessionId } = useSession(sessionIdx);
 
 
     // Bind controller with session
@@ -52,6 +52,7 @@ export default function SnowAnimation(props: Props): JSX.Element {
     useEffect(() => {
         snowController.configure({
             goodbyeTextTimeoutSec: animationConfig.goodbyeText.timeoutSec,
+            sessionId: sessionId,
             canvas: canvasRef.current,
             onChecking,
             onFound,
@@ -78,9 +79,13 @@ export default function SnowAnimation(props: Props): JSX.Element {
     // Start / Stop controller
     useEffect(() => {
         if (play) {
-            void snowController.startProcessing(configuration);
+            if (!snowController.isRunning()) {
+                void snowController.startProcessing(configuration);
+            }
         } else {
-            void snowController.stopProcessing();
+            if (snowController.isRunning()) {
+                void snowController.stopProcessing();
+            }
         }
     }, [ play, configuration ]);
 

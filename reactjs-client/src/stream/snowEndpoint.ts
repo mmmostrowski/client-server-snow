@@ -80,6 +80,10 @@ async function askSnowEndpoint(controller: AbortController, action: string, sess
         throw Error("Invalid server response! JSON Response expected!");
     }
 
+    if (data === AbortedEndpointResponse) {
+        return data;
+    }
+
     if (data.status === false) {
         throw Error(data.message
             ? "Server respond with error: " + data.message
@@ -94,11 +98,11 @@ async function fetchEndpoint(controller: AbortController, url: string): Promise<
         const response: Response = await fetch(url, { signal: controller?.signal });
         return await response.json() as EndpointResponse;
     } catch (error) {
-        console.error(error);
         switch(error.name) {
             case 'AbortError':
                 return AbortedEndpointResponse;
             case 'TypeError':
+                console.error(error);
                 error = new Error("Server error!");
         }
         throw error;

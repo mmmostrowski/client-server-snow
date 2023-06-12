@@ -27,18 +27,19 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
     const setSessionErrorStatus: SessionErrorStatusUpdater = useSessionErrorStatusUpdater(sessionIdx);
     const setSessionPlayingStatus: SessionPlayingStatusUpdater = useSessionPlayingStatusUpdater(sessionIdx);
     const dispatch = useSessionDispatch(sessionIdx);
-    const { isStopped } = useSession(sessionIdx);
     const [ isLocked, setIsLocked ] = useState(false);
-    const [ playAnimation, setPlayAnimation ] = useState<boolean>(!isStopped);
-    const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>(null);
     const {
-        status, hasError, hasConfigError,
+        status, hasError, hasConfigError, isStopped,
         isSessionExists, hasSessionIdError, cannotStartSession,
         presetName, isInitializing, animationProgressRef,
         validatedWidth: width, validatedHeight: height, validatedFps: fps,
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSession(sessionIdx);
     const [ animationProgress, setAnimationProgress ] = useState<number>(animationProgressRef.current);
+    const [ playAnimation, setPlayAnimation ] = useState<boolean>(status === 'playing');
+    const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>({
+        width, height, fps, presetName,
+    });
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -50,7 +51,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
     }, []);
 
 
-    function handleStart() {
+    function handleStart(): void {
         if (isLocked) {
             return;
         }
@@ -79,7 +80,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
         }
     }
 
-    async function handleStop() {
+    async function handleStop(): Promise<void> {
         if (isLocked) {
             return;
         }
@@ -95,8 +96,8 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
         setSessionPlayingStatus(0, bufferPercent);
     }
 
-    function handleAnimationPlaying(progressPercent: number, bufferPercent: number): void {
-        if (progressPercent === 0) {
+    function handleAnimationPlaying(firstFrame: boolean, progressPercent: number, bufferPercent: number): void {
+        if (firstFrame) {
             setSessionStatus('playing');
         }
         setSessionPlayingStatus(progressPercent, bufferPercent);

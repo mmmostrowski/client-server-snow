@@ -22,10 +22,10 @@ type BufferFrame = [ SnowDataFrame, SnowBasis ];
 export type DetailsFromServer = DetailsEndpointResponse;
 
 export class SnowAnimationController {
-    private readonly sessionId: string;
+    private sessionId: string;
 
     private onBuffering: (percent: number) => void;
-    private onPlaying: (progress: number, bufferPercent: number) => void;
+    private onPlaying: (firstFrame:boolean, progress: number, bufferPercent: number) => void;
     private onChecking: (sessionId: string, periodicCheck: boolean) => void;
     private onFound: (response: DetailsFromServer, periodicCheck: boolean) => void;
     private onNotFound: (periodicCheck: boolean) => void;
@@ -37,6 +37,7 @@ export class SnowAnimationController {
     private isDestroyed: boolean;
     private decoder: SnowDecoder;
     private fpsInterval: number;
+    private firstData: boolean;
     private firstFrame: boolean;
     private lastTimestamp: number;
     private checkingEnabled: boolean;
@@ -59,12 +60,13 @@ export class SnowAnimationController {
     }
 
     public configure(config: {
+        sessionId?: string,
         canvas?: SnowDrawingRefHandler,
         checkingEnabled?: boolean,
         allowForGoodbye?: boolean,
         goodbyeTextTimeoutSec?: number,
         onBuffering?: (percent: number) => void,
-        onPlaying?: (progress: number, bufferPercent: number) => void,
+        onPlaying?: (firstFrame: boolean, progress: number, bufferPercent: number) => void,
         onChecking?: (sessionId: string, periodicCheck: boolean) => void,
         onFound?: (response: DetailsFromServer, periodicCheck: boolean) => void,
         onNotFound?: (periodicCheck: boolean) => void,
@@ -80,6 +82,7 @@ export class SnowAnimationController {
         this.onFinish = config.onFinish ?? idle;
         this.onError = config.onError ?? idle;
 
+        this.sessionId = config.sessionId ?? this.sessionId
         this.canvas = config.canvas ?? null;
         this.checkingEnabled = config.checkingEnabled ?? true;
         this.goodbyeTextTimeoutSec = config.goodbyeTextTimeoutSec ?? 2;
@@ -90,6 +93,10 @@ export class SnowAnimationController {
         this.stopPeriodicChecking();
         this.isDestroyed = true;
         this.turnOff();
+    }
+
+    public isRunning(): boolean {
+        return this.state !== 'stopped';
     }
 
     public async startProcessing(configuration: SnowAnimationConfiguration): Promise<void> {
@@ -193,6 +200,7 @@ export class SnowAnimationController {
     }
 
     private reset(): void {
+        this.firstData = true;
         this.firstFrame = true;
         this.lastTimestamp = null;
         this.basis = NoSnowBasis;
@@ -208,8 +216,8 @@ export class SnowAnimationController {
 
         this.notifyBuffering();
 
-        if (this.firstFrame) {
-            this.firstFrame = false;
+        if (this.firstData) {
+            this.firstData = false;
             [ this.metadata, this.background ] = this.decoder.decodeHeader(data);
             return;
         }
@@ -261,6 +269,7 @@ export class SnowAnimationController {
 
     private animateFrame([frame, basis]: BufferFrame): void {
         this.notifyPlaying(frame);
+        this.firstFrame = false;
 
         if (this.isLastFrame(frame)) {
             this.sayGoodbye();
@@ -317,7 +326,7 @@ export class SnowAnimationController {
     }
 
     private notifyPlaying(frame: SnowDataFrame): void {
-        this.onPlaying(this.animationProgress(frame), this.bufferLevel());
+        this.onPlaying(this.firstFrame, this.animationProgress(frame), this.bufferLevel());
     }
 
     private isLastFrame(frame: SnowDataFrame): boolean {
