@@ -11,11 +11,11 @@ import {
     useSessionStatusUpdater
 } from '../snow/snowSessionStatus';
 import SnowAnimation from "./SnowAnimationPlayer/SnowAnimation";
-import AnimationCircularProgress from "./SnowAnimationPlayer/AnimationCircularProgress";
+import AnimationCircularStatus from "./SnowAnimationPlayer/AnimationCircularStatus";
 import AnimationSessionId from "./SnowAnimationPlayer/AnimationSessionId";
 import AnimationControlButtons from "./SnowAnimationPlayer/AnimationControlButtons";
-import LinearProgress from "@mui/material/LinearProgress";
 import {CannotStartError, CannotStopError, DetailsFromServer} from "../snow/SnowAnimationController";
+import AnimationLinearProgress from "./AnimationLinearProgress";
 
 
 interface Props {
@@ -29,26 +29,16 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
     const dispatch = useSessionDispatch(sessionIdx);
     const [ isLocked, setIsLocked ] = useState(false);
     const {
-        status, hasError, hasConfigError, isStopped,
+        status, hasError, hasConfigError,
         isSessionExists, hasSessionIdError, cannotStartSession,
-        presetName, isInitializing, animationProgressRef,
+        presetName, isInitializing,
         validatedWidth: width, validatedHeight: height, validatedFps: fps,
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSession(sessionIdx);
-    const [ animationProgress, setAnimationProgress ] = useState<number>(animationProgressRef.current);
-    const [ playAnimation, setPlayAnimation ] = useState<boolean>(status === 'playing');
+    const [ playAnimation, setPlayAnimation ] = useState<boolean>(status === 'playing' || status === 'buffering');
     const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>({
         width, height, fps, presetName,
     });
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setAnimationProgress(animationProgressRef.current);
-        }, 10);
-        return () => {
-            clearInterval(timer);
-        };
-    }, []);
 
 
     function handleStart(): void {
@@ -91,8 +81,10 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
     }
 
 
-    function handleAnimationBuffering(bufferPercent: number): void {
-        setSessionStatus('buffering');
+    function handleAnimationBuffering(startingBuffering: boolean, bufferPercent: number): void {
+        if (startingBuffering) {
+            setSessionStatus('buffering');
+        }
         setSessionPlayingStatus(0, bufferPercent);
     }
 
@@ -165,7 +157,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
     return (
         <div className="snow-animation" >
             <div className="animation-header">
-                <AnimationCircularProgress sessionIdx={sessionIdx}/>
+                <AnimationCircularStatus sessionIdx={sessionIdx}/>
                 <AnimationSessionId sessionIdx={sessionIdx} isEditing={(underEdit: boolean) => setIsLocked(underEdit)} />
                 <AnimationControlButtons sessionIdx={sessionIdx} handleStart={handleStart} handleStop={handleStop} />
             </div>
@@ -184,9 +176,8 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
                            onError={handleAnimationError}
                            onFinish={handleStop}
             />
-            <LinearProgress value={animationProgress}
-                            title="Animation progress"
-                            variant="determinate" />
+            <AnimationLinearProgress sessionIdx={sessionIdx} />
         </div>
     )
 }
+

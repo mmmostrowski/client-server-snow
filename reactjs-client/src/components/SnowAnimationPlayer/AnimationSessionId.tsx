@@ -23,8 +23,6 @@ export default function AnimationSessionId({ sessionIdx, isEditing } : Animation
         varName="sessionId"
         varValue={sessionId}
         isEditing={isEditing}
-
-        InputLabelProps={{ shrink: true }}
         variant="standard"
         label="Session id"
         defaultValue={sessionId}
@@ -33,6 +31,7 @@ export default function AnimationSessionId({ sessionIdx, isEditing } : Animation
         error={hasSessionIdError}
         helperText={sessionIdError}
         autoComplete="off"
+        InputLabelProps={{ shrink: true }}
     />
 }
 

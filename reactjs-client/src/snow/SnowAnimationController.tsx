@@ -24,7 +24,7 @@ export type DetailsFromServer = DetailsEndpointResponse;
 export class SnowAnimationController {
     private sessionId: string;
 
-    private onBuffering: (percent: number) => void;
+    private onBuffering: (startingBuffering: boolean, percent: number) => void;
     private onPlaying: (firstFrame:boolean, progress: number, bufferPercent: number) => void;
     private onChecking: (sessionId: string, periodicCheck: boolean) => void;
     private onFound: (response: DetailsFromServer, periodicCheck: boolean) => void;
@@ -43,6 +43,7 @@ export class SnowAnimationController {
     private checkingEnabled: boolean;
     private isLastFrameInBuffer: boolean;
     private goodbyeTextTimeoutSec: number;
+    private inBackground: boolean;
     private basis: SnowBasis;
     private background: SnowBackground;
     private canvas: SnowDrawingRefHandler;
@@ -53,19 +54,20 @@ export class SnowAnimationController {
 
     public constructor(sessionId: string, decoder: SnowDecoder = new SnowDecoder()) {
         this.isDestroyed = false;
+        this.inBackground = false;
         this.sessionId = sessionId;
         this.decoder = decoder;
-        this.configure({});
+        this.processInForeground({});
         this.reset();
     }
 
-    public configure(config: {
+    public processInForeground(config: {
         sessionId?: string,
         canvas?: SnowDrawingRefHandler,
         checkingEnabled?: boolean,
         allowForGoodbye?: boolean,
         goodbyeTextTimeoutSec?: number,
-        onBuffering?: (percent: number) => void,
+        onBuffering?: (startingBuffering: boolean, percent: number) => void,
         onPlaying?: (firstFrame: boolean, progress: number, bufferPercent: number) => void,
         onChecking?: (sessionId: string, periodicCheck: boolean) => void,
         onFound?: (response: DetailsFromServer, periodicCheck: boolean) => void,
@@ -73,6 +75,8 @@ export class SnowAnimationController {
         onError?: (error: Error) => void,
         onFinish?: () => void,
     }): void {
+        this.inBackground = false;
+
         const idle = () => {};
         this.onFound = config.onFound ?? idle;
         this.onNotFound = config.onNotFound ?? idle;
@@ -86,6 +90,15 @@ export class SnowAnimationController {
         this.canvas = config.canvas ?? null;
         this.checkingEnabled = config.checkingEnabled ?? true;
         this.goodbyeTextTimeoutSec = config.goodbyeTextTimeoutSec ?? 2;
+
+        if (this.state === 'playing') {
+            this.startAnimation();
+        }
+    }
+
+    public continueProcessingInBackground(): void {
+        this.stopPeriodicChecking();
+        this.inBackground = true;
     }
 
     public destroy(): void {
@@ -137,10 +150,6 @@ export class SnowAnimationController {
             console.error(error);
             this.onError(new CannotStopError(error.message));
         }
-    }
-
-    public haltProcessing(): void {
-
     }
 
     public startPeriodicChecking(refreshEveryMs: number): void {
@@ -214,9 +223,8 @@ export class SnowAnimationController {
             return;
         }
 
-        this.notifyBuffering();
-
         if (this.firstData) {
+            this.notifyStartBuffering();
             this.firstData = false;
             [ this.metadata, this.background ] = this.decoder.decodeHeader(data);
             return;
@@ -236,6 +244,8 @@ export class SnowAnimationController {
             } else {
                 this.buffer.shift();
             }
+        } else {
+            this.notifyBuffering();
         }
     }
 
@@ -245,6 +255,10 @@ export class SnowAnimationController {
     }
 
     private animationLoop(): void {
+        if (this.inBackground) {
+            return;
+        }
+
         if (this.state === "stopped" || this.isDestroyed) {
             this.canvas.clear();
             return;
@@ -340,11 +354,15 @@ export class SnowAnimationController {
         return frame.frameNum * 100 / this.metadata.totalNumberOfFrames;
     }
 
+    private notifyStartBuffering(): void {
+        this.onBuffering(true,0);
+    }
+
     private notifyBuffering(): void {
         if (this.state !== "buffering") {
             return;
         }
-        this.onBuffering(this.bufferLevel());
+        this.onBuffering(false, this.bufferLevel());
     }
 
     private bufferLevel(): number {

@@ -9,7 +9,7 @@ interface Props {
     sessionIdx: number
 }
 
-export default function AnimationCircularProgress({ sessionIdx } : Props) {
+export default function AnimationCircularStatus({ sessionIdx } : Props) {
     const { status, errorMsg, bufferLevelRef } = useDelayedSession(sessionIdx);
 
     const [ bufferLevel, setBufferLevel ] = useState<number>(bufferLevelRef.current);
@@ -17,11 +17,11 @@ export default function AnimationCircularProgress({ sessionIdx } : Props) {
     useEffect(() => {
         const timer = setInterval(() => {
             setBufferLevel(bufferLevelRef.current);
-        }, 10);
+        }, 50);
         return () => {
             clearInterval(timer);
         };
-    }, []);
+    }, [ bufferLevelRef ]);
 
     let color : "primary" | "error" | "info" | "success" | "inherit" | "secondary" | "warning" = "primary";
     let progress = 100;

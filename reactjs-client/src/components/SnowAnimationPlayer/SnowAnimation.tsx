@@ -12,7 +12,7 @@ interface Props {
     play: boolean;
     configuration: SnowAnimationConfiguration;
     onFinish: () => void;
-    onBuffering: (percent: number) => void;
+    onBuffering: (startingBuffering: boolean, percent: number) => void;
     onPlaying: (firstFrame: boolean, progress: number, bufferPercent: number) => void;
     onError: (error: Error) => void;
     onChecking: (sessionId: string, periodicCheck: boolean) => void;
@@ -42,15 +42,12 @@ export default function SnowAnimation(props: Props): JSX.Element {
 
         snowController.startPeriodicChecking(checkEveryMs);
 
-        return () => {
-            snowController.haltProcessing();
-        };
     }, [ snowController, checkEveryMs ]);
 
 
     // Configure controller
     useEffect(() => {
-        snowController.configure({
+        snowController.processInForeground({
             goodbyeTextTimeoutSec: animationConfig.goodbyeText.timeoutSec,
             sessionId: sessionId,
             canvas: canvasRef.current,
@@ -63,6 +60,9 @@ export default function SnowAnimation(props: Props): JSX.Element {
             onError,
             checkingEnabled,
         });
+        return () => {
+            snowController.continueProcessingInBackground();
+        };
     }, [ onChecking, onFound, onNotFound, onBuffering, onPlaying, onFinish, onError, checkingEnabled ]);
 
 
