@@ -58,7 +58,7 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, Props>(
                 ctx.fillText(char, cellX(x), cellY(y));
             },
             setCurrentFont(color: string, size: number, face: string = "Courier New"): void {
-                const textHeight = Math.floor(scaleFactor * size);
+                const textHeight = Math.max(6, Math.floor(scaleFactor * size));
                 ctx.font = `bold ${textHeight}px ${face}`;
                 ctx.fillStyle = color;
             },
