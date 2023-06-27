@@ -4,7 +4,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
 import AnimationDebouncedInput from './SnowAnimationPlayer/AnimationDebouncedInput'
-import {useDelayedSession, useSession, useSessionDispatch} from '../snow/SessionsProvider'
+import {useDebouncedSession, useSession, useSessionDispatch} from '../snow/SessionsProvider'
 import {applicationConfig} from "../config/application";
 
 interface SnowConfigurationProps {
@@ -20,7 +20,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
         presetName: userPresetName,
         foundWidth, foundHeight, foundFps, foundPresetName,
     } = useSession(sessionIdx);
-    const { status, widthError, heightError, fpsError } = useDelayedSession(sessionIdx);
+    const { status, widthError, heightError, fpsError } = useDebouncedSession(sessionIdx);
     const dispatch = useSessionDispatch(sessionIdx);
     const width = isSessionExists ? foundWidth : userWidth;
     const height = isSessionExists ? foundHeight : userHeight;

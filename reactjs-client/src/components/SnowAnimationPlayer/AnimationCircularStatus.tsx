@@ -1,27 +1,17 @@
 import * as React from "react";
-import {useEffect, useState} from "react";
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import {useDelayedSession} from '../../snow/SessionsProvider'
+import {useDebouncedSession} from '../../snow/SessionsProvider'
+import {useRefProbing} from "../../utils/useRefProbing";
 
 interface Props {
     sessionIdx: number
 }
 
 export default function AnimationCircularStatus({ sessionIdx } : Props) {
-    const { status, errorMsg, bufferLevelRef } = useDelayedSession(sessionIdx);
-
-    const [ bufferLevel, setBufferLevel ] = useState<number>(bufferLevelRef.current);
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setBufferLevel(bufferLevelRef.current);
-        }, 50);
-        return () => {
-            clearInterval(timer);
-        };
-    }, [ bufferLevelRef ]);
+    const { status, errorMsg, bufferLevelRef } = useDebouncedSession(sessionIdx);
+    const bufferLevel = useRefProbing<number>(bufferLevelRef);
 
     let color : "primary" | "error" | "info" | "success" | "inherit" | "secondary" | "warning" = "primary";
     let progress = 100;

@@ -1,18 +1,9 @@
 import * as React from "react";
-import {
-    createContext,
-    PropsWithChildren,
-    Reducer,
-    useCallback,
-    useContext,
-    useEffect,
-    useReducer,
-    useRef,
-    useState
-} from "react";
+import {createContext, PropsWithChildren, Reducer, useCallback, useContext, useReducer} from "react";
 import {validateNumberBetween, validateSessionId} from './sessionValidator';
 import {applicationConfig} from "../config/application";
 import {SnowAnimationController} from "./SnowAnimationController";
+import {useDebounce} from "use-debounce";
 
 export const SessionsContext = createContext([]);
 export const SessionsDispatchContext = createContext(null);
@@ -148,26 +139,9 @@ export function useSessionDispatch(sessionIdx : number): (action: DispatchAction
     , [ dispatch, sessionIdx ]);
 }
 
-export function useDelayedSession(sessionIdx: number, delayMs: number = 70): Session {
+export function useDebouncedSession(sessionIdx: number, delayMs: number = 70): Session {
     const targetSession = useSession(sessionIdx);
-    const [ currentSession, setCurrentSession ] = useState(targetSession);
-    const isWaitingRef = useRef<boolean>(false);
-    const targetSessionRef = useRef<Session>();
-
-    targetSessionRef.current = targetSession;
-
-    useEffect(() => {
-        if (isWaitingRef.current) {
-            return;
-        }
-        isWaitingRef.current = true;
-        setTimeout(() => {
-            setCurrentSession(targetSessionRef.current);
-            isWaitingRef.current = false;
-        }, delayMs);
-    }, [ targetSession, delayMs ]);
-
-    return currentSession;
+    return useDebounce<Session>(targetSession, delayMs)[0];
 }
 
 function sessionsReducer(sessions: Session[], action: DispatchAction): Session[] {
