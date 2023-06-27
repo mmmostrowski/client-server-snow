@@ -19,7 +19,7 @@ export function useSessionStatusUpdater(sessionIdx: number): SessionStatusUpdate
                 ...params,
             },
         });
-    }, [ dispatch ]);
+    }, [ currentStatus, dispatch ]);
 }
 
 export function useSessionErrorStatusUpdater(sessionIdx: number): SessionErrorStatusUpdater {
@@ -36,11 +36,10 @@ export function useSessionErrorStatusUpdater(sessionIdx: number): SessionErrorSt
 
 export function useSessionPlayingStatusUpdater(sessionIdx: number): SessionPlayingStatusUpdater {
     const { animationProgressRef, bufferLevelRef } = useSession(sessionIdx);
-    const setSessionStatus: SessionStatusUpdater = useSessionStatusUpdater(0);
 
     return useCallback(( progressPercent: number, bufferPercent: number ) => {
         animationProgressRef.current = progressPercent;
         bufferLevelRef.current = bufferPercent;
-    }, [ setSessionStatus ]);
+    }, [ animationProgressRef, bufferLevelRef ]);
 }
 

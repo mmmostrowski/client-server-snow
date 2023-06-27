@@ -37,43 +37,44 @@ export default function SnowAnimation(props: Props): JSX.Element {
     const { snowController, sessionId } = useSession(sessionIdx);
 
 
-    // Bind controller with session
-    useEffect(() => {
-
-        snowController.startPeriodicChecking(checkEveryMs);
-
-    }, [ snowController, checkEveryMs ]);
-
-
     // Configure controller
     useEffect(() => {
-        snowController.processInForeground({
-            goodbyeTextTimeoutSec: animationConfig.goodbyeText.timeoutSec,
-            sessionId: sessionId,
-            canvas: canvasRef.current,
+        snowController.processingInForeground(
+            sessionId,
+            canvasRef.current,
+            checkingEnabled,
+            animationConfig.goodbyeText.timeoutSec,
+            onBuffering,
+            onPlaying,
             onChecking,
             onFound,
             onNotFound,
-            onBuffering,
-            onPlaying,
-            onFinish,
             onError,
-            checkingEnabled,
-        });
+            onFinish,
+        );
         return () => {
-            snowController.continueProcessingInBackground();
+            snowController.processingInBackground();
         };
-    }, [ onChecking, onFound, onNotFound, onBuffering, onPlaying, onFinish, onError, checkingEnabled ]);
+    }, [ snowController, sessionId, onChecking, onFound, onNotFound, onBuffering, onPlaying, onFinish, onError, checkingEnabled ]);
 
 
-    // Check session details
+    // Session details checking
     useEffect(() => {
         const abortController = new AbortController();
 
         void snowController.checkDetails(abortController);
 
         return () => { abortController.abort() };
-    }, [ snowController ]);
+    }, [ snowController, sessionId ]);
+
+
+    // Periodic session details checking
+    useEffect(() => {
+        snowController.startPeriodicChecking(checkEveryMs);
+        return () => {
+            snowController.stopPeriodicChecking()
+        };
+    }, [ snowController, checkEveryMs ]);
 
 
     // Start / Stop controller
@@ -87,7 +88,7 @@ export default function SnowAnimation(props: Props): JSX.Element {
                 void snowController.stopProcessing();
             }
         }
-    }, [ play, configuration ]);
+    }, [ snowController, play, configuration ]);
 
 
     return <SnowDrawing width={width} height={height} ref={canvasRef} />;

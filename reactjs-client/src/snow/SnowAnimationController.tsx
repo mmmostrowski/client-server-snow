@@ -54,50 +54,44 @@ export class SnowAnimationController {
 
     public constructor(sessionId: string, decoder: SnowDecoder = new SnowDecoder()) {
         this.isDestroyed = false;
-        this.inBackground = false;
         this.sessionId = sessionId;
         this.decoder = decoder;
-        this.processInForeground({});
         this.reset();
     }
 
-    public processInForeground(config: {
-        sessionId?: string,
-        canvas?: SnowDrawingRefHandler,
-        checkingEnabled?: boolean,
-        allowForGoodbye?: boolean,
-        goodbyeTextTimeoutSec?: number,
-        onBuffering?: (startingBuffering: boolean, percent: number) => void,
-        onPlaying?: (firstFrame: boolean, progress: number, bufferPercent: number) => void,
-        onChecking?: (sessionId: string, periodicCheck: boolean) => void,
-        onFound?: (response: DetailsFromServer, periodicCheck: boolean) => void,
-        onNotFound?: (periodicCheck: boolean) => void,
-        onError?: (error: Error) => void,
-        onFinish?: () => void,
-    }): void {
+    public processingInForeground(
+        sessionId: string,
+        canvas: SnowDrawingRefHandler,
+        checkingEnabled: boolean,
+        goodbyeTextTimeoutSec: number,
+        onBuffering: (startingBuffering: boolean, percent: number) => void,
+        onPlaying: (firstFrame: boolean, progress: number, bufferPercent: number) => void,
+        onChecking: (sessionId: string, periodicCheck: boolean) => void,
+        onFound: (response: DetailsFromServer, periodicCheck: boolean) => void,
+        onNotFound: (periodicCheck: boolean) => void,
+        onError: (error: Error) => void,
+        onFinish: () => void,
+    ): void {
+        this.canvas = canvas;
         this.inBackground = false;
+        this.sessionId = sessionId;
+        this.checkingEnabled = checkingEnabled;
+        this.goodbyeTextTimeoutSec = goodbyeTextTimeoutSec;
 
-        const idle = () => {};
-        this.onFound = config.onFound ?? idle;
-        this.onNotFound = config.onNotFound ?? idle;
-        this.onChecking = config.onChecking ?? idle;
-        this.onBuffering = config.onBuffering ?? idle;
-        this.onPlaying = config.onPlaying ?? idle;
-        this.onFinish = config.onFinish ?? idle;
-        this.onError = config.onError ?? idle;
-
-        this.sessionId = config.sessionId ?? this.sessionId
-        this.canvas = config.canvas ?? null;
-        this.checkingEnabled = config.checkingEnabled ?? true;
-        this.goodbyeTextTimeoutSec = config.goodbyeTextTimeoutSec ?? 2;
+        this.onFound = onFound;
+        this.onNotFound = onNotFound;
+        this.onChecking = onChecking;
+        this.onBuffering = onBuffering;
+        this.onPlaying = onPlaying;
+        this.onFinish = onFinish;
+        this.onError = onError;
 
         if (this.state === 'playing') {
             this.startAnimation();
         }
     }
 
-    public continueProcessingInBackground(): void {
-        this.stopPeriodicChecking();
+    public processingInBackground(): void {
         this.inBackground = true;
     }
 
@@ -154,7 +148,7 @@ export class SnowAnimationController {
 
     public startPeriodicChecking(refreshEveryMs: number): void {
         this.disallowWhenDestroyed();
-
+        this.stopPeriodicChecking();
         this.periodicHandler = setInterval(() => {
             void this.askServerForDetails(this.abortController, true);
         }, refreshEveryMs);
@@ -214,6 +208,7 @@ export class SnowAnimationController {
         this.lastTimestamp = null;
         this.basis = NoSnowBasis;
         this.background = NoSnowBackground;
+        this.inBackground = false;
         this.isLastFrameInBuffer = false;
         this.buffer = new Array<[SnowDataFrame, SnowBasis]>();
     }

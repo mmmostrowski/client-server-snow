@@ -161,13 +161,13 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
                 <AnimationSessionId sessionIdx={sessionIdx} isEditing={(underEdit: boolean) => setIsLocked(underEdit)} />
                 <AnimationControlButtons sessionIdx={sessionIdx} handleStart={handleStart} handleStop={handleStop} />
             </div>
-            <SnowAnimation sessionIdx={sessionIdx}
+            <SnowAnimation checkEveryMs={1300}
+                           play={playAnimation}
+                           sessionIdx={sessionIdx}
+                           checkingEnabled={!hasConfigError}
+                           configuration={animationConfiguration}
                            width={isSessionExists ? foundWidth : width}
                            height={isSessionExists ? foundHeight : height}
-                           play={playAnimation}
-                           configuration={animationConfiguration}
-                           checkingEnabled={!hasConfigError}
-                           checkEveryMs={1300}
                            onChecking={handleChecking}
                            onFound={handleSessionFound}
                            onNotFound={handleSessionNotFound}
