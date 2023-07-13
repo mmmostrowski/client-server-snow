@@ -103,7 +103,7 @@ async function fetchEndpoint(controller: AbortController, url: string): Promise<
                 return AbortedEndpointResponse;
             case 'TypeError':
                 console.error(error);
-                error = new Error("Server error!");
+                throw new Error("Server error!");
         }
         throw error;
     }
