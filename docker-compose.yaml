@@ -4,13 +4,39 @@ services:
     build:
       context: .
       dockerfile: docker/reactjs-client/Dockerfile
+      args:
+        - UID=${UID:-}
+        - GID=${GID:-}
+        - PHP_SNOW_APP_MODE=${PHP_SNOW_APP_MODE:-production}
+    user: "${UID:-}:${GID:-}"
     ports:
       - "3000:3000"
+      - "8181:8181"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - PHP_SNOW_APP_MODE=${PHP_SNOW_APP_MODE:-production}
+      - PORT=8181
+    volumes:
+      - "./reactjs-client/:/snow/reactjs-client/"
   snow-endpoint:
+    command: "snow-server"
     build:
       context: .
       dockerfile: docker/Dockerfile
-    command: "snow-server"
+      args:
+        - UID=${UID:-}
+        - GID=${GID:-}
+        - PHP_SNOW_APP_MODE=${PHP_SNOW_APP_MODE:-production}
+    user: "${UID:-}:${GID:-}"
     ports:
       - "8080:8080"
-
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - PHP_SNOW_APP_MODE=${PHP_SNOW_APP_MODE:-production}
+      - XDEBUG_SESSION=1
+    volumes:
+      - "./app/:/snow/app/"
+      - "./.pipes/:/snow/.pipes/"
+      - "./java-proxy/:/snow/java-proxy/"

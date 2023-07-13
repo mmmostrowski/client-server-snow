@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+set -eu
+
+main() {
+    export PHP_SNOW_APP_MODE="develop"
+    export UID="$(id -u)"
+    export GID="$(id -g)"
+
+    "${@}"
+}
+
+main "${@}"

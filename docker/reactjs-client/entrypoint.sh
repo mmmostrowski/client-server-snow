@@ -5,7 +5,7 @@ function main() {
     installFreshCopyOfNodeModules
     installFreshCopyOfNodeBuild
 
-    if [[ "${1:-}" == 'bash' ]] || [[ "${1:-}" == 'dev' ]]; then
+    if isAskingForDev "${1:-}"; then
         echo ''
         echo '--'
         echo ''
@@ -42,6 +42,12 @@ function installFreshCopyOfNodeBuild() {
 
     rm -rf /snow/reactjs-client/build/
     cp -rf /data/snow-node-build/ /snow/reactjs-client/build/
+}
+
+function isAskingForDev() {
+    local param="${1}"
+
+    [[ "${param}" == 'bash' ]] || [[ "${param}" == 'dev' ]]
 }
 
 main "${@}"
