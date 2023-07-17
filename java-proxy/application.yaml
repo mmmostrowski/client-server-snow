@@ -17,7 +17,7 @@ phpsnow:
     timeout: '3600'
     core-pool-size: '6'
   buffer-size-in-milliseconds: '2000'
-  bootstrap: ../run
+  bootstrap: ../php-cli
 logging:
   level:
     techbit:

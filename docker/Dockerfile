@@ -21,8 +21,8 @@ RUN addgroup -S devbox -g ${GID} \
     && ( \
       echo '#!/usr/bin/env bash'; \
       echo '( cd /snow/app/; php snow.php "${@}" )'; \
-    ) > /snow/run \
-    && chmod a+x /snow/run \
+    ) > /snow/php-cli \
+    && chmod a+x /snow/php-cli \
 ;
 
 

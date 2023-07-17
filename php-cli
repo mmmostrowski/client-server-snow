@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -eu
+
+function init() {
+    export SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+    export SCRIPT_PID="${BASHPID}"
+    export SCRIPT_OWNER_PID="${SCRIPT_OWNER_PID:-}"
+    export PHP_SNOW_APP_MODE="develop"
+}
+
+function main() (
+    init;
+
+    if [[ "${1:-}" == "--docker-killer" ]]; then
+        killDockerWhenNoParentProcess "${2}" "${3:-}"
+        return 0
+    else
+        runSelfInBackground --docker-killer "${SCRIPT_PID}" ${SCRIPT_OWNER_PID:-}
+    fi
+
+    cd "${SCRIPT_DIR}"
+    mkdir -p ".pipes/"
+
+    docker run -t"$( [ -t 0 ] && echo 'i' )" --rm \
+        --name "snow-php-server-${SCRIPT_PID}" \
+        --volume "${SCRIPT_DIR}/app/:/snow/app/" \
+        --volume "${SCRIPT_DIR}/.pipes/:/snow/.pipes/" \
+        --env XDEBUG_SESSION=1 \
+        --env PHP_SNOW_APP_MODE \
+        $( build dockerSnowApp ) \
+        "${@}" \
+    ;
+)
+
+function dockerSnowApp() {
+    docker build \
+        --file "docker/Dockerfile" \
+        --build-arg="UID=$(id -u)" \
+        --build-arg="GID=$(id -g)" \
+        --build-arg="PHP_SNOW_APP_MODE" \
+        . \
+        "${@}" \
+    ;
+}
+
+function build() {
+    local buildFunction="${1}"
+    shift 1
+
+    if [[ "${PHP_SNOW_APP_MODE}" == "develop" ]]; then
+        ${buildFunction} "${@}"
+        ${buildFunction} "${@}" --quiet
+        return 0
+    fi
+
+    echo 'Building...' >&2
+    ${buildFunction} "${@}"
+
+    if ! ${buildFunction} "${@}" --quiet; then
+        ${buildFunction} "${@}"
+        return 1
+    fi
+}
+
+function runSelfInBackground() {
+    setsid bash "${BASH_SOURCE[0]}" "${@}" &> /dev/null &
+}
+
+function killDockerWhenNoParentProcess() {
+    local listenForPid="${1}"
+    local listenForAnotherPid="${2:-}"
+
+    (
+        while true; do
+            sleep 1
+            if ! ps -p ${listenForPid} \
+                || ( [[ -n "${listenForAnotherPid}" ]] && ! ps -p ${listenForAnotherPid} ); then
+                break;
+            fi
+        done
+
+        docker rm -f "snow-php-server-${listenForPid}"
+    ) &> /dev/null;
+}
+
+main "${@}"

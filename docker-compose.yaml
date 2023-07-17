@@ -1,12 +1,12 @@
 version: "3.9"
 services:
-  snow-webapp:
+  reactjs-client:
     build:
       context: .
       dockerfile: docker/reactjs-client/Dockerfile
       args:
-        - UID=${UID:-}
-        - GID=${GID:-}
+        - UID=${UID:-10000}
+        - GID=${GID:-10000}
         - PHP_SNOW_APP_MODE=${PHP_SNOW_APP_MODE:-production}
     user: "${UID:-}:${GID:-}"
     ports:
@@ -19,14 +19,14 @@ services:
       - PORT=8181
     volumes:
       - "./reactjs-client/:/snow/reactjs-client/"
-  snow-endpoint:
+  java-proxy:
     command: "snow-server"
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
-        - UID=${UID:-}
-        - GID=${GID:-}
+        - UID=${UID:-10000}
+        - GID=${GID:-10000}
         - PHP_SNOW_APP_MODE=${PHP_SNOW_APP_MODE:-production}
     user: "${UID:-}:${GID:-}"
     ports:
