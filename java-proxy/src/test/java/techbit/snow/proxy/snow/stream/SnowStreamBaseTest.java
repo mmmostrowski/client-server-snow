@@ -7,6 +7,7 @@ import techbit.snow.proxy.config.PhpSnowConfig;
 import techbit.snow.proxy.dto.ServerMetadata;
 import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowDataFrame;
+import techbit.snow.proxy.lang.Array;
 import techbit.snow.proxy.snow.php.NamedPipe;
 import techbit.snow.proxy.snow.php.PhpSnowApp;
 import techbit.snow.proxy.snow.transcoding.StreamDecoder;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.spy;
 import static techbit.snow.proxy.snow.stream.TestingFrames.frame;
 
+@SuppressWarnings("ALL")
 abstract public class SnowStreamBaseTest {
 
     protected final SnowDataBuffer buffer;
@@ -66,7 +68,7 @@ abstract public class SnowStreamBaseTest {
 
         lenient().when(decoder.decodeFrame(any())).then(i -> inputFrames.next());
         lenient().when(decoder.decodeBasis(any())).thenReturn(SnowBasis.NONE);
-        lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(new byte[]{}));
+        lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(Array.NO_BYTES));
 
         snowStream = new SnowStream("session-xyz", snowConfig,
                 serverMetadata,

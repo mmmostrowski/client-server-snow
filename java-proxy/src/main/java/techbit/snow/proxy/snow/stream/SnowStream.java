@@ -1,6 +1,7 @@
 package techbit.snow.proxy.snow.stream;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import jakarta.annotation.Nullable;
 import lombok.experimental.StandardException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.ApplicationEvent;
@@ -37,11 +38,11 @@ public final class SnowStream {
     private final ExecutorService executor = Executors.newSingleThreadExecutor(
             new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
     );
-    private volatile ConsumerThreadException consumerException;
+    private @Nullable volatile ConsumerThreadException consumerException;
     private volatile boolean destroyed = false;
     private volatile boolean running = false;
-    private SnowAnimationMetadata metadata;
-    private SnowBackground background;
+    private SnowAnimationMetadata metadata = SnowAnimationMetadata.NONE;
+    private SnowBackground background = SnowBackground.NONE;
     public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
                       ServerMetadata serverMetadata, NamedPipe pipe, PhpSnowApp phpSnowApp,
                       SnowDataBuffer buffer, StreamDecoder decoder, ApplicationEventPublisher applicationEventPublisher
@@ -176,9 +177,10 @@ public final class SnowStream {
     }
 
     private void throwConsumerExceptionIfAny() throws ConsumerThreadException {
-        if (consumerException != null) {
+        final ConsumerThreadException exception = consumerException;
+        if (exception != null) {
             log.debug("streamTo( {} ) | Consumer Exception", sessionId);
-            throw consumerException;
+            throw exception;
         }
     }
 

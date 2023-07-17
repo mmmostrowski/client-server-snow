@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.0.6'
+    id 'org.springframework.boot' version '3.1.0'
     id 'io.spring.dependency-management' version '1.1.0'
     id 'jacoco'
 }
@@ -47,6 +47,7 @@ dependencies {
     implementation 'jakarta.validation:jakarta.validation-api'
     implementation 'com.google.guava:guava:31.1-jre'
     implementation 'commons-io:commons-io:2.11.0'
+    implementation 'org.yaml:snakeyaml:2.0'
 
     // Test
     testImplementation('org.springframework.boot:spring-boot-starter-test') {

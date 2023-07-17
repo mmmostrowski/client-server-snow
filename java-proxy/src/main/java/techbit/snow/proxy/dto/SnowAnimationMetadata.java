@@ -8,6 +8,9 @@ public record SnowAnimationMetadata(
         int totalNumberOfFrames)
 {
 
+    public static final SnowAnimationMetadata NONE = new SnowAnimationMetadata(
+            0, 0, 0, 0, 0);
+
     @Override
     public String toString() {
         return "SnowAnimationMetadata{" +

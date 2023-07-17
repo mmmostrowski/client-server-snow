@@ -280,8 +280,8 @@ class SnowDataBufferTest {
 
     @Test
     void whenInvalidSizeOfBuffer_thenExceptionITsThrown() {
-        assertThrows(IllegalArgumentException.class, () -> new SnowDataBuffer(0, null));
-        assertThrows(IllegalArgumentException.class, () -> new SnowDataBuffer(-1, null));
+        assertThrows(IllegalArgumentException.class, () -> new SnowDataBuffer(0, new BlockingBag<>()));
+        assertThrows(IllegalArgumentException.class, () -> new SnowDataBuffer(-1, new BlockingBag<>()));
     }
 
     @Test
