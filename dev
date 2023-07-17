@@ -6,7 +6,17 @@ main() {
     export UID="$(id -u)"
     export GID="$(id -g)"
 
-    "${@}"
+    if [[ "${1:-}" == 'docker' ]] || [[ "${2:-}" == 'compose' ]]; then
+        shift 2
+        docker compose "${@}"
+    elif if [[ "${1:-}" == 'docker-compose' ]]; then
+        shift 1
+        docker-compose "${@}"
+    else
+        echo "Usage: ./dev docker compose [args]"
+        echo "   or  ./dev docker-compose [args]"
+        return 1
+    fi
 }
 
 main "${@}"
