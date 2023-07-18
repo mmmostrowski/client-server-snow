@@ -6,10 +6,10 @@ main() {
     export UID="$(id -u)"
     export GID="$(id -g)"
 
-    if [[ "${1:-}" == 'docker' ]] || [[ "${2:-}" == 'compose' ]]; then
+    if [ "${1:-}" = 'docker' ] && [ "${2:-}" = 'compose' ]; then
         shift 2
         docker compose "${@}"
-    elif if [[ "${1:-}" == 'docker-compose' ]]; then
+    elif [ "${1:-}" = 'docker-compose' ]; then
         shift 1
         docker-compose "${@}"
     else

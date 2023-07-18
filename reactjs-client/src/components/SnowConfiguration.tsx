@@ -4,7 +4,12 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
 import AnimationDebouncedInput from './SnowAnimationPlayer/AnimationDebouncedInput'
-import {useDebouncedSession, useSession, useSessionDispatch} from '../snow/SessionsProvider'
+import {
+    DispatchActionWithoutSessionIdx,
+    useDebouncedSession,
+    useSession,
+    useSessionDispatch
+} from '../snow/SessionsProvider'
 import {applicationConfig} from "../config/application";
 
 interface SnowConfigurationProps {
@@ -18,14 +23,17 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
         height: userHeight,
         fps: userFps,
         presetName: userPresetName,
-        foundWidth, foundHeight, foundFps, foundPresetName,
+        sceneName: userSceneName,
+        foundWidth, foundHeight, foundFps,
+        foundPresetName, foundSceneName,
     } = useSession(sessionIdx);
     const { status, widthError, heightError, fpsError } = useDebouncedSession(sessionIdx);
-    const dispatch = useSessionDispatch(sessionIdx);
+    const dispatch: (action: DispatchActionWithoutSessionIdx) => void = useSessionDispatch(sessionIdx);
     const width = isSessionExists ? foundWidth : userWidth;
     const height = isSessionExists ? foundHeight : userHeight;
     const fps = isSessionExists ? foundFps : userFps;
     const presetName = isSessionExists ? foundPresetName : userPresetName;
+    const sceneName = isSessionExists ? foundSceneName : userSceneName;
     const isAvailable = status !== 'checking' && status !== 'error';
     const isEditable =
            status === 'stopped-not-checked'
@@ -42,24 +50,35 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
         });
     }
 
+    function handleSceneChange(e : React.ChangeEvent<HTMLInputElement>) {
+        dispatch({
+            type: 'session-changed',
+            changes: {
+                sceneName: e.target.value
+            }
+        });
+    }
     return (
         <>
             <Container sx={{ padding: 2, paddingRight: [ 4, 4, 4 ] }} >
-                <Select
-                    value={isAvailable ? presetName : "?"}
-                    onChange={handlePresetChange}
-                    disabled={!isEditable}
-                    variant="outlined"
-                    size="small"
-                    sx={{ width: 180 }} >
-
-                    { !isAvailable && <MenuItem key="?" value="?">?</MenuItem> }
-                    { isAvailable && Object.entries(applicationConfig.presets).map(([presetName, presetLabel]) =>
-                            <MenuItem key={presetName} value={presetName}>{presetLabel}</MenuItem>
-                    ) }
-
-                </Select>
-                <FormHelperText className={isEditable ? "" : "Mui-disabled"} sx={{ pl: 2 }} >Animation preset</FormHelperText>
+                <ConfigSelectField
+                    label="Animation preset"
+                    value={presetName}
+                    entries={applicationConfig.presets}
+                    isAvailable={isAvailable}
+                    handleChange={handlePresetChange}
+                    isEditable={isEditable}
+                />
+            </Container>
+            <Container sx={{ padding: 2, paddingRight: [ 4, 4, 4 ] }} >
+                <ConfigSelectField
+                    label="Scene preset"
+                    value={sceneName}
+                    entries={applicationConfig.scenes}
+                    isAvailable={isAvailable}
+                    handleChange={handleSceneChange}
+                    isEditable={isEditable}
+                />
             </Container>
             <Container sx={{ padding: 2 }} >
                 <ConfigNumberField
@@ -101,20 +120,50 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
     );
 }
 
-
-type ConfigNumberFieldProps = {
-    sessionIdx: number,
-    varName: string,
+type ConfigSelectFieldProps = {
     label: string,
+    entries: Record<string, string>,
     isAvailable: boolean,
     isEditable: boolean,
     value: string|number,
-    helperText: string
+    handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
+}
+
+function ConfigSelectField(props: ConfigSelectFieldProps): JSX.Element {
+    const { label, entries, handleChange, isAvailable, isEditable, value } = props;
+    return <>
+        <Select
+            value={isAvailable ? value : "?"}
+            onChange={handleChange}
+            disabled={!isEditable}
+            variant="outlined"
+            size="small"
+            sx={{ width: 180 }} >
+
+            { !isAvailable && <MenuItem key="?" value="?">?</MenuItem> }
+            { isAvailable && Object.entries(entries).map(([key, label]) =>
+                <MenuItem key={key} value={key}>{label}</MenuItem>
+            ) }
+
+        </Select>
+        <FormHelperText className={isEditable ? "" : "Mui-disabled"} sx={{ pl: 2 }} >{label}</FormHelperText>
+    </>;
+}
+
+type ConfigNumberFieldProps = {
+    isAvailable: boolean,
+    value: string|number,
+    isEditable: boolean,
+    helperText: string,
+    sessionIdx: number,
     errorMsg: string,
+    varName: string,
+    label: string,
 }
 
 function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
-    const { sessionIdx, varName, isAvailable, isEditable, value, errorMsg, label, helperText } = props;
+    const { sessionIdx, varName, isAvailable, isEditable,
+        value, errorMsg, label, helperText } = props;
 
     return <AnimationDebouncedInput
         sessionIdx={sessionIdx}

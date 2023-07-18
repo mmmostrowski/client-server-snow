@@ -3,7 +3,7 @@ import {forwardRef, useImperativeHandle, useRef} from "react";
 import SnowBackground, {NoSnowBackground} from "../../dto/SnowBackground";
 import SnowDataFrame from "../../dto/SnowDataFrame";
 import SnowBasis, {NoSnowBasis} from "../../dto/SnowBasis";
-import {SnowCanvas, SnowCanvasRefHandler} from "../SnowCanvas";
+import {SnowCanvas, SnowCanvasRefHandler} from "./SnowCanvas";
 import {animationConfig} from "../../config/animation";
 
 

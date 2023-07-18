@@ -36,6 +36,7 @@ public final class PhpSnowApp {
                 config.height(),
                 config.fps(),
                 config.durationInSeconds(),
+                "base64:" + config.scene(),
                 config.presetName()
         );
     }

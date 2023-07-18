@@ -27,6 +27,7 @@ function main() {
 
 function installFreshCopyOfNodeModules() {
     if [[ -e /snow/reactjs-client/node_modules/ ]] \
+        && [[ -e /data/snow-node-modules/.package-lock.json ]] \
         && cmp /snow/reactjs-client/node_modules/.package-lock.json /data/snow-node-modules/.package-lock.json; then
         return 0
     fi

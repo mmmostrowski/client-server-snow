@@ -7,6 +7,7 @@ export interface SnowAnimationConfiguration {
     width: number,
     height: number,
     fps: number,
+    scene: string,
 }
 
 interface EndpointResponse {
@@ -41,7 +42,9 @@ export async function startSnowSession(sessionId: string, config: SnowAnimationC
     const url= "/fps/" + config.fps
         + "/width/" + config.width
         + "/height/" + config.height
-        + "/presetName/" + config.presetName;
+        + "/presetName/" + config.presetName
+        + "/scene/" + config.scene
+    ;
 
     const response = await askSnowEndpoint(controller, 'start', sessionId, url);
     if (!response.running) {

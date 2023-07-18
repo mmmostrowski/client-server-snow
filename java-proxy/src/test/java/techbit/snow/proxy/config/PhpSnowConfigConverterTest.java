@@ -131,11 +131,12 @@ class PhpSnowConfigConverterTest {
     @Test
     void givenConfigObject_whenConvertToMap_thenReturnsProperMap() {
         PhpSnowConfig config = new PhpSnowConfig(
-                "preset-name", 999, 888, Duration.ofDays(1), 66);
+                "preset-name", "BASE64BASE64=", 999, 888, Duration.ofDays(1), 66);
 
         Map<String, Object> map = converter.toMap(config);
 
         assertEquals("preset-name", map.get("presetName"));
+        assertEquals("BASE64BASE64=", map.get("scene"));
         assertEquals(999, map.get("width"));
         assertEquals(888, map.get("height"));
         assertEquals(66, map.get("fps"));

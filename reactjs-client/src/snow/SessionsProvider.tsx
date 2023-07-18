@@ -20,6 +20,7 @@ interface ValidatedSession extends DraftSession, SessionErrors {
 export interface DraftSession {
     sessionId: string,
     presetName: string,
+    sceneName: string,
     width: string,
     height: string,
     fps: string,
@@ -29,6 +30,7 @@ export interface DraftSession {
     errorMsg: string|null,
 
     foundPresetName: string|null,
+    foundSceneName: string|null,
     foundWidth: number|null,
     foundHeight: number|null,
     foundFps: number|null,
@@ -92,7 +94,7 @@ interface DispatchDeleteAction {
     sessionIdx : number,
 }
 
-type DispatchActionWithoutSessionIdx = DistributiveOmit<DispatchAction, "sessionIdx">;
+export type DispatchActionWithoutSessionIdx = DistributiveOmit<DispatchAction, "sessionIdx">;
 
 type DistributiveOmit<T, K extends keyof any> = T extends any
   ? Omit<T, K>
@@ -192,6 +194,7 @@ function createNewSession(sessionId: string): Session {
         snowController: new SnowAnimationController(sessionId),
 
         presetName: applicationConfig.defaultPreset,
+        sceneName: applicationConfig.defaultScene,
         width: '' + applicationConfig.defaultWidth,
         height: '' + applicationConfig.defaultHeight,
         fps: '' + applicationConfig.defaultFps,
@@ -202,6 +205,7 @@ function createNewSession(sessionId: string): Session {
         errorMsg: "",
 
         foundPresetName: null,
+        foundSceneName: null,
         foundWidth: null,
         foundHeight: null,
         foundFps: null,

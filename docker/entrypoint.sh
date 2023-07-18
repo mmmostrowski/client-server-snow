@@ -14,7 +14,7 @@ function main() {
         echo "To start java-proxy development: gradle --project-dir /snow/java-proxy bootRun"
         echo "To test java-proxy: gradle --project-dir /snow/java-proxy clean test"
         echo ''
-        echo "To run php snow app: php snow.php [ args ... ]"
+        echo "To run php snow app: cd /snow/app; php snow.php [ args ... ]"
         echo "To enable XDebug: echo 'xdebug.mode=debug' >> /usr/local/etc/php/conf.d/my-xdebug.ini"
         echo "To stream data to output instead of named pipe: export DEBUG_TO_SCREEN=1"
         echo ''

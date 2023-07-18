@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class PhpSnowAppTest {
 
     private final PhpSnowConfig config = new PhpSnowConfig(
-            "customPreset", 135, 85, Duration.ofMinutes(1), 35);
+            "customPreset", "ENCODED==", 135, 85, Duration.ofMinutes(1), 35);
 
     @Mock(answer = RETURNS_DEEP_STUBS)
     private ProcessBuilder builder;
@@ -49,6 +49,7 @@ class PhpSnowAppTest {
                 eq("85"),
                 eq("35"),
                 eq("60"),
+                eq("base64:ENCODED=="),
                 eq("customPreset")
         );
         verify(builder).start();

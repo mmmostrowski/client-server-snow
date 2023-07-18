@@ -54,7 +54,7 @@ abstract public class SnowStreamBaseTest {
     void setup() throws IOException {
         serverMetadata = new ServerMetadata(Duration.ofSeconds(7));
         snowConfig = new PhpSnowConfig(
-                "testingPreset", 87, 76, Duration.ofMinutes(11), 21);
+                "testingPreset", "BASE64BASE64==", 87, 76, Duration.ofMinutes(11), 21);
 
         client = spy(new SnowStreamSimpleClient(encoder, outputStream));
 

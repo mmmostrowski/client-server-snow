@@ -1,6 +1,7 @@
 package techbit.snow.proxy.config;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
@@ -17,6 +18,9 @@ public record PhpSnowConfig(
         @Nonnull
         @Size(min = 1, message = "Invalid preset name!")
         String presetName,
+
+        @Nullable
+        String scene,
 
         @Min(value = 1, message = "Invalid animation canvas width. Please provide a positive number!")
         int width,

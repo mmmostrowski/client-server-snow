@@ -16,6 +16,7 @@ import AnimationSessionId from "./SnowAnimationPlayer/AnimationSessionId";
 import AnimationControlButtons from "./SnowAnimationPlayer/AnimationControlButtons";
 import {CannotStartError, CannotStopError, DetailsFromServer} from "../snow/SnowAnimationController";
 import AnimationLinearProgress from "./AnimationLinearProgress";
+import {animationSceneFromBase64, animationSceneToBase64} from "../snow/animationScenes";
 
 
 interface Props {
@@ -31,13 +32,15 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
     const {
         status, hasError, hasConfigError,
         isSessionExists, hasSessionIdError, cannotStartSession,
-        presetName, isInitializing,
+        presetName, sceneName, isInitializing,
         validatedWidth: width, validatedHeight: height, validatedFps: fps,
-        foundWidth, foundHeight, foundFps, foundPresetName,
+        foundWidth, foundHeight, foundFps, foundPresetName, foundSceneName,
     } = useSession(sessionIdx);
     const [ playAnimation, setPlayAnimation ] = useState<boolean>(status === 'playing' || status === 'buffering');
     const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>({
-        width, height, fps, presetName,
+        width, height, fps,
+        presetName,
+        scene: animationSceneToBase64(sceneName)
     });
 
 
@@ -58,14 +61,14 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
                 height: foundHeight,
                 fps: foundFps,
                 presetName: foundPresetName,
+                scene: animationSceneToBase64(foundSceneName),
             });
         } else {
             setSessionStatus('initializing-new');
             setAnimationConfiguration({
-                width: width,
-                height: height,
-                fps: fps,
-                presetName: presetName,
+                width, height, fps,
+                presetName,
+                scene: animationSceneToBase64(sceneName),
             });
         }
     }
@@ -125,6 +128,8 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
             return;
         }
 
+        console.log(animationSceneFromBase64(response.scene));
+
         if (status === 'checking'
             || status === 'stopped-found'
             || status === 'stopped-not-found'
@@ -134,6 +139,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
                 foundHeight: response.height,
                 foundFps: response.fps,
                 foundPresetName: response.presetName,
+                foundSceneName: animationSceneFromBase64(response.scene),
             });
         }
     }

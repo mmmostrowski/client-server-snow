@@ -88,17 +88,51 @@ class SnowStreamTest extends SnowStreamBaseTest {
     @Test
     void whenCompatibleConfig_thenNoErrorOccurs() {
         PhpSnowConfig snowConfig = new PhpSnowConfig(
-                "testingPreset", 87, 76, Duration.ofMinutes(11), 21);
+                "testingPreset", "BASE64BASE64==", 87, 76, Duration.ofMinutes(11), 21);
         assertDoesNotThrow(() -> snowStream.ensureCompatibleWithConfig("session-abc", snowConfig));
     }
 
     @Test
-    void whenIncompatibleConfig_thenThrowException() {
+    void whenIncompatiblePresetName_thenThrowException() {
         PhpSnowConfig snowConfig = new PhpSnowConfig(
-                "changedTestingPreset", 87, 76, Duration.ofMinutes(11), 21);
+                "changedTestingPreset", "BASE64BASE64==", 87, 76, Duration.ofMinutes(11), 21);
         assertThrows(IncompatibleConfigException.class, () -> snowStream.ensureCompatibleWithConfig("session-abc", snowConfig));
     }
 
+    @Test
+    void whenIncompatibleScene_thenThrowException() {
+        PhpSnowConfig snowConfig = new PhpSnowConfig(
+                "testingPreset", "OTHER==", 87, 76, Duration.ofMinutes(11), 21);
+        assertThrows(IncompatibleConfigException.class, () -> snowStream.ensureCompatibleWithConfig("session-abc", snowConfig));
+    }
+
+    @Test
+    void whenIncompatibleWidth_thenThrowException() {
+        PhpSnowConfig snowConfig = new PhpSnowConfig(
+                "testingPreset", "BASE64BASE64==", 187, 76, Duration.ofMinutes(11), 21);
+        assertThrows(IncompatibleConfigException.class, () -> snowStream.ensureCompatibleWithConfig("session-abc", snowConfig));
+    }
+
+    @Test
+    void whenIncompatibleHeight_thenThrowException() {
+        PhpSnowConfig snowConfig = new PhpSnowConfig(
+                "testingPreset", "BASE64BASE64==", 87, 176, Duration.ofMinutes(11), 21);
+        assertThrows(IncompatibleConfigException.class, () -> snowStream.ensureCompatibleWithConfig("session-abc", snowConfig));
+    }
+
+    @Test
+    void whenIncompatibleDuration_thenThrowException() {
+        PhpSnowConfig snowConfig = new PhpSnowConfig(
+                "testingPreset", "BASE64BASE64==", 87, 76, Duration.ofSeconds(11), 21);
+        assertThrows(IncompatibleConfigException.class, () -> snowStream.ensureCompatibleWithConfig("session-abc", snowConfig));
+    }
+
+    @Test
+    void whenIncompatibleFps_thenThrowException() {
+        PhpSnowConfig snowConfig = new PhpSnowConfig(
+                "testingPreset", "BASE64BASE64==", 87, 76, Duration.ofMinutes(11), 121);
+        assertThrows(IncompatibleConfigException.class, () -> snowStream.ensureCompatibleWithConfig("session-abc", snowConfig));
+    }
     @Test
     void whenAskingForDetails_thenProvidingThemFromSnowStream() {
         PhpSnowConfig details = snowStream.config();

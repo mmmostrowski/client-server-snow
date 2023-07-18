@@ -1,3 +1,7 @@
+import {animationSceneLabels} from "../snow/animationScenes";
+import "../config/scenes/scene_a"
+import "../config/scenes/scene_b"
+
 export const applicationConfig = {
     defaultSessionId: "session-abc",
 
@@ -22,4 +26,6 @@ export const applicationConfig = {
         snowy: "Snowy",
         noSnow: "No snow",
     },
+    defaultScene: "scene_b",
+    scenes: animationSceneLabels(),
 };

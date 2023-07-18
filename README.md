@@ -17,10 +17,14 @@ docker compose up
 
 ## Develop in IDE
 
-1. Start `bootRun` gradle action in IDE
-2. Run in terminal:
+1. To start develop java proxy server, please start `bootRun` gradle action in IDE,
+2. To start develop js react client, please run in terminal:
 ```bash
-./dev docker compose up reactjs-client --build 
+./dev docker compose up --build reactjs-client 
+```
+3. To start develop php cli, please run in terminal:
+```bash
+./dev docker-compose run java-proxy bash 
 ```
 
 Visit http://localhost:8181/
