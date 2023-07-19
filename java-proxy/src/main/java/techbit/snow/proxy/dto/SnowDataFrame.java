@@ -2,8 +2,7 @@ package techbit.snow.proxy.dto;
 
 import java.util.Arrays;
 
-import static techbit.snow.proxy.lang.Array.NO_BYTES;
-import static techbit.snow.proxy.lang.Array.NO_FLOATS;
+import static techbit.snow.proxy.lang.EmptyArray.NO;
 
 public record SnowDataFrame(
         int frameNum,
@@ -15,7 +14,7 @@ public record SnowDataFrame(
 ) {
 
     public static final SnowDataFrame LAST = new SnowDataFrame(
-            -1, 0, NO_FLOATS, NO_FLOATS, NO_BYTES, SnowBasis.NONE);
+            -1, 0, NO.FLOATS, NO.FLOATS, NO.BYTES, SnowBasis.NONE);
 
 
     public SnowDataFrame(int frameNum, int chunkSize, float[] x, float[] y, byte[] flakeShapes) {

@@ -1,9 +1,7 @@
 package techbit.snow.proxy.snow.php;
 
 import jakarta.annotation.Nullable;
-import lombok.Generated;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import techbit.snow.proxy.config.PhpSnowConfig;
 
@@ -54,7 +52,6 @@ public final class PhpSnowApp {
 
         process = builder.start();
 
-        waitAMoment();
         if (!process.isAlive() && process.exitValue() > 0) {
             String stdErr = new String(process.getErrorStream().readAllBytes());
             String stdOut = new String(process.getInputStream().readAllBytes());
@@ -76,11 +73,6 @@ public final class PhpSnowApp {
         return process != null && process.isAlive();
     }
 
-    @Generated
-    @SneakyThrows
-    private void waitAMoment() {
-        Thread.sleep(300);
-    }
 
     private static String currentDir() {
         return new File("").getAbsolutePath();

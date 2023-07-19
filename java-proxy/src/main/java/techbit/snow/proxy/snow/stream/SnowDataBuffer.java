@@ -1,7 +1,6 @@
 package techbit.snow.proxy.snow.stream;
 
 import com.google.common.collect.Sets;
-import lombok.Generated;
 import lombok.SneakyThrows;
 import org.springframework.context.annotation.Scope;
 import techbit.snow.proxy.dto.SnowDataFrame;
@@ -96,7 +95,6 @@ public final class SnowDataBuffer {
                 : frames.get(frame);
     }
 
-    @Generated
     @SneakyThrows
     private SnowDataFrame waitForFrame(int frame) {
         waitForInitialFrame();

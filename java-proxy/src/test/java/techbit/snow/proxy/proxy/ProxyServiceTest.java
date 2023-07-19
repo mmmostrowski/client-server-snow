@@ -213,6 +213,18 @@ class ProxyServiceTest {
     }
 
     @Test
+    void whenIOExceptionOccursDuringStoppingSession_thenSneakyRethrow() throws IOException, InterruptedException {
+        when(session.exists("session-abc")).thenReturn(true);
+        when(streamFinishedEvent.getSessionId()).thenReturn("session-abc");
+        when(streams.get("session-abc")).thenReturn(snowStream);
+
+        doThrow(IOException.class).when(snowStream).stop();
+
+        assertThrows(IOException.class,
+                () -> proxyServiceSpyStreams.onApplicationEvent(streamFinishedEvent));
+    }
+
+    @Test
     void givenCustomConfiguration_whenStreamToExisting_thenEnsureIsCompatible() throws ConsumerThreadException, IOException, InterruptedException {
         Map<String, String> setup = Map.of("key", "val");
         when(session.exists("session-abc")).thenReturn(true);

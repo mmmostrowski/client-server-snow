@@ -1,7 +1,6 @@
 package techbit.snow.proxy.proxy;
 
 import com.google.common.collect.Maps;
-import lombok.Generated;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +10,7 @@ import techbit.snow.proxy.config.PhpSnowConfigConverter;
 import techbit.snow.proxy.error.InvalidSessionException;
 import techbit.snow.proxy.snow.stream.SnowStream;
 import techbit.snow.proxy.snow.stream.SnowStream.ConsumerThreadException;
+import techbit.snow.proxy.snow.stream.SnowStream.SnowStreamFinishedEvent;
 import techbit.snow.proxy.snow.stream.SnowStreamClient;
 import techbit.snow.proxy.snow.stream.SnowStreamFactory;
 import techbit.snow.proxy.snow.stream.SnowStreamSimpleClient;
@@ -23,7 +23,7 @@ import java.util.Map;
 
 @Log4j2
 @Service
-public final class ProxyService implements ApplicationListener<SnowStream.SnowStreamFinishedEvent> {
+public final class ProxyService implements ApplicationListener<SnowStreamFinishedEvent> {
 
     private final Map<String, Object> sessionLocks = Maps.newConcurrentMap();
     private final PhpSnowConfigConverter configConverter;
@@ -140,8 +140,7 @@ public final class ProxyService implements ApplicationListener<SnowStream.SnowSt
 
     @Override
     @SneakyThrows
-    @Generated
-    public void onApplicationEvent(SnowStream.SnowStreamFinishedEvent event) {
+    public void onApplicationEvent(SnowStreamFinishedEvent event) {
         stopSession(event.getSessionId());
     }
 

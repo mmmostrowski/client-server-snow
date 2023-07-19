@@ -2,8 +2,7 @@ package techbit.snow.proxy.dto;
 
 import java.util.Arrays;
 
-import static techbit.snow.proxy.lang.Array.NO_BYTES;
-import static techbit.snow.proxy.lang.Array.NO_INTS;
+import static techbit.snow.proxy.lang.EmptyArray.NO;
 
 public record SnowBasis(
         int numOfPixels,
@@ -11,7 +10,7 @@ public record SnowBasis(
         int[] y,
         byte[] pixels
 ) {
-    public static final SnowBasis NONE = new SnowBasis(0, NO_INTS, NO_INTS, NO_BYTES);
+    public static final SnowBasis NONE = new SnowBasis(0, NO.INTEGERS, NO.INTEGERS, NO.BYTES);
 
     public int x(int i) {
         return x[i];
