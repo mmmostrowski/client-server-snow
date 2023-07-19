@@ -54,6 +54,8 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
                 fps: '' + foundFps,
                 width: '' + foundWidth,
                 height: '' + foundHeight,
+                presetName: foundPresetName,
+                sceneName: foundSceneName,
             });
             dispatch({ type: 'accept-or-reject-session-changes' });
             setAnimationConfiguration({
@@ -127,8 +129,6 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
         if (status === 'buffering' || isInitializing || cannotStartSession || hasSessionIdError) {
             return;
         }
-
-        console.log(animationSceneFromBase64(response.scene));
 
         if (status === 'checking'
             || status === 'stopped-found'
