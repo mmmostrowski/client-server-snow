@@ -65,14 +65,14 @@ final class TestWindPreset extends DefaultConfig
         return parent::snowMaxNumOfFlakesAtOnce() * 20;
     }
 
-    public function windBlowsMinanimationDuration(): int
+    public function windBlowsMinAnimationDuration(): int
     {
-        return parent::windBlowsMinanimationDuration() * 10;
+        return parent::windBlowsMinAnimationDuration() * 10;
     }
 
-    public function windBlowsMaxanimationDuration(): int
+    public function windBlowsMaxAnimationDuration(): int
     {
-        return parent::windBlowsMaxanimationDuration() * 10;
+        return parent::windBlowsMaxAnimationDuration() * 10;
     }
 
 

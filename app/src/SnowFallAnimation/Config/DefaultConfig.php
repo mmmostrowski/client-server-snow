@@ -63,7 +63,7 @@ class DefaultConfig implements Config
 
     public function windFieldGridUpdateEveryNthFrame(): int
     {
-        return 5;
+        return 3;
     }
 
     public function windFieldGridSize(): int
@@ -121,17 +121,17 @@ class DefaultConfig implements Config
         return 3;
     }
 
-    public function windBlowsMinanimationDuration(): int
+    public function windBlowsMinAnimationDuration(): int
     {
         return 60;
     }
 
-    public function windBlowsMaxanimationDuration(): int
+    public function windBlowsMaxAnimationDuration(): int
     {
         return 200;
     }
 
-    public function extendWorkingAreaFacor(): float
+    public function extendWorkingAreaFactor(): float
     {
         return 1.5;
     }

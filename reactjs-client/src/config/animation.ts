@@ -17,19 +17,21 @@ export const animationConfig = {
 
     basisFont: {
         color: "white",
-        scale: 1.7,
+        scale: 1.5,
     },
 
     goodbyeText: {
         text: "Thank you for watching",
         color: "lightblue",
         font: "bold Arial",
-        size: 10,
+        size: 6,
         timeoutSec: 2.5,
     },
 
     canvas: {
         color: '#778',
         backgroundColor: 'black',
-    }
+    },
+
+    canvasHorizontalSqueeze: 0.55,
 }

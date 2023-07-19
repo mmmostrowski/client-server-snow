@@ -267,6 +267,7 @@ function revertChangesFromSession(session: ValidatedSession): Session {
 function sessionPostprocessing(session: ValidatedSession): Session {
     return {
         ...session,
+        sceneName: session.sceneName === '' ? applicationConfig.defaultScene : session.sceneName,
         hasSessionIdError: session.sessionIdError !== null,
         animationProgressRef: session.status === 'playing' ? session.animationProgressRef : { current: 0 },
         hasConfigError:

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {forwardRef, useCallback, useEffect, useImperativeHandle, useRef} from 'react';
 import {useResizeDetector} from 'react-resize-detector';
+import {animationConfig} from "../../config/animation";
 
 interface Props {
     canvasColor: string,
@@ -21,6 +22,9 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, Props>(
 {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const { width : canvasWidth, height : canvasHeight, ref : canvasWrapperRef } = useResizeDetector();
+    const horizontalSqueeze = animationConfig.canvasHorizontalSqueeze;
+
+    width *= horizontalSqueeze;
 
     const isHoriz = canvasHeight * width  > canvasWidth * height;
     const canvasOffsetH = isHoriz ? 0 : ( canvasWidth - canvasHeight * width / height ) / 2;
@@ -74,7 +78,7 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, Props>(
         };
 
         function cellX(x : number): number {
-            return x * scaleFactor + canvasOffsetH;
+            return x * scaleFactor * horizontalSqueeze + canvasOffsetH;
         }
 
         function cellY(y : number): number {

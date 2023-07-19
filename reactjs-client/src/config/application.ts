@@ -1,14 +1,13 @@
 import {animationSceneLabels} from "../snow/animationScenes";
-import "../config/scenes/scene_a"
-import "../config/scenes/scene_b"
+import "../config/scenes.ts"
 
 export const applicationConfig = {
     defaultSessionId: "session-abc",
 
     minWidth: 40,
     minHeight: 20,
-    defaultWidth: 200,
-    defaultHeight: 90,
+    defaultWidth: 160,
+    defaultHeight: 40,
     maxWidth: 700,
     maxHeight: 350,
 
@@ -26,6 +25,6 @@ export const applicationConfig = {
         snowy: "Snowy",
         noSnow: "No snow",
     },
-    defaultScene: "scene_b",
+    defaultScene: "scene_a",
     scenes: animationSceneLabels(),
 };

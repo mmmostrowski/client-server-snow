@@ -17,19 +17,15 @@ final class Snow implements IAnimationVisibleObject, IAnimationConfigurableObjec
 
     private readonly SnowParticles $particles;
 
-    private readonly IFramePainter $renderer;
-
     private readonly IConsole $console;
 
     private readonly SnowFlakeShape $shapes;
-
-    private int $howMuchSnowIsGeneratedAtTop;
 
     private int $snowMaxNumOfFlakesAtOnce;
 
     private int $snowProducingTempo;
 
-    private float $extendWorkingAreaFacor;
+    private float $extendWorkingAreaFactor;
 
     public function initialize(AnimationContext $context): void
     {
@@ -37,16 +33,14 @@ final class Snow implements IAnimationVisibleObject, IAnimationConfigurableObjec
         $this->console = $context->console();
 
         $this->particles = $context->snowParticles();
-        $this->renderer = $context->painter();
         $this->basis = $context->snowBasis();
     }
 
 	public function onConfigChange(Config $config): void 
     {
-        $this->howMuchSnowIsGeneratedAtTop = $config->snowProbabilityOfProducingFromTop();
         $this->snowMaxNumOfFlakesAtOnce = $config->snowMaxNumOfFlakesAtOnce();
         $this->snowProducingTempo = $config->snowProducingTempo();
-        $this->extendWorkingAreaFacor = $config->extendWorkingAreaFacor();
+        $this->extendWorkingAreaFactor = $config->extendWorkingAreaFactor();
 	}
 
     public function renderFirstFrame(): void
@@ -81,8 +75,8 @@ final class Snow implements IAnimationVisibleObject, IAnimationConfigurableObjec
     {
         $shape = $this->shapes->randomShape();
 
-        $extendByX = (int)($this->console->width() * $this->extendWorkingAreaFacor);
-        $extendByY = (int)($this->console->height() * $this->extendWorkingAreaFacor);
+        $extendByX = (int)($this->console->width() * $this->extendWorkingAreaFactor);
+        $extendByY = (int)($this->console->height() * $this->extendWorkingAreaFactor);
 
         $consoleYMin = (int)$this->console->minY() - $extendByY;
         $consoleYMax = (int)$this->console->maxY() + $extendByY;

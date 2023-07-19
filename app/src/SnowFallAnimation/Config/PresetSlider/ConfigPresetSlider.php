@@ -192,14 +192,14 @@ final class ConfigPresetSlider implements Config, IAnimationAliveObject
 		return $this->interpolateInt(fn(Config $config) => $config->windBlowsMaxStrength());
 	}
 	
-	public function windBlowsMinanimationDuration(): int 
+	public function windBlowsMinAnimationDuration(): int
 	{
-		return $this->interpolateInt(fn(Config $config) => $config->windBlowsMinanimationDuration());
+		return $this->interpolateInt(fn(Config $config) => $config->windBlowsMinAnimationDuration());
 	}
 	
-	public function windBlowsMaxanimationDuration(): int 
+	public function windBlowsMaxAnimationDuration(): int
 	{
-		return $this->interpolateInt(fn(Config $config) => $config->windBlowsMaxanimationDuration());
+		return $this->interpolateInt(fn(Config $config) => $config->windBlowsMaxAnimationDuration());
 	}
 
 	public function hasWind(): bool 
@@ -212,8 +212,8 @@ final class ConfigPresetSlider implements Config, IAnimationAliveObject
 		return $this->closestPreset()->showFps();
 	}
 
-	public function extendWorkingAreaFacor(): float {
-		return $this->interpolateFloat(fn(Config $config) => $config->extendWorkingAreaFacor());
+	public function extendWorkingAreaFactor(): float {
+		return $this->interpolateFloat(fn(Config $config) => $config->extendWorkingAreaFactor());
 	}
 
 	private function interpolateFloat(callable $callback): float

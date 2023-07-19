@@ -131,16 +131,17 @@ type ConfigSelectFieldProps = {
 
 function ConfigSelectField(props: ConfigSelectFieldProps): JSX.Element {
     const { label, entries, handleChange, isAvailable, isEditable, value } = props;
+    const isUnknown = !isAvailable || (!isEditable && value === "");
     return <>
         <Select
-            value={isAvailable ? value : "?"}
+            value={isUnknown ? "?" : value}
             onChange={handleChange}
             disabled={!isEditable}
             variant="outlined"
             size="small"
             sx={{ width: 180 }} >
 
-            { !isAvailable && <MenuItem key="?" value="?">?</MenuItem> }
+            { isUnknown && <MenuItem key="?" value="?">?</MenuItem> }
             { isAvailable && Object.entries(entries).map(([key, label]) =>
                 <MenuItem key={key} value={key}>{label}</MenuItem>
             ) }

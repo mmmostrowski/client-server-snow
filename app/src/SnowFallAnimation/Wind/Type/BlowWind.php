@@ -63,8 +63,8 @@ final class BlowWind implements IWind
         $this->maxNumOfWindBlows = $config->windBlowsMaxNumAtSameTime();
         $this->minStrength = $config->windBlowsMinStrength();
         $this->maxStrength = $config->windBlowsMaxStrength();
-        $this->minanimationDuration = $config->windBlowsMinanimationDuration();
-        $this->maxanimationDuration = $config->windBlowsMaxanimationDuration();
+        $this->minanimationDuration = $config->windBlowsMinAnimationDuration();
+        $this->maxanimationDuration = $config->windBlowsMaxAnimationDuration();
 	}
 
     public function update(): void

@@ -4,12 +4,11 @@ namespace TechBit\Snow\SnowFallAnimation\Wind\Type;
 
 use TechBit\Snow\SnowFallAnimation\AnimationContext;
 use TechBit\Snow\SnowFallAnimation\Config\Config;
-use TechBit\Snow\SnowFallAnimation\Object\IAnimationConfigurableObject;
 use TechBit\Snow\SnowFallAnimation\Snow\SnowParticles;
 use TechBit\Snow\SnowFallAnimation\Wind\IWind;
 
 
-final class MicroWavingWind implements IWind, IAnimationConfigurableObject
+final class MicroWavingWind implements IWind
 {
 
     private readonly SnowParticles $particles;
@@ -26,7 +25,8 @@ final class MicroWavingWind implements IWind, IAnimationConfigurableObject
         $this->particles = $context->snowParticles();
     }
 
-	public function onConfigChange(Config $config): void {
+	public function onConfigChange(Config $config): void
+    {
         $this->microMovementConstant = $config->microMovementPower();
         $this->microMovementFrequency = $config->microMovementFrequency();
 	}

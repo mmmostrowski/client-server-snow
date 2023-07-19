@@ -47,7 +47,7 @@ final class Scene implements IAnimationVisibleObject
             ConsoleColor::LIGHT_BLUE);
 
         $this->basis->drawCharsInCenter($this->drawIsAwesome(),
-            0,
+            38,
             10,
             ConsoleColor::BLUE
         );
@@ -84,17 +84,14 @@ EOL;
     private function drawIsAwesome(): string
     {
         return <<<EOL
-                          _                                                                            
-68b                      dM.                                                                           
-Y89                     ,MMb                                                                           
-___   ____              d'YM.    ____    _    ___   ____     ____     _____   ___  __    __     ____   
-`MM  6MMMMb\           ,P `Mb    `MM(   ,M.   )M'  6MMMMb   6MMMMb\  6MMMMMb  `MM 6MMb  6MMb   6MMMMb  
- MM MM'    `           d'  YM.    `Mb   dMb   d'  6M'  `Mb MM'    ` 6M'   `Mb  MM69 `MM69 `Mb 6M'  `Mb 
- MM YM.               ,P   `Mb     YM. ,PYM. ,P   MM    MM YM.      MM     MM  MM'   MM'   MM MM    MM 
- MM  YMMMMb           d'    YM.    `Mb d'`Mb d'   MMMMMMMM  YMMMMb  MM     MM  MM    MM    MM MMMMMMMM 
- MM      `Mb         ,MMMMMMMMb     YM,P  YM,P    MM            `Mb MM     MM  MM    MM    MM MM       
- MM L    ,MM         d'      YM.    `MM'  `MM'    YM    d9 L    ,MM YM.   ,M9  MM    MM    MM YM    d9
-_MM_MYMMMM9        _dM_     _dMM_    YP    YP      YMMMM9  MYMMMM9   YMMMMM9  _MM_  _MM_  _MM_ YMMMM9
+88                  ,ad8888ba,                                                88
+""                 d8"'    `"8b                                        ,d     88
+                  d8'                                                  88     88
+88  ,adPPYba,     88             8b,dPPYba,   ,adPPYba,  ,adPPYYba,  MM88MMM  88
+88  I8[    ""     88      88888  88P'   "Y8  a8P_____88  ""     `Y8    88     88
+88   `"Y8ba,      Y8,        88  88          8PP"""""""  ,adPPPPP88    88     ""
+88  aa    ]8I      Y8a.    .a88  88          "8b,   ,aa  88,    ,88    88,    aa
+88  `"YbbdP"'       `"Y88888P"   88           `"Ybbd8"'  `"8bbdP"Y8    "Y888  88                                                                                
 EOL;
     }
 

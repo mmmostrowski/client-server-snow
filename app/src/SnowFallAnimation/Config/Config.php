@@ -52,10 +52,10 @@ interface Config
 
     public function windBlowsMaxStrength(): int;
 
-    public function windBlowsMinanimationDuration(): int;
+    public function windBlowsMinAnimationDuration(): int;
 
-    public function windBlowsMaxanimationDuration(): int;
+    public function windBlowsMaxAnimationDuration(): int;
 
-    public function extendWorkingAreaFacor(): float;
+    public function extendWorkingAreaFactor(): float;
 
 }
