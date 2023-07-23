@@ -107,7 +107,7 @@ export class SnowAnimationController {
     }
 
     public async startProcessing(configuration: SnowAnimationConfiguration): Promise<void> {
-        if (this.state !== 'stopped') {
+        if (this.isRunning()) {
             return;
         }
         this.disallowWhenDestroyed();
@@ -116,18 +116,21 @@ export class SnowAnimationController {
             throw Error("Need to stopProcessing() first!");
         }
         try {
-            this.startStream(
-                await startSnowSession(this.sessionId, configuration, this.abortController),
-                this.onServerData.bind(this)
-            );
+            let startResponse = await startSnowSession(this.sessionId, configuration, this.abortController);
+            if (this.isRunning()) {
+                return;
+            }
+            this.startStream(startResponse, this.onServerData.bind(this));
             this.state = "buffering";
         } catch (error) {
-            console.error(error);
             this.onError(new CannotStartError(error.message));
         }
     }
 
     public async stopProcessing(): Promise<void> {
+        if (!this.isRunning()) {
+            return;
+        }
         this.disallowWhenDestroyed();
 
         if (this.state === 'stopped') {

@@ -32,11 +32,11 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
     const {
         status, hasError, hasConfigError,
         isSessionExists, hasSessionIdError, cannotStartSession,
-        presetName, sceneName, isInitializing,
+        presetName, sceneName, isInitializing, isActive,
         validatedWidth: width, validatedHeight: height, validatedFps: fps,
         foundWidth, foundHeight, foundFps, foundPresetName, foundSceneName,
     } = useSession(sessionIdx);
-    const [ playAnimation, setPlayAnimation ] = useState<boolean>(status === 'playing' || status === 'buffering');
+    const [ playAnimation, setPlayAnimation ] = useState<boolean>(isActive);
     const [ animationConfiguration, setAnimationConfiguration ] = useState<SnowAnimationConfiguration>({
         width, height, fps,
         presetName,

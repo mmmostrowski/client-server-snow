@@ -80,13 +80,9 @@ export default function SnowAnimation(props: Props): JSX.Element {
     // Start / Stop controller
     useEffect(() => {
         if (play) {
-            if (!snowController.isRunning()) {
-                void snowController.startProcessing(configuration);
-            }
+            void snowController.startProcessing(configuration);
         } else {
-            if (snowController.isRunning()) {
-                void snowController.stopProcessing();
-            }
+            void snowController.stopProcessing();
         }
     }, [ snowController, play, configuration ]);
 

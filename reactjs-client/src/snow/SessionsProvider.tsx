@@ -48,6 +48,7 @@ interface SessionErrors {
 interface SessionExtras {
     isSessionExists: boolean|null,
     isStopped: boolean,
+    isActive: boolean,
     isInitializing: boolean;
     hasError: boolean,
     hasSessionIdError: boolean,
@@ -294,6 +295,11 @@ function sessionPostprocessing(session: ValidatedSession): Session {
         isStopped:
                session.status === 'stopped-not-checked'
             || session.status === 'stopped-not-found'
-            || session.status === 'stopped-found'
+            || session.status === 'stopped-found',
+        isActive:
+                session.status === 'buffering'
+            ||  session.status === 'playing'
+            ||  session.status === 'initializing-new'
+            ||  session.status === 'initializing-existing'
     };
 }
