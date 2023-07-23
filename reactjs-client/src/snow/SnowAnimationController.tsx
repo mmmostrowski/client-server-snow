@@ -228,11 +228,13 @@ export class SnowAnimationController {
             return;
         }
 
-        const frame: BufferFrame = this.decoder.decodeFrame(data);
-        this.buffer.push(frame);
-        // console.log(frame);
+        const bufferFrame: BufferFrame = this.decoder.decodeFrame(data);
+        const [ snowFrame ] = bufferFrame;
 
-        if (this.isLastFrame(frame[0])) {
+        this.pushFrame(bufferFrame);
+        // console.log(bufferFrame);
+
+        if (this.isLastFrame(snowFrame)) {
             this.isLastFrameInBuffer = true;
         }
 
@@ -240,7 +242,7 @@ export class SnowAnimationController {
             if (this.state === "buffering") {
                 this.startAnimation();
             } else {
-                this.buffer.shift();
+                this.popFrame();
             }
         } else {
             this.notifyBuffering();
@@ -275,21 +277,17 @@ export class SnowAnimationController {
         }
 
         if (this.buffer.length > 0) {
-            this.animateFrame(this.buffer.shift());
+            this.animateFrame(this.popFrame());
         }
     }
 
-    private animateFrame([frame, basis]: BufferFrame): void {
+    private animateFrame(frame: SnowDataFrame): void {
         this.notifyPlaying(frame);
         this.firstFrame = false;
 
         if (this.isLastFrame(frame)) {
             this.sayGoodbye();
             return;
-        }
-
-        if (basis !== NoSnowBasis) {
-            this.basis = basis;
         }
 
         this.drawAnimationFrame(frame);
@@ -331,6 +329,18 @@ export class SnowAnimationController {
         }
         stopSnowDataStream(this.streamHandler);
         this.streamHandler = null;
+    }
+
+    private pushFrame(frame: BufferFrame) {
+        this.buffer.push(frame);
+    }
+
+    private popFrame(): SnowDataFrame {
+        const [ frame, basis] = this.buffer.shift();
+        if (basis !== NoSnowBasis) {
+            this.basis = basis;
+        }
+        return frame;
     }
 
     private isBufferOverflowed(): boolean {

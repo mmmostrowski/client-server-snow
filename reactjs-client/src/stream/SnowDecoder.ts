@@ -83,10 +83,10 @@ export default class SnowDecoder
         let ptr= 8 + 9 * frameChunkSize; // after data frame
 
         const numOfPixels = data.getInt32(ptr, false);
-        ptr += 4;
         if (numOfPixels === 0) {
             return NoSnowBasis;
         }
+        ptr += 4;
 
         const x = new Uint32Array(numOfPixels);
         const y = new Uint32Array(numOfPixels);
