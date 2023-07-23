@@ -57,7 +57,7 @@ final class ConfigPresetSlider implements Config, IAnimationAliveObject
 		}
 	}
 
-	private function startNextPreset() 
+	private function startNextPreset(): void
 	{
 		$this->currentPreset = $this->targetPreset;
 
@@ -240,5 +240,9 @@ final class ConfigPresetSlider implements Config, IAnimationAliveObject
 			? $this->currentPreset
 			: $this->targetPreset;
 	}
-	
+
+    public function showScene(): bool
+    {
+        return $this->currentPreset->showScene();
+    }
 }

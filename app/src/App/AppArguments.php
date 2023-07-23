@@ -8,12 +8,12 @@ final class AppArguments
 {
 
     /**
-     * @param string[]|class-string<IWind>[] $windForces
+     * @param string[]|class-string<IWind>[]|null $windForces
      */
     public function __construct(
         private readonly string $projectRootDir,
         private readonly bool $isDeveloperMode,
-        private readonly array $windForces,
+        private readonly ?array $windForces,
         private readonly string $presetName,
         private readonly ?string $customScene,
         private readonly int $targetFps,
@@ -51,7 +51,12 @@ final class AppArguments
      */
     public function windForces(): array
     {
-        return $this->windForces;
+        return (array)$this->windForces;
+    }
+
+    public function useDefaultWindForces(): bool
+    {
+        return $this->windForces === null;
     }
 
     public function presetName(): string
@@ -77,12 +82,12 @@ final class AppArguments
     public function serverCanvasWidth(): int
     {
         return $this->serverCanvasWidth;
-    }    
+    }
 
     public function serverCanvasHeight(): int
     {
         return $this->serverCanvasHeight;
-    }    
+    }
 
     public function serverPipesDir(): string
     {

@@ -64,8 +64,7 @@ final class AnimationFactory implements IAnimationFactory
     {
         $startupConfig = $this->startupConfig ?? $this->startupConfigFactory->create($arguments);
 
-        $windFactory = $this->windFactory ?? new WindFactory(
-            $this->objectsPool->allWindForces());
+        $windFactory = $this->windFactory ?? new WindFactory();
 
         $configPresetSliderFactory = $this->configPresetSliderFactory ?? new ConfigPresetSliderFactory(
             $startupConfig,
@@ -87,9 +86,12 @@ final class AnimationFactory implements IAnimationFactory
 
         $config = $configFactory->create($arguments->presetName());
 
-        $wind = $windFactory->create($config->hasWind(), $arguments->windForces());
+        $windForces = $arguments->useDefaultWindForces()
+            ? $this->objectsPool->allWindForces()
+            : $arguments->windForces();
+        $wind = $windFactory->create($config->hasWind(), $windForces);
 
-        $scene = $this->sceneFactory->create($arguments->customScene());
+        $scene = $this->sceneFactory->create($config->showScene(), $arguments->customScene());
 
         return new SnowFallAnimation(
             new AnimationContext(

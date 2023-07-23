@@ -31,9 +31,10 @@ final class AppArgumentsFactory
         }
         $customScene = $this->isResource($argv) ? $this->readResource($argv) : null;
         $presetName = $this->read($argv);
+        $windForces = getenv('WIND') === false ? null : explode(',', getenv('WIND'));
 
-        return new AppArguments($projectRootDir, $isDeveloperMode, 
-            [], $presetName, $customScene, 
+        return new AppArguments($projectRootDir, $isDeveloperMode,
+            $windForces, $presetName, $customScene,
             $targetFps, $animationDurationSec,
             $serverSessionId, $serverCanvasWidth, $serverCanvasHeight, 
             $serverPipesDir);

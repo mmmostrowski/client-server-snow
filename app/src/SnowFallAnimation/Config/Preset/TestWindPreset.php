@@ -8,6 +8,11 @@ use TechBit\Snow\SnowFallAnimation\Config\DefaultConfig;
 final class TestWindPreset extends DefaultConfig
 {
 
+    public function showScene(): bool
+    {
+        return false;
+    }
+
 //    public function fps()
 //    {
 //        return 100000;

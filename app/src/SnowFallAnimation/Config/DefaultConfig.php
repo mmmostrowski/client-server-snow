@@ -6,6 +6,11 @@ namespace TechBit\Snow\SnowFallAnimation\Config;
 class DefaultConfig implements Config
 {
 
+    public function showScene(): bool
+    {
+        return true;
+    }
+
     public function showFps(): bool
     {
         return true;

@@ -7,9 +7,9 @@ interface IWindFactory
 
 
     /**
-     * @param string[]|class-string<IWind>[] $limitToWindForces
+     * @param string[]|class-string<IWind>[] $windForces
      */
-    public function create(bool $windEnabled, array $limitToWindForces): IWind;
+    public function create(bool $windEnabled, array $windForces): IWind;
 
 
 }

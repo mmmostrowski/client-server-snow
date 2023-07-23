@@ -7,6 +7,6 @@ use TechBit\Snow\SnowFallAnimation\Object\IAnimationObject;
 interface ISceneFactory
 {
 
-    public function create(?string $customSceneTxt): IAnimationObject;
+    public function create(bool $showScene, ?string $customSceneTxt): IAnimationObject;
 
 }

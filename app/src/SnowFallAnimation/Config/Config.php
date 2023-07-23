@@ -58,4 +58,6 @@ interface Config
 
     public function extendWorkingAreaFactor(): float;
 
+    public function showScene(): bool;
+
 }

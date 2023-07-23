@@ -8,35 +8,27 @@ use TechBit\Snow\App\NamedClass;
 final class WindFactory implements IWindFactory
 {
 
-    /**
-     * @param class-string<IWind>[] $allWindForces
-     */
     public function __construct(
-        private readonly array $allWindForces,
         private readonly NamedClass $namedClass = new NamedClass("SnowFallAnimation\\Wind\\Type\\", ""),
     )
     {
     }
 
     /**
-     * @param string[]|class-string<IWind>[] $limitToWindForces
+     * @param string[]|class-string<IWind>[] $windForces
      */
-    public function create(bool $windEnabled, array $limitToWindForces): IWind
+    public function create(bool $windEnabled, array $windForces): IWind
     {
-        if (!$windEnabled) {
+        if (!$windEnabled || empty($windForces)) {
             return new NoWind();
         }
 
-        if (!$limitToWindForces) {
-            $limitToWindForces = $this->allWindForces;
-        }
-
         $windObjects = [];
-        foreach ($limitToWindForces as $classOrName) {
+        foreach ($windForces as $classOrName) {
             $windObjects[] = $this->createWindObject($classOrName);
         }
 
-        if (count($limitToWindForces) > 1) {
+        if (count($windForces) > 1) {
             return new WindComposition($windObjects);
         }
         return reset($windObjects);
