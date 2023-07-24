@@ -52,10 +52,18 @@ public final class PhpSnowApp {
 
         process = builder.start();
 
+        catchErrors();
+    }
+
+    public void catchErrors() throws IOException {
+        if (process == null) {
+            return;
+        }
+
         if (!process.isAlive() && process.exitValue() > 0) {
             String stdErr = new String(process.getErrorStream().readAllBytes());
             String stdOut = new String(process.getInputStream().readAllBytes());
-            throw new RuntimeException("Error during running '" + cmd + "' :\n" + stdErr + "\n\n" + stdOut);
+            throw new RuntimeException("Error during running '" + process.toString() + "' :\n" + stdErr + "\n\n" + stdOut);
         }
     }
 

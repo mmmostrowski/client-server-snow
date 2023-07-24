@@ -1,25 +1,19 @@
 package techbit.snow.proxy.snow.php;
 
-import edu.umd.cs.mtc.MultithreadedTestCase;
-import edu.umd.cs.mtc.TestFramework;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mockStatic;
 
 @SuppressWarnings("unused")
 @ExtendWith(MockitoExtension.class)
@@ -69,31 +63,22 @@ class NamedPipeTest {
     }
 
     @Test
-    void givenNoPipeFile_whenReading_thenBlockingUntilIsAvailable() throws Throwable {
+    void givenNoPipeFile_whenReading_thenThrowException() {
         Assertions.assertTrue(pipePath.toFile().delete());
-        TestFramework.runOnce(new MultithreadedTestCase() {
-            void thread1() throws IOException {
-                waitForTick(1);
-                Files.writeString(pipePath, "new-content");
-            }
 
-            void thread2() throws IOException {
-                try (InputStream input = namedPipe.inputStream()) {
-                    assertTick(1);
-                    Assertions.assertArrayEquals("new-content".getBytes(), input.readAllBytes());
-                }
-            }
-        });
+        assertThrows(FileNotFoundException.class, namedPipe::inputStream);
     }
 
     @Test
-    void givenNoPipeFile_whenWaitingForItTooLong_thenThrowException() {
+    void whenPipeFileExists_thenNamedPipeIsNotMissing() {
+        assertFalse(namedPipe.isMissing());
+    }
+
+    @Test
+    void whenNoPipeFileExists_thenNamedPipeIsMissing() {
         Assertions.assertTrue(pipePath.toFile().delete());
 
-        try (MockedStatic<FileUtils> fileUtils = mockStatic(FileUtils.class)) {
-            fileUtils.when(() -> FileUtils.waitFor(any(), anyInt())).thenReturn(false);
-
-            assertThrows(IllegalStateException.class, namedPipe::inputStream);
-        }
+        assertTrue(namedPipe.isMissing());
     }
+
 }

@@ -133,6 +133,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
                 "testingPreset", "BASE64BASE64==", 87, 76, Duration.ofMinutes(11), 121);
         assertThrows(IncompatibleConfigException.class, () -> snowStream.ensureCompatibleWithConfig("session-abc", snowConfig));
     }
+
     @Test
     void whenAskingForDetails_thenProvidingThemFromSnowStream() {
         PhpSnowConfig details = snowStream.config();
@@ -489,6 +490,38 @@ class SnowStreamTest extends SnowStreamBaseTest {
 
         Throwable thrownException = assertThrows(ConsumerThreadException.class, () -> snowStream.streamTo(client));
         assertSame(customException, thrownException.getCause());
+    }
+
+    @Test
+    void givenMissingPipeAllTheTime_whenStreamFrames_thenThrowException() {
+        when(pipe.isMissing()).thenReturn(true);
+
+        assertThrows(IOException.class, () -> snowStream.startConsumingSnowData());
+    }
+
+    @Test
+    void givenPipeAvailableAfterAWhile_whenStreamFrames_thenNoExceptionIsThrown() {
+        when(phpSnow.isAlive()).thenReturn(true);
+        when(pipe.isMissing()).thenReturn(true, true, true, false);
+
+        assertDoesNotThrow(() -> snowStream.startConsumingSnowData());
+    }
+
+    @Test
+    void givenMissingPipeForTooLong_whenStreamFrames_thenThrowException() {
+        when(pipe.isMissing()).thenReturn(true,
+                true, true, true, true, true, true, true, true, true, false);
+
+        assertThrows(IOException.class, () -> snowStream.startConsumingSnowData());
+    }
+
+    @Test
+    void givenInterruptedWaitingForPipe_whenStreamFrames_thenThrowException() {
+        snowStream = spy(snowStream);
+        doThrow(RuntimeException.class).when(snowStream).wait100ms();
+        when(pipe.isMissing()).thenReturn(true);
+
+        assertThrows(RuntimeException.class, () -> snowStream.startConsumingSnowData());
     }
 
 }

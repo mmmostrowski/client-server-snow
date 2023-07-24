@@ -70,8 +70,7 @@ abstract public class SnowStreamBaseTest {
         lenient().when(decoder.decodeBasis(any())).thenReturn(SnowBasis.NONE);
         lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(EmptyArray.NO.BYTES));
 
-        snowStream = new SnowStream("session-xyz", snowConfig,
-                serverMetadata,
-                pipe, phpSnow, buffer, decoder, eventPublisher);
+        snowStream = new SnowStream("session-xyz", snowConfig, serverMetadata,
+                pipe, phpSnow, buffer, decoder, 1, eventPublisher);
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import techbit.snow.proxy.config.PhpSnowConfig;
 import techbit.snow.proxy.dto.*;
 import techbit.snow.proxy.error.IncompatibleConfigException;
+import techbit.snow.proxy.lang.Wait;
 import techbit.snow.proxy.snow.php.NamedPipe;
 import techbit.snow.proxy.snow.php.PhpSnowApp;
 import techbit.snow.proxy.snow.transcoding.StreamDecoder;
@@ -38,14 +39,17 @@ public final class SnowStream {
     private final ExecutorService executor = Executors.newSingleThreadExecutor(
             new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
     );
-    private @Nullable volatile ConsumerThreadException consumerException;
+    private @Nullable
+    volatile ConsumerThreadException consumerException;
     private volatile boolean destroyed = false;
     private volatile boolean running = false;
     private SnowAnimationMetadata metadata = SnowAnimationMetadata.NONE;
     private SnowBackground background = SnowBackground.NONE;
+    private final int maxWaitForStartPhpCliSec;
+
     public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
                       ServerMetadata serverMetadata, NamedPipe pipe, PhpSnowApp phpSnowApp,
-                      SnowDataBuffer buffer, StreamDecoder decoder, ApplicationEventPublisher applicationEventPublisher
+                      SnowDataBuffer buffer, StreamDecoder decoder, int maxWaitForStartPhpCliSec, ApplicationEventPublisher applicationEventPublisher
     ) {
         this.sessionId = sessionId;
         this.pipe = pipe;
@@ -55,6 +59,7 @@ public final class SnowStream {
         this.phpSnowConfig = phpSnowConfig;
         this.serverMetadata = serverMetadata;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.maxWaitForStartPhpCliSec = maxWaitForStartPhpCliSec;
     }
 
     public boolean isActive() {
@@ -72,6 +77,8 @@ public final class SnowStream {
     }
 
     public void startConsumingSnowData() throws IOException {
+        waitForInputStream();
+
         if (destroyed) {
             throw new IllegalStateException("You cannot use snow stream twice!");
         }
@@ -176,6 +183,18 @@ public final class SnowStream {
         }
     }
 
+    private void waitForInputStream() throws IOException {
+        int counter = maxWaitForStartPhpCliSec * 10;
+        while (pipe.isMissing()) {
+            if (--counter <= 0) {
+                throw new IOException("Cannot open pipe!");
+            }
+
+            phpSnowApp.catchErrors();
+            wait100ms();
+        }
+    }
+
     private void throwConsumerExceptionIfAny() throws ConsumerThreadException {
         final ConsumerThreadException exception = consumerException;
         if (exception != null) {
@@ -232,8 +251,8 @@ public final class SnowStream {
 
     @StandardException
     public static class ConsumerThreadException extends Exception {
-    }
 
+    }
     public class SnowStreamFinishedEvent extends ApplicationEvent {
 
         public SnowStreamFinishedEvent(Object source) {
@@ -243,5 +262,9 @@ public final class SnowStream {
         public String getSessionId() {
             return sessionId;
         }
+
+    }
+    void wait100ms()  {
+        Wait.milliseconds(100);
     }
 }

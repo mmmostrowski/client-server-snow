@@ -1,6 +1,5 @@
 package techbit.snow.proxy.snow.php;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,8 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.*;
 
@@ -77,9 +75,14 @@ class PhpSnowAppTest {
         when(process.getInputStream()).thenReturn(stream);
         when(stream.readAllBytes()).thenReturn(new byte[]{'b', 'u', 'g', 'g', 'y'});
 
-        Exception exception = Assertions.assertThrows(Exception.class, phpSnowApp::start);
+        Exception exception = assertThrows(Exception.class, phpSnowApp::start);
 
         assertTrue(exception.getMessage().contains("buggy"));
+    }
+
+    @Test
+    void givenNoStart_whenCatchErrors_thenNoExceptionIsThrown() {
+        assertDoesNotThrow(phpSnowApp::catchErrors);
     }
 
 

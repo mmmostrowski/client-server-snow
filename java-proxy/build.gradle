@@ -13,6 +13,7 @@ jacocoTestReport {
             fileTree(dir: it, exclude: [
                     "**/*Exception.class",
                     "**/SnowProxyApplication.class",
+                    "**/Wait.class",
             ])
         }))
     }

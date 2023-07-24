@@ -1,15 +1,10 @@
 package techbit.snow.proxy.snow.php;
 
-import org.apache.commons.io.FileUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Path;
-import java.time.Duration;
 
 import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE;
 
@@ -23,9 +18,13 @@ public final class NamedPipe {
         pipeFile = pipesDir.resolve(sessionId).toFile();
     }
 
+    public boolean isMissing() {
+        return !pipeFile.exists();
+    }
+
     public InputStream inputStream() throws IOException {
-        if (!FileUtils.waitFor(pipeFile, (int) Duration.ofMinutes(2).getSeconds())) {
-            throw new IllegalStateException("PhpSnow did not create a pipe file: " + pipeFile);
+        if (isMissing()) {
+            throw new FileNotFoundException("File not found: " + pipeFile.getAbsolutePath());
         }
         return new FileInputStream(pipeFile);
     }
