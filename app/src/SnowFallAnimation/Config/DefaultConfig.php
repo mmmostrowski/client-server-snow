@@ -26,6 +26,11 @@ class DefaultConfig implements Config
         return 0.35;
     }
 
+    public function friction(): float
+    {
+        return 0.3;
+    }
+
     public function microMovementPower(): float
     {
         return 0.4;
@@ -118,12 +123,12 @@ class DefaultConfig implements Config
 
     public function windBlowsMinStrength(): int
     {
-        return 1;
+        return 2;
     }
 
     public function windBlowsMaxStrength(): int
     {
-        return 3;
+        return 6;
     }
 
     public function windBlowsMinAnimationDuration(): int

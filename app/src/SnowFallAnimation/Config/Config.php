@@ -60,4 +60,6 @@ interface Config
 
     public function showScene(): bool;
 
+    public function friction(): float;
+
 }

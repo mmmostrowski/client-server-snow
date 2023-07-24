@@ -91,10 +91,16 @@ final class SnowParticles
         unset($this->particles[$idx]);
     }
 
-    public function updateMomentum(int $idx, float $dx, float $dy): void
+    public function addMomentum(int $idx, float $dx, float $dy): void
     {
         $this->particles[$idx][self::MOMENTUM_X] += $dx;
         $this->particles[$idx][self::MOMENTUM_Y] += $dy;
+    }
+
+    public function multiplyMomentum(int $idx, float $dx, float $dy): void
+    {
+        $this->particles[$idx][self::MOMENTUM_X] *= $dx;
+        $this->particles[$idx][self::MOMENTUM_Y] *= $dy;
     }
 
     public function updateMomentumArr(int $idx, array $data): void

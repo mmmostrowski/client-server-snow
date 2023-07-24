@@ -112,7 +112,7 @@ final class FieldWind implements IWind
 
         $forceVector = $this->grid[$particleX][$particleY];
         $perParticleFactor = SnowParticles::perParticleFactor($idx, 0.2);
-        $this->particles->updateMomentum($idx, 
+        $this->particles->addMomentum($idx,
             $forceVector[0] * $perParticleFactor,
             $forceVector[1] * $perParticleFactor,
         );

@@ -51,6 +51,9 @@ final class AppArguments
      */
     public function windForces(): array
     {
+        if (implode('', $this->windForces) === '') {
+            return [];
+        }
         return (array)$this->windForces;
     }
 

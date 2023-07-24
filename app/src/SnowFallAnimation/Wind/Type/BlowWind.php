@@ -140,10 +140,10 @@ final class BlowWind implements IWind
         $waveFactor = sin( $deltaTime * M_PI * $this->windWaveNoise->generateInRange($this->time / 100, 50, 350) );
 
         $perParticleFactor = SnowParticles::perParticleFactor($particleIdx, 0.8);
-        $by += $waveFactor * 200 * $perParticleFactor;
+        $by += $waveFactor * 100 * $perParticleFactor;
 
-        $vx = (float)($x - $bx);
-        $vy = (float)($y - $by);
+        $vx = $x - $bx;
+        $vy = $y - $by;
 
         $distSquare = $vx * $vx + $vy * $vy;
 
@@ -162,7 +162,7 @@ final class BlowWind implements IWind
         $ratio = (1.0 / $dist) * $blowSource[self::STRENGTH] * $power * $animationFactor * 0.001;
         $perParticleFactor = SnowParticles::perParticleFactor($particleIdx, 0.1);
 
-        $this->particles->updateMomentum(
+        $this->particles->addMomentum(
             $particleIdx,
             $vx * $ratio * $perParticleFactor,
             $vy * $ratio * $perParticleFactor,

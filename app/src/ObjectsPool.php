@@ -6,6 +6,7 @@ use TechBit\Snow\SnowFallAnimation\Config\Config;
 use TechBit\Snow\SnowFallAnimation\Wind\IWind;
 use TechBit\Snow\SnowFallAnimation\Wind\Type\BlowWind;
 use TechBit\Snow\SnowFallAnimation\Wind\Type\FieldWind;
+use TechBit\Snow\SnowFallAnimation\Wind\Type\Friction;
 use TechBit\Snow\SnowFallAnimation\Wind\Type\MicroWavingWind;
 use TechBit\Snow\SnowFallAnimation\Wind\Type\NoWind;
 use TechBit\Snow\SnowFallAnimation\Wind\Type\StaticWind;
@@ -29,6 +30,7 @@ final class ObjectsPool
             FieldWind::class,
             BlowWind::class,
             NoWind::class,
+            Friction::class,
         ],
         private readonly array $configPresets = [
             ClassicalPreset::class,

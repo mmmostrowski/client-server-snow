@@ -72,7 +72,7 @@ final class StaticWind implements IWind
     {
         $factor = SnowParticles::perParticleFactor($idx, 0.2);
 
-        $this->particles->updateMomentum($idx, $this->directionX * $factor, $this->directionY * $factor);
+        $this->particles->addMomentum($idx, $this->directionX * $factor, $this->directionY * $factor);
     }
 
 }

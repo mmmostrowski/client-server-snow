@@ -13,6 +13,17 @@ final class TestWindPreset extends DefaultConfig
         return false;
     }
 
+
+    public function windBlowsMaxStrength(): int
+    {
+        return parent::windBlowsMaxStrength() * 3;
+    }
+
+    public function windBlowsMinStrength(): int
+    {
+        return parent::windBlowsMinStrength() * 3;
+    }
+
 //    public function fps()
 //    {
 //        return 100000;
@@ -22,8 +33,8 @@ final class TestWindPreset extends DefaultConfig
     // {
     //     return 0;
     // }
-//
-//    public function gravity()
+
+//    public function gravity(): float
 //    {
 //        return 0;
 //    }
