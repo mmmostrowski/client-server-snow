@@ -57,7 +57,7 @@ final class ConfigPresetSlider implements Config, IAnimationAliveObject
 		}
 	}
 
-	private function startNextPreset(): void
+    private function startNextPreset(): void
 	{
 		$this->currentPreset = $this->targetPreset;
 
@@ -77,8 +77,8 @@ final class ConfigPresetSlider implements Config, IAnimationAliveObject
 		$this->progressDelta = 1.0 / ( rand($fadeTimeMin, $fadeTimeMax) * $this->config->targetFps() );
 	}
 
-	private function randomNextPreset(bool $excludeCurrent): Config
-	{		
+    private function randomNextPreset(bool $excludeCurrent): Config
+	{
 		$presets = $this->presets;
 		if ($excludeCurrent) {
 			unset($presets[get_class($this->currentPreset)]);
@@ -87,76 +87,96 @@ final class ConfigPresetSlider implements Config, IAnimationAliveObject
 		$presetClass = $random->next();
 		return $this->presetFactory->create($presetClass);
 	}
-	
-	public function gravity(): float 
+
+    public function gravity(): float
 	{
 		return $this->interpolateFloat(fn(Config $config) => $config->gravity());
 	}
 
-	public function microMovementPower(): float 
+    public function friction(): float
+    {
+        return $this->interpolateFloat(fn(Config $config) => $config->friction());
+    }
+
+    public function microMovementPower(): float
 	{
 		return $this->interpolateFloat(fn(Config $config) => $config->microMovementPower());
 	}
-	
-	public function microMovementFrequency(): float 
+
+    public function microMovementFrequency(): float
 	{
 		return $this->interpolateFloat(fn(Config $config) => $config->microMovementFrequency());
 	}
-	
-	public function windGlobalVariation(): float 
+
+    public function windGlobalVariation(): float
 	{
 		return $this->interpolateFloat(fn(Config $config) => $config->windGlobalVariation());
 	}
-	
-	public function windGlobalStrengthMin(): float 
+
+    public function windGlobalStrengthMin(): float
 	{
 		return $this->interpolateFloat(fn(Config $config) => $config->windGlobalStrengthMin());
 	}
-	
-	public function windGlobalStrengthMax(): float 
+
+    public function windGlobalStrengthMax(): float
 	{
 		return $this->interpolateFloat(fn(Config $config) => $config->windGlobalStrengthMax());
 	}
-	
-	public function windFieldVariation(): float 
+
+    public function windFieldVariation(): float
 	{
 		return $this->interpolateFloat(fn(Config $config) => $config->windFieldVariation());
 	}
-	
-	public function windFieldStrengthMin(): int 
+
+    public function windFieldStrengthMin(): int
 	{
 		return $this->interpolateInt(fn(Config $config) => $config->windFieldStrengthMin());
 	}
-	
-	public function windFieldStrengthMax(): int 
+
+    public function windFieldStrengthMax(): int
 	{
 		return $this->interpolateInt(fn(Config $config) => $config->windFieldStrengthMax());
 	}
-	
-	public function windFieldGridUpdateEveryNthFrame(): int 
+
+    public function windFieldGridUpdateEveryNthFrame(): int
 	{
 		return $this->interpolateInt(fn(Config $config) => $config->windFieldGridUpdateEveryNthFrame());
 	}
 
-	public function windFieldGridSize(): int {
+    public function windFieldGridSize(): int {
 		return $this->interpolateInt(fn(Config $config) => $config->windFieldGridSize());
 	}
 
-	public function snowProducingTempo(): int 
+    public function snowProducingTempo(): int
 	{
 		return $this->interpolateInt(fn(Config $config) => $config->snowProducingTempo());
 	}
-	
-	public function snowMaxNumOfFlakesAtOnce(): int 
+
+    public function snowMaxNumOfFlakesAtOnce(): int
 	{
 		return $this->interpolateInt(fn(Config $config) => $config->snowMaxNumOfFlakesAtOnce());
 	}
-	
-	public function snowProbabilityOfProducingFromTop(): int 
+
+    public function snowProbabilityOfProducingFromTop(): int
 	{
 		return $this->interpolateInt(fn(Config $config) => $config->snowProbabilityOfProducingFromTop());
 	}
-	
+
+    public function snowProducingGridUpdateEveryNthFrame(): int
+    {
+        return $this->interpolateInt(fn(Config $config) => $config->snowProducingGridUpdateEveryNthFrame());
+    }
+
+    public function snowProducingVariation(): float
+    {
+        return $this->interpolateFloat(fn(Config $config) => $config->snowProducingVariation());
+    }
+
+    public function snowProducingGridSize(): int
+    {
+        return $this->interpolateInt(fn(Config $config) => $config->snowProducingGridSize());
+    }
+
 	public function snowHowManyFlakesNeedsToFallToFormAHill(): int 
 	{
 		return $this->interpolateInt(fn(Config $config) => $config->snowHowManyFlakesNeedsToFallToFormAHill());

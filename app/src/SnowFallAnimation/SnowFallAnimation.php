@@ -33,8 +33,6 @@ final class SnowFallAnimation implements IAnimation
      */
     public function initialize(): void
     {
-        srand();
-
         $this->console->ensureConsoleValidSize(
             $this->startupConfig->minRequiredConsoleWidth(),
             $this->startupConfig->minRequiredConsoleHeight(),

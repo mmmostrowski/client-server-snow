@@ -40,20 +40,7 @@ final class FieldWind implements IWind
     {
     }
 
-    public function initialize(AnimationContext $context): void
-    {
-        $this->time = (float)time();
-
-        $this->particles = $context->snowParticles();
-        $this->console = $context->console();
-
-        $this->vectorDirectionNoise->initialize(20);
-        $this->vectorPowerNoise->initialize(3);
-
-        $this->updateGridFrameCounter = $this->updateGridEveryNthFrame;        
-    }
-
-	public function onConfigChange(Config $config): void 
+    public function onConfigChange(Config $config): void
     {
         $this->updateGridEveryNthFrame = $config->windFieldGridUpdateEveryNthFrame();
         $this->fieldWindVariation = $config->windFieldVariation();
@@ -65,7 +52,20 @@ final class FieldWind implements IWind
         if ($this->gridSize != $previousGridSize) {
             $this->updateGrid();
         }
-	}
+    }
+
+    public function initialize(AnimationContext $context): void
+    {
+        $this->time = (float)time();
+
+        $this->particles = $context->snowParticles();
+        $this->console = $context->console();
+
+        $this->vectorDirectionNoise->initialize(20);
+        $this->vectorPowerNoise->initialize(3);
+
+        $this->updateGridFrameCounter = $this->updateGridEveryNthFrame;
+    }
 
     public function update(): void
     {

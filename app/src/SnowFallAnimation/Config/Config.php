@@ -32,7 +32,13 @@ interface Config
 
     public function windFieldGridSize(): int;
 
+    public function snowProducingGridUpdateEveryNthFrame(): int;
+
     public function snowProducingTempo(): int;
+
+    public function snowProducingVariation(): float;
+
+    public function snowProducingGridSize(): int;
 
     public function snowMaxNumOfFlakesAtOnce(): int;
 

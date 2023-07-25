@@ -23,12 +23,12 @@ class DefaultConfig implements Config
 
     public function gravity(): float
     {
-        return 0.35;
+        return 0.25;
     }
 
     public function friction(): float
     {
-        return 0.3;
+        return 0.01;
     }
 
     public function microMovementPower(): float
@@ -81,9 +81,24 @@ class DefaultConfig implements Config
         return 4;
     }
 
+    public function snowProducingGridUpdateEveryNthFrame(): int
+    {
+        return 4;
+    }
+
     public function snowProducingTempo(): int
     {
         return 100;
+    }
+
+    public function snowProducingVariation(): float
+    {
+        return 43;
+    }
+
+    public function snowProducingGridSize(): int
+    {
+        return 10;
     }
 
     public function snowMaxNumOfFlakesAtOnce(): int
