@@ -2,7 +2,7 @@ import {addAnimationScene} from "../../snow/animationScenes";
 
 addAnimationScene({
     key: "scene_a",
-    label: "Hello World!",
+    label: "Welcome",
     scene: `
      \`7MMF'  \`7MMF'       \`7MM  \`7MM                      
        MM      MM           MM    MM                      

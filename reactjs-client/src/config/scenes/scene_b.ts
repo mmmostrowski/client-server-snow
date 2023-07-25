@@ -2,7 +2,7 @@ import {addAnimationScene} from "../../snow/animationScenes";
 
 addAnimationScene({
     key: "scene_b",
-    label: "Love Java (Script)",
+    label: "Java (Script)",
     scene: `
                                            /$$                                                                                
                                           | $$                                                                                

@@ -2,7 +2,7 @@ import {addAnimationScene} from "../../snow/animationScenes";
 
 addAnimationScene({
     key: "scene_c",
-    label: "PHP Is Great",
+    label: "PHP",
     scene: `
     PPPPPPPPPPPPPPPPP        HHHHHHHHH     HHHHHHHHH     PPPPPPPPPPPPPPPPP
     P::::::::::::::::P       H:::::::H     H:::::::H     P::::::::::::::::P

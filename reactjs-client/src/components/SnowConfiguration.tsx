@@ -72,7 +72,7 @@ export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProp
             </Container>
             <Container sx={{ padding: 2, paddingRight: [ 4, 4, 4 ] }} >
                 <ConfigSelectField
-                    label="Scene preset"
+                    label="Scene"
                     value={sceneName}
                     entries={applicationConfig.scenes}
                     isAvailable={isAvailable}

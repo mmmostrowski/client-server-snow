@@ -6,8 +6,8 @@ export const applicationConfig = {
 
     minWidth: 40,
     minHeight: 20,
-    defaultWidth: 160,
-    defaultHeight: 40,
+    defaultWidth: 180,
+    defaultHeight: 45,
     maxWidth: 700,
     maxHeight: 350,
 
