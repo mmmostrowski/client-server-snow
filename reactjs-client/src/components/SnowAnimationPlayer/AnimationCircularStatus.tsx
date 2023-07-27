@@ -11,7 +11,7 @@ interface Props {
 
 export default function AnimationCircularStatus({ sessionIdx } : Props) {
     const { status, errorMsg, bufferLevelRef } = useDebouncedSession(sessionIdx);
-    const bufferLevel = useRefProbing<number>(bufferLevelRef);
+    const bufferLevel = useRefProbing<number>(bufferLevelRef, 77);
 
     let color : "primary" | "error" | "info" | "success" | "inherit" | "secondary" | "warning" = "primary";
     let progress = 100;

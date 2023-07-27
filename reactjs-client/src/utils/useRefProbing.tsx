@@ -1,6 +1,6 @@
 import {MutableRefObject, useEffect, useState} from "react";
 
-export function useRefProbing<T = undefined>(ref: MutableRefObject<T | undefined>, timeout: number = 66): T | undefined {
+export function useRefProbing<T = undefined>(ref: MutableRefObject<T | undefined>, timeout: number): T | undefined {
     const [value, setValue] = useState<T | undefined>(ref.current);
 
     useEffect(() => {

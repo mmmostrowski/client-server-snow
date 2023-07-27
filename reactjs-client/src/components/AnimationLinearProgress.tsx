@@ -9,7 +9,7 @@ interface Props {
 
 export default function AnimationLinearProgress({ sessionIdx } : Props): JSX.Element {
     const { animationProgressRef} = useDebouncedSession(sessionIdx);
-    const animationProgress = useRefProbing<number>(animationProgressRef);
+    const animationProgress = useRefProbing<number>(animationProgressRef, 500);
 
     return <LinearProgress value={animationProgress}
                            title="Animation progress"
