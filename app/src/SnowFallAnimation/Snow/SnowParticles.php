@@ -103,12 +103,6 @@ final class SnowParticles
         $this->particles[$idx][self::MOMENTUM_Y] *= $dy;
     }
 
-    public function updateMomentumArr(int $idx, array $data): void
-    {
-        $this->particles[$idx][self::MOMENTUM_X] += $data[0];
-        $this->particles[$idx][self::MOMENTUM_Y] += $data[1];
-    }
-
     public function moveByMomentum(int $idx): void
     {
         $this->particles[$idx][self::X] += $this->particles[$idx][self::MOMENTUM_X];

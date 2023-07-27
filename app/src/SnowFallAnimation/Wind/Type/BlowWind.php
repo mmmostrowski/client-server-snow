@@ -20,6 +20,7 @@ final class BlowWind implements IWind
     const RADIUS_SQUARE = 5;
     const CORE_RADIUS = 6;
     const STRENGTH = 7;
+    const WAVING_SPEED = 8;
 
     private readonly SnowParticles $particles;
     
@@ -89,6 +90,7 @@ final class BlowWind implements IWind
         $strength = rand((int)($this->minStrength * 10000), (int)($this->maxStrength * 10000)) / 10000;
         $coreRadiusRatio = (float)(rand(70, 100) / 100);
         $animationDuration = (int)(rand((int)($this->minanimationDuration * 10000), (int)($this->maxanimationDuration * 10000)) / 10000);
+        $wavingSpeed = (float)(rand(3800, 18100) / 100);
 
         $left = rand(1, 2) == 1;
         $y = rand((int)$this->console->minY() - $aboveEdge, (int)$this->console->maxY() + $belowEdge) / 1.5;
@@ -98,11 +100,11 @@ final class BlowWind implements IWind
             $x = rand((int)$this->console->maxX() + $minAfterEdge, (int)$this->console->maxX() + $maxAfterEdge);
         }
 
-        $radius = $this->console->width() + $maxAfterEdge * 2.0 + 24.0;
-        $this->addBlowSource($x, $y, $strength, $radius, $radius * $coreRadiusRatio, $animationDuration);
+        $radius = $this->console->width() + $maxAfterEdge * 2.0 + rand(24, 60);
+        $this->addBlowSource($x, $y, $strength, $radius, $radius * $coreRadiusRatio, $animationDuration, $wavingSpeed);
     }
 
-    private function addBlowSource(float $x, float $y, float $strength, float $radius, float $coreRadius, int $animationDuration): void
+    private function addBlowSource(float $x, float $y, float $strength, float $radius, float $coreRadius, int $animationDuration, float $wavingSpeed): void
     {
         $this->blowSources[] = [
             self::X => $x,
@@ -113,6 +115,7 @@ final class BlowWind implements IWind
             self::CORE_RADIUS => $coreRadius,
             self::ANIMATION_LENGTH => $animationDuration,
             self::TIME => $this->time,
+            self::WAVING_SPEED => $wavingSpeed
         ];
     }
 
@@ -137,10 +140,10 @@ final class BlowWind implements IWind
             return;
         }
 
-        $waveFactor = sin( $deltaTime * M_PI * $this->windWaveNoise->generateInRange($this->time / 100, 50, 350) );
+        $waveFactor = sin( M_PI * $this->windWaveNoise->generateInRange($this->time / $blowSource[self::WAVING_SPEED], 50, 350) );
 
         $perParticleFactor = SnowParticles::perParticleFactor($particleIdx, 0.8);
-        $by += $waveFactor * 100 * $perParticleFactor;
+        $by += $waveFactor * rand(50, 150) * $perParticleFactor;
 
         $vx = $x - $bx;
         $vy = $y - $by;

@@ -171,12 +171,12 @@ final class Snow implements IAnimationVisibleObject, IAnimationConfigurableObjec
 
     private function isActiveArea(float $x, float $y): bool
     {
-        $particleX = (int)(($this->gridSize) * ($x - $this->console->minX()) / $this->console->width());
+        $particleX = (int)(($this->gridSize) * ($x - $this->console->minX()) / ($this->console->width() * $this->extendWorkingAreaFactor));
         if ($particleX >= $this->gridSize || $particleX < 0) {
             return false;
         }
 
-        $particleY = (int)(($this->gridSize) * ($y - $this->console->minY()) / $this->console->height());
+        $particleY = (int)(($this->gridSize) * ($y - $this->console->minY()) / ($this->console->height() * $this->extendWorkingAreaFactor));
         if ($particleY >= $this->gridSize || $particleY < 0) {
             return false;
         }

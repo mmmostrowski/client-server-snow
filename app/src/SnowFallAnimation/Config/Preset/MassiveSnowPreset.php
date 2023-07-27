@@ -10,7 +10,7 @@ final class MassiveSnowPreset extends DefaultConfig
 
     public function snowProducingTempo(): int
     {
-        return parent::snowProducingTempo() * 48;
+        return parent::snowProducingTempo() * 38;
     }
 
 }

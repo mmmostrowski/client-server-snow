@@ -90,7 +90,7 @@ final class SnowBasis implements IAnimationAliveObject, IAnimationVisibleObject,
 
     public function renderLoopFrame(): void
     {
-        if (++$this->frameCounter % 15 != 0) {
+        if (++$this->frameCounter % 3 != 0) {
             return;
         }
 

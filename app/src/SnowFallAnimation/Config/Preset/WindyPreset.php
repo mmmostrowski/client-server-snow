@@ -10,7 +10,7 @@ final class WindyPreset extends DefaultConfig
 
     public function snowProducingTempo(): int
     {
-        return parent::snowProducingTempo() * 5;
+        return parent::snowProducingTempo() * 10;
     }
 
     public function snowMaxNumOfFlakesAtOnce(): int

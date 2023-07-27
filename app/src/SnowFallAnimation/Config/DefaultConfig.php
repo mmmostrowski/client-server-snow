@@ -83,7 +83,7 @@ class DefaultConfig implements Config
 
     public function snowProducingGridUpdateEveryNthFrame(): int
     {
-        return 4;
+        return 8;
     }
 
     public function snowProducingTempo(): int
