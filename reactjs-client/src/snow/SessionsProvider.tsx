@@ -176,6 +176,8 @@ function sessionsReducer(sessions: Session[], action: DispatchAction): Session[]
 
        case 'delete-session':
             const deleteSessionAction = action as DispatchDeleteAction;
+            const deletedSession = sessions[deleteSessionAction.sessionIdx];
+            deletedSession.snowController.destroy();
             return [
                ...sessions.slice(0, deleteSessionAction.sessionIdx),
                ...sessions.slice(deleteSessionAction.sessionIdx + 1),

@@ -100,6 +100,15 @@ export class SnowAnimationController {
         this.stopPeriodicChecking();
         this.isDestroyed = true;
         this.turnOff();
+
+        const emptyCallback = function() {};
+        this.onFound = emptyCallback;
+        this.onNotFound = emptyCallback;
+        this.onChecking = emptyCallback;
+        this.onBuffering = emptyCallback;
+        this.onPlaying = emptyCallback;
+        this.onFinish = emptyCallback;
+        this.onError = emptyCallback;
     }
 
     public isRunning(): boolean {
