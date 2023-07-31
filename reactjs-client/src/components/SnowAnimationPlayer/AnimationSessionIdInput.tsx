@@ -1,14 +1,14 @@
 import * as React from "react";
 import {useSession} from '../../snow/SessionsProvider'
-import AnimationDebouncedInput from './AnimationDebouncedInput'
+import DebouncedInput from '../DebouncedInput'
 
 
-interface AnimationSessionIdProps {
+interface Props {
     sessionIdx: number,
     isEditing?: (underEdit: boolean) => void,
 }
 
-export default function AnimationSessionId({ sessionIdx, isEditing } : AnimationSessionIdProps): JSX.Element {
+export default function AnimationSessionIdInput({ sessionIdx, isEditing } : Props): JSX.Element {
     const {
         status, hasError, isStopped,
         sessionId, sessionIdError, hasSessionIdError,
@@ -18,7 +18,7 @@ export default function AnimationSessionId({ sessionIdx, isEditing } : Animation
         || hasError
         || status === "checking";
 
-    return <AnimationDebouncedInput
+    return <DebouncedInput
         sessionIdx={sessionIdx}
         varName="sessionId"
         varValue={sessionId}

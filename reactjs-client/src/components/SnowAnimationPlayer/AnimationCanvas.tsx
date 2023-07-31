@@ -10,14 +10,14 @@ interface Props {
     height: number,
 }
 
-export interface SnowCanvasRefHandler {
+export interface AnimationCanvasRefHandler {
     clearCanvas(): void;
     setCurrentFont(color: string, size: number, face?: string): void;
     drawChar(x: number, y: number, char: string): void;
     drawTextInCenter(text: string): void;
 }
 
-export const SnowCanvas = forwardRef<SnowCanvasRefHandler, Props>(
+export const AnimationCanvas = forwardRef<AnimationCanvasRefHandler, Props>(
     function SnowCanvas({ width, height, canvasWorkspaceColor, canvasColor}, ref )
 {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,7 +51,7 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, Props>(
     }, [ canvasOffsetH, canvasOffsetV, scaleFactor, canvasColor, canvasWorkspaceColor ]);
 
 
-    useImperativeHandle(ref, (): SnowCanvasRefHandler => {
+    useImperativeHandle(ref, (): AnimationCanvasRefHandler => {
         const ctx: CanvasRenderingContext2D = canvasRef.current?.getContext('2d');
 
         return {

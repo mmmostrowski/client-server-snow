@@ -3,7 +3,7 @@ import {forwardRef, useImperativeHandle, useRef} from "react";
 import SnowBackground, {NoSnowBackground} from "../../dto/SnowBackground";
 import SnowDataFrame from "../../dto/SnowDataFrame";
 import SnowBasis, {NoSnowBasis} from "../../dto/SnowBasis";
-import {SnowCanvas, SnowCanvasRefHandler} from "./SnowCanvas";
+import {AnimationCanvas, AnimationCanvasRefHandler} from "./AnimationCanvas";
 import {animationConfig} from "../../config/animation";
 
 
@@ -24,18 +24,18 @@ export interface SnowDrawingRefHandler {
 export const SnowDrawing = forwardRef<SnowDrawingRefHandler, Props>(
     function SnowDrawing({ width, height }, ref )
 {
-    const canvasRef = useRef<SnowCanvasRefHandler>(null);
+    const canvasRef = useRef<AnimationCanvasRefHandler>(null);
     const { canvas : canvasConfig } = animationConfig;
 
     useImperativeHandle(ref, (): SnowDrawingRefHandler => {
         return {
             clear(): void {
-                whenCanvasVisible((canvas: SnowCanvasRefHandler): void => {
+                whenCanvasVisible((canvas: AnimationCanvasRefHandler): void => {
                     canvas.clearCanvas();
                 });
             },
             drawBackground(background: SnowBackground): void {
-                whenCanvasVisible((canvas: SnowCanvasRefHandler): void => {
+                whenCanvasVisible((canvas: AnimationCanvasRefHandler): void => {
                     if (background === NoSnowBackground) {
                         return;
                     }
@@ -57,7 +57,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, Props>(
             },
 
             drawSnow(frame: SnowDataFrame): void {
-                whenCanvasVisible((canvas: SnowCanvasRefHandler): void => {
+                whenCanvasVisible((canvas: AnimationCanvasRefHandler): void => {
                     const { particlesX, particlesY, flakeShapes: flakes, chunkSize } = frame;
                     const font = animationConfig.snowFont;
                     const flakeShapes = animationConfig.flakeShapes;
@@ -70,7 +70,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, Props>(
             },
 
             drawBasis(basis: SnowBasis): void {
-                whenCanvasVisible((canvas: SnowCanvasRefHandler): void => {
+                whenCanvasVisible((canvas: AnimationCanvasRefHandler): void => {
                     if (basis === NoSnowBasis) {
                         return;
                     }
@@ -87,7 +87,7 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, Props>(
             },
 
             drawGoodbye(): void {
-                whenCanvasVisible((canvas: SnowCanvasRefHandler): void => {
+                whenCanvasVisible((canvas: AnimationCanvasRefHandler): void => {
                     const { text, color, font, size } = animationConfig.goodbyeText;
 
                     canvas.clearCanvas();
@@ -98,13 +98,13 @@ export const SnowDrawing = forwardRef<SnowDrawingRefHandler, Props>(
         };
     });
 
-    function whenCanvasVisible(callback: (canvas: SnowCanvasRefHandler) => void) {
+    function whenCanvasVisible(callback: (canvas: AnimationCanvasRefHandler) => void) {
         if (canvasRef.current !== null) {
             callback(canvasRef.current);
         }
     }
 
-    return <SnowCanvas
+    return <AnimationCanvas
         width={width}
         height={height}
         ref={canvasRef}

@@ -12,10 +12,10 @@ import {
 } from '../snow/snowSessionStatus';
 import SnowAnimation from "./SnowAnimationPlayer/SnowAnimation";
 import AnimationCircularStatus from "./SnowAnimationPlayer/AnimationCircularStatus";
-import AnimationSessionId from "./SnowAnimationPlayer/AnimationSessionId";
+import AnimationSessionIdInput from "./SnowAnimationPlayer/AnimationSessionIdInput";
 import AnimationControlButtons from "./SnowAnimationPlayer/AnimationControlButtons";
 import {CannotStartError, CannotStopError, DetailsFromServer} from "../snow/SnowAnimationController";
-import AnimationLinearProgress from "./AnimationLinearProgress";
+import AnimationLinearProgress from "./SnowAnimationPlayer/AnimationLinearProgress";
 import {animationSceneFromBase64, animationSceneToBase64} from "../snow/animationScenes";
 
 
@@ -164,7 +164,7 @@ export default function SnowAnimationPlayer({ sessionIdx } : Props): JSX.Element
         <div className="snow-animation" >
             <div className="animation-header">
                 <AnimationCircularStatus sessionIdx={sessionIdx}/>
-                <AnimationSessionId sessionIdx={sessionIdx} isEditing={(underEdit: boolean) => setIsLocked(underEdit)} />
+                <AnimationSessionIdInput sessionIdx={sessionIdx} isEditing={(underEdit: boolean) => setIsLocked(underEdit)} />
                 <AnimationControlButtons sessionIdx={sessionIdx} handleStart={handleStart} handleStop={handleStop} />
             </div>
             <SnowAnimation checkEveryMs={1300}

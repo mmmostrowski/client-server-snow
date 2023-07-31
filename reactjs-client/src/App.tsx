@@ -3,7 +3,7 @@ import { useState, forwardRef, useEffect, MouseEvent, HTMLProps } from 'react';
 import { useSessions } from './snow/SessionsProvider'
 import { useSessionsManager } from './snow/snowSessionManager'
 import SnowAnimationPlayer from './components/SnowAnimationPlayer'
-import SnowConfiguration from './components/SnowConfiguration'
+import SnowAnimationConfiguration from './components/SnowAnimationConfiguration'
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Tooltip from '@mui/material/Tooltip';
@@ -101,7 +101,7 @@ export default function App({ maxTabs } : AppProps): JSX.Element {
                         <div key={idx} className="snow-session-wrapper" >
                             <div className="snow-configuration-wrapper" >
                                 <Paper elevation={3} sx={{ mt: 1 }} >
-                                    <SnowConfiguration
+                                    <SnowAnimationConfiguration
                                         key={idx}
                                         sessionIdx={idx}
                                      />

@@ -1,7 +1,7 @@
 import LinearProgress from "@mui/material/LinearProgress";
 import * as React from "react";
-import {useDebouncedSession} from "../snow/SessionsProvider";
-import {useRefProbing} from "../utils/useRefProbing";
+import {useDebouncedSession} from "../../snow/SessionsProvider";
+import {useRefProbing} from "../../utils/useRefProbing";
 
 interface Props {
     sessionIdx: number;

@@ -3,7 +3,7 @@ import Container from '@mui/material/Container';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import FormHelperText from '@mui/material/FormHelperText';
-import AnimationDebouncedInput from './SnowAnimationPlayer/AnimationDebouncedInput'
+import DebouncedInput from './DebouncedInput'
 import {
     DispatchActionWithoutSessionIdx,
     useDebouncedSession,
@@ -12,11 +12,11 @@ import {
 } from '../snow/SessionsProvider'
 import {applicationConfig} from "../config/application";
 
-interface SnowConfigurationProps {
+interface Props {
     sessionIdx: number
 }
 
-export default function SnowConfiguration({ sessionIdx } : SnowConfigurationProps): JSX.Element {
+export default function SnowAnimationConfiguration({ sessionIdx } : Props): JSX.Element {
     const {
         isSessionExists,
         width: userWidth,
@@ -166,7 +166,7 @@ function ConfigNumberField(props: ConfigNumberFieldProps): JSX.Element {
     const { sessionIdx, varName, isAvailable, isEditable,
         value, errorMsg, label, helperText } = props;
 
-    return <AnimationDebouncedInput
+    return <DebouncedInput
         sessionIdx={sessionIdx}
         varName={varName}
         varValue={isAvailable ? value : '?'}
