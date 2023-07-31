@@ -27,13 +27,13 @@ function main() {
 
 function installFreshCopyOfNodeModules() {
     if [[ -e /snow/reactjs-client/node_modules/ ]] \
-        && [[ -e /data/snow-node-modules/.package-lock.json ]] \
-        && cmp /snow/reactjs-client/node_modules/.package-lock.json /data/snow-node-modules/.package-lock.json; then
+        && [[ -e /data/snow-node-modules/package-lock.json ]] \
+        && cmp /snow/reactjs-client/node_modules/package-lock.json /data/snow-node-modules/package-lock.json; then
         return 0
     fi
 
-    rm -rf /snow/reactjs-client/node_modules/
-    cp -rf /data/snow-node-modules/ /snow/reactjs-client/node_modules/
+    purgeDirectory /snow/reactjs-client/node_modules/
+    cp -rf /data/snow-node-modules/. /snow/reactjs-client/node_modules/
 }
 
 function installFreshCopyOfNodeBuild() {
@@ -41,14 +41,22 @@ function installFreshCopyOfNodeBuild() {
         return;
     fi
 
-    rm -rf /snow/reactjs-client/build/
-    cp -rf /data/snow-node-build/ /snow/reactjs-client/build/
+    purgeDirectory /snow/reactjs-client/build/
+    cp -rf /data/snow-node-build/. /snow/reactjs-client/build/
 }
 
 function isAskingForDev() {
     local param="${1}"
 
     [[ "${param}" == 'bash' ]] || [[ "${param}" == 'dev' ]]
+}
+
+
+function purgeDirectory() {
+    local dir="${1}"
+    shopt -s dotglob
+    rm -rf "${dir}/"*
+    shopt -u dotglob
 }
 
 main "${@}"

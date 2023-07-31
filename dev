@@ -5,6 +5,22 @@ main() {
     export PHP_SNOW_APP_MODE="develop"
     export UID="$(id -u)"
     export GID="$(id -g)"
+    export SELF_DIR="$(dirname "${0}")"
+
+    mkdir -p "${SELF_DIR}/reactjs-client/node_modules/"
+    export REACTJS_VOLUME1="${SELF_DIR}/reactjs-client/node_modules/"
+
+    mkdir -p "${SELF_DIR}/reactjs-client/build/"
+    export REACTJS_VOLUME2="${SELF_DIR}/reactjs-client/build/"
+
+    mkdir -p "${SELF_DIR}/app/vendor/"
+    export PHP_CLI_VOLUME1="${SELF_DIR}/app/vendor/"
+
+    mkdir -p "${SELF_DIR}/java-proxy/build/"
+    export JAVA_PROXY_VOLUME1="${SELF_DIR}/java-proxy/build/"
+
+    mkdir -p "${SELF_DIR}/java-proxy/.gradle/"
+    export JAVA_PROXY_VOLUME2="${SELF_DIR}/java-proxy/.gradle/"
 
     if [ "${1:-}" = 'docker' ] && [ "${2:-}" = 'compose' ]; then
         shift 2

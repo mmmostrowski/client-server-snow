@@ -18,7 +18,14 @@ services:
       - PHP_SNOW_APP_MODE=${PHP_SNOW_APP_MODE:-production}
       - PORT=8181
     volumes:
-      - "./reactjs-client/:/snow/reactjs-client/"
+      - "./reactjs-client/public/:/snow/reactjs-client/public/"
+      - "./reactjs-client/src/:/snow/reactjs-client/src/"
+      - "./reactjs-client/package.json:/snow/reactjs-client/package.json"
+      - "./reactjs-client/package-lock.json:/snow/reactjs-client/package-lock.json"
+      - "./reactjs-client/tsconfig.json:/snow/reactjs-client/tsconfig.json"
+      - "./reactjs-client/webpack.config.js:/snow/reactjs-client/webpack.config.js"
+      - ${REACTJS_VOLUME1:-snow_reactjs_node_modules}:/snow/reactjs-client/node_modules
+      - ${REACTJS_VOLUME2:-snow_reactjs_build}:/snow/reactjs-client/build
   java-proxy:
     command: "snow-server"
     build:
@@ -37,6 +44,26 @@ services:
       - PHP_SNOW_APP_MODE=${PHP_SNOW_APP_MODE:-production}
       - XDEBUG_SESSION=1
     volumes:
-      - "./app/:/snow/app/"
       - "./.pipes/:/snow/.pipes/"
-      - "./java-proxy/:/snow/java-proxy/"
+      - "./app/assets/:/snow/app/assets/"
+      - "./app/lib/:/snow/app/lib/"
+      - "./app/src/:/snow/app/src/"
+      - "./app/composer.json:/snow/app/composer.json"
+      - "./app/composer.lock:/snow/app/composer.lock"
+      - "./app/snow.php:/snow/app/snow.php"
+      - ${PHP_CLI_VOLUME1:-snow_phpcli_app_vendor}:/snow/app/vendor/
+      - "./java-proxy/gradle/:/snow/java-proxy/gradle/"
+      - "./java-proxy/src/:/snow/java-proxy/src/"
+      - "./java-proxy/application.yaml:/snow/java-proxy/application.yaml"
+      - "./java-proxy/build.gradle:/snow/java-proxy/build.gradle"
+      - "./java-proxy/gradlew:/snow/java-proxy/gradlew"
+      - "./java-proxy/lombok.config:/snow/java-proxy/lombok.config"
+      - "./java-proxy/settings.gradle:/snow/java-proxy/settings.gradle"
+      - ${JAVA_PROXY_VOLUME1:-snow_java_proxy_build}:/snow/java-proxy/build/
+      - ${JAVA_PROXY_VOLUME2:-snow_java_proxy_gradle}:/snow/java-proxy/.gradle/
+volumes:
+  snow_reactjs_node_modules:
+  snow_reactjs_build:
+  snow_phpcli_app_vendor:
+  snow_java_proxy_build:
+  snow_java_proxy_gradle:

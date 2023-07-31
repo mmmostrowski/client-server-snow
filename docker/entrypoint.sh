@@ -34,6 +34,17 @@ function main() {
         return 0
     fi
 
+    if [[ "${1:-}" == "test" ]]; then
+        (
+            mkdir -p "/snow/.pipes/";
+            cd /snow/java-proxy/
+            if [[ ! -e /snow/java-proxy/build/libs/proxy-0.0.1-SNAPSHOT.jar ]] || [[ ! -e  /data/app-gradle-build/ ]]; then
+                gradle test
+            fi
+        )
+        return 0
+    fi
+
     waitUntilTerminalSizeIsAvailable 3s
 
     if [[ "${PHP_SNOW_APP_MODE:-}" != "develop" ]]; then
@@ -47,19 +58,19 @@ function main() {
 }
 
 function installFreshCopyOfVendorFolder() {
-    rm -rf /snow/app/vendor/
-    cp -rf /data/app-vendor/ /snow/app/vendor/
+    purgeDirectory /snow/app/vendor/
+    cp -rf /data/app-vendor/. /snow/app/vendor/
 }
 
 function installFreshCopyOfGradleFolders() {
     if [[ -e /data/app-gradle/ ]]; then
-        rm -rf /snow/java-proxy/.gradle/
-        cp -rf /data/app-gradle/ /snow/java-proxy/.gradle/
+        purgeDirectory /snow/java-proxy/.gradle/
+        cp -rf /data/app-gradle/. /snow/java-proxy/.gradle/
     fi
 
     if [[ -e /data/app-gradle-build/ ]]; then
-        rm -rf /snow/java-proxy/build/
-        cp -rf /data/app-gradle-build/ /snow/java-proxy/build/
+        purgeDirectory /snow/java-proxy/build/
+        cp -rf /data/app-gradle-build/. /snow/java-proxy/build/
     fi
 }
 
@@ -93,6 +104,13 @@ function isAskingForDev() {
     local param="${1}"
 
     [[ "${param}" == 'bash' ]] || [[ "${param}" == 'dev' ]]
+}
+
+function purgeDirectory() {
+    local dir="${1}"
+    shopt -s dotglob
+    rm -rf "${dir}/"*
+    shopt -u dotglob
 }
 
 main "${@}"
