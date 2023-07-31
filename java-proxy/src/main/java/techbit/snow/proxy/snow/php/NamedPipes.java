@@ -27,6 +27,7 @@ public final class NamedPipes {
         }
 
         String problematicFiles = stream(files)
+                .filter(f -> !f.isHidden())
                 .filter(f -> !f.delete())
                 .map(File::toString)
                 .collect(joining(", "));

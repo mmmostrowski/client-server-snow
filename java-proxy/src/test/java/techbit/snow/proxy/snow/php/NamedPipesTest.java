@@ -41,6 +41,19 @@ class NamedPipesTest {
     }
 
     @Test
+    void whenDestroyingAllPipes_thenKeepHiddenFilesInFolderWithPipes() throws IOException {
+        Files.createFile(folder.resolve("normal"));
+        Files.createFile(folder.resolve(".hidden1"));
+        Files.createFile(folder.resolve(".hidden2"));
+
+        namedPipes.destroyAll();
+
+        try (Stream<Path> stream = Files.list(folder)) {
+            assertEquals(2, stream.count());
+        }
+    }
+
+    @Test
     void whenCannotDestroyAnyOfPipes_thenThrowException() throws IOException {
         Files.createFile(folder.resolve("particlesX"));
         Files.createFile(folder.resolve("particlesY"));
