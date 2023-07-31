@@ -85,7 +85,7 @@ export const SnowCanvas = forwardRef<SnowCanvasRefHandler, Props>(
             return ( y + 1 ) * scaleFactor + canvasOffsetV;
         }
 
-    }, [ canvasWidth, canvasHeight, resetView, scaleFactor, canvasOffsetH, canvasOffsetV ]);
+    }, [ canvasWidth, canvasHeight, resetView, scaleFactor, canvasOffsetH, canvasOffsetV, horizontalSqueeze ]);
 
 
     // scale font to canvas size
