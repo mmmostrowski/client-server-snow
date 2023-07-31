@@ -1,6 +1,6 @@
 ## Quick run
 
-1. To quickly run the application, execute the following command in the terminal:
+1. To quickly run the application, go to the project root folder and execute the following command in the terminal:
 ```bash
 docker compose up 
 ```
