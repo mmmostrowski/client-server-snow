@@ -1,6 +1,7 @@
 version: "3.9"
 services:
   reactjs-client:
+    image: mmmostrowski/php-java-react-snow-client
     build:
       context: .
       dockerfile: docker/reactjs-client/Dockerfile
@@ -27,6 +28,7 @@ services:
       - ${REACTJS_VOLUME1:-snow_reactjs_node_modules}:/snow/reactjs-client/node_modules
       - ${REACTJS_VOLUME2:-snow_reactjs_build}:/snow/reactjs-client/build
   java-proxy:
+    image: mmmostrowski/php-java-react-snow-proxy
     command: "snow-server"
     build:
       context: .
