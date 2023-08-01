@@ -1,68 +1,76 @@
-## Quick run ( Linux / MacOs / Windows )
+# PHP Snow Live Stream Toy
+Continuation of [PHP Terminal Snow Toy](https://github.com/mmmostrowski/php-snow) project.<br>
 
-1. To quickly run the application execute the following command in the terminal:
+![screenshot](assets/screenshot.png "Application screenshot")
+
+
+## How it works ?
+The PHP Snow Live Stream Toy works as follows:
+
+1. A single PHP CLI process generates an animation and sends it to a pipe.
+2. A Java Proxy Server receives the animation from the pipe and buffers it.
+3. Multiple React Webapp Clients live-stream the same animation via Websockets and render it. 
+
+![diagram](assets/diagram.png "Application diagram")
+
+
+## Quick run
+To quickly run the application, follow these steps:
+
+1. Open a terminal and execute the following command to start the Client:
 ```bash
 docker run --name php-java-react-snow-client -it --rm -p3000:3000 mmmostrowski/php-java-react-snow-client
 ```
-Note: press Ctrl+C to stop
-2. Open a second new terminal and execute:
+Note: Press Ctrl+C to stop the client.
+2. Open a second terminal and execute the following command to start the Server:
 ```bash
 docker run --name php-java-react-snow-proxy -it --rm -p8080:8080 mmmostrowski/php-java-react-snow-proxy snow-server
 ```
-Note: press Ctrl+C to stop
-3. Visit http://localhost:3000/ in your web browser
+Note: Press Ctrl+C to stop the proxy server.
+3. Once both the client and the proxy server are running, visit http://localhost:3000/ in your web browser.
 
 
-
-
-## Run ( Linux / MacOs / Windows )
-
-1. Clone project and execute the following command in the terminal from cloned folder:
-```bash
-docker compose up 
-```
-3. Visit http://localhost:3000/ in your web browser
-
-
-## Develop in an IDE 
-### ( Linux / MacOs / Windows WSL )
+## Develop in an IDE
+Follow these steps to develop using an IDE:
 
 1. Start the Java Proxy server by running `bootRun` Gradle action in IDE,
 2. To run the Web Client, execute the following command in the terminal:
 ```bash
 ./dev docker compose up --build reactjs-client 
 ```
-3. Launch the PHP CLI by running the following command in the terminal and then follow the further instructions:
+3. To reflect Java Proxy changes, relaunch the `bootRun` Gradle action. <br>
+   Changes made to the Web Client will be automatically reflected in the web browser due to React's hot-reloading feature.
+   PHP changes will be automatically updated during each animation start. <br>
+4. You can launch the PHP CLI by running the following command in the terminal:
 ```bash
 ./dev docker compose run java-proxy bash 
 ```
-4. To reflect Java Proxy changes you need to re-lunch `bootRun` Gradle action.
-   Changes made to the Web Client will be automatically reflected in the web browser due to React's hot-reloading feature.
-5. You can run tests by executing the `test` Gradle action. 
+5. Run tests by executing the test Gradle action. 
 
-Visit http://localhost:8181/ to access the application.
+To access the application during development, visit http://localhost:8181/ in your web browser.
 
 
-## Develop without an IDE 
-### ( Linux / MacOs / Windows WSL )
+## Develop without an IDE
+To develop without an IDE, follow these steps:
 
-1. To develop without an IDE, run the following command in the terminal:
+1. Run the following command in the terminal to start the entire application:
 ```bash
 ./dev docker compose up --build
 ```
-2. Access the application at http://localhost:8181/ in your web browser
-3. Make changes and repeat the process from step 1 as needed
-4. You can run tests by executing the following command in the terminal:
+2. Access the application at http://localhost:8181/ in your web browser.
+3. Make changes and repeat the process from step 1 as needed.
+4. Run tests by executing the following command in the terminal:
 ```bash
 ./dev docker compose run java-proxy test
 ```
 
 
 ## Cleanup
-1. When you are done, use the following command in the terminal to clean up the environment:
+When you are done, use the following command in the terminal to clean up the environment:
 ```bash
 docker compose down -v
 ```
 
 <br>
-Note: Please make sure you have Docker installed and set up on your system before running the commands above.
+Note: Please ensure that you have Docker installed and set up on your system before running the commands above.
+<br>
