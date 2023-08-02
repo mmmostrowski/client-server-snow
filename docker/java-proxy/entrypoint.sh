@@ -16,7 +16,7 @@ function main() {
         echo ''
         echo "To start java-proxy server: java -jar /snow/java-proxy/build/libs/proxy-0.0.1-SNAPSHOT.jar"
         echo "To start java-proxy development: gradle --project-dir /snow/java-proxy bootRun"
-        echo "To test java-proxy: gradle --project-dir /snow/java-proxy clean test"
+        echo "To test java-proxy: gradle --project-dir /snow/java-proxy test"
         echo ''
         bash -l
         return 0
@@ -38,9 +38,7 @@ function main() {
         (
             mkdir -p "/snow/.pipes/";
             cd /snow/java-proxy/
-            if [[ ! -e /snow/java-proxy/build/libs/proxy-0.0.1-SNAPSHOT.jar ]] || [[ ! -e  /data/app-gradle-build/ ]]; then
-                gradle test
-            fi
+            gradle test
         )
         return 0
     fi

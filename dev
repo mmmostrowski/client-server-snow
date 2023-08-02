@@ -22,6 +22,9 @@ main() {
     mkdir -p "${SELF_DIR}/java-proxy/.gradle/"
     export JAVA_PROXY_VOLUME2="${SELF_DIR}/java-proxy/.gradle/"
 
+    mkdir -p "${SELF_DIR}/.pipes/"
+    export JAVA_PROXY_VOLUME3="${SELF_DIR}/.pipes/"
+
     if [ "${1:-}" = 'docker' ] && [ "${2:-}" = 'compose' ]; then
         shift 2
         docker compose "${@}"

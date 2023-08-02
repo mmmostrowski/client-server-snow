@@ -57,14 +57,20 @@ RUN mkdir -p /data/ \
     && chown devbox:devbox -R /data/ \
 ;
 
+
 USER devbox
-RUN composer install \
+
+RUN mkdir -p /snow/.pipes/  \
+    && composer install \
     && cp -rf /snow/app/vendor/ /data/app-vendor/ \
 ;
 
+
 USER root
+
 COPY /java-proxy/ /snow/java-proxy/
-RUN chown devbox:devbox -R /snow/
+RUN chown devbox:devbox -R /snow/ /data/
+
 
 USER devbox
 
@@ -77,6 +83,6 @@ RUN if [[ "${PHP_SNOW_APP_MODE}" == "production" ]]; then \
 
 EXPOSE 8080
 
-COPY /docker/entrypoint.sh /
+COPY /docker/java-proxy/entrypoint.sh /
 ENTRYPOINT [ "bash", "-l", "/entrypoint.sh"  ]
 

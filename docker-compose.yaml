@@ -32,7 +32,7 @@ services:
     command: "snow-server"
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/java-proxy/Dockerfile
       args:
         - UID=${UID:-10000}
         - GID=${GID:-10000}
@@ -46,7 +46,6 @@ services:
       - PHP_SNOW_APP_MODE=${PHP_SNOW_APP_MODE:-production}
       - XDEBUG_SESSION=1
     volumes:
-      - "./.pipes/:/snow/.pipes/"
       - "./app/assets/:/snow/app/assets/"
       - "./app/lib/:/snow/app/lib/"
       - "./app/src/:/snow/app/src/"
@@ -63,9 +62,11 @@ services:
       - "./java-proxy/settings.gradle:/snow/java-proxy/settings.gradle"
       - ${JAVA_PROXY_VOLUME1:-snow_java_proxy_build}:/snow/java-proxy/build/
       - ${JAVA_PROXY_VOLUME2:-snow_java_proxy_gradle}:/snow/java-proxy/.gradle/
+      - ${JAVA_PROXY_VOLUME3:-snow_pipes}:/snow/.pipes/
 volumes:
   snow_reactjs_node_modules:
   snow_reactjs_build:
   snow_phpcli_app_vendor:
   snow_java_proxy_build:
   snow_java_proxy_gradle:
+  snow_pipes:

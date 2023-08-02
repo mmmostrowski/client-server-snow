@@ -11,13 +11,13 @@ To quickly run the application, follow these steps:
 
 1. Open a terminal and execute the following command to start the Client:
 ```shell
-docker run -it --rm -p3000:3000 mmmostrowski/php-java-react-snow-client
+docker run -it --rm -p3000:3000 --pull always mmmostrowski/php-java-react-snow-client
 ```
 Note: Press Ctrl+C to stop the client.
 
 2. Open a second terminal and execute the following command to start the Server:
 ```shell
-docker run -it --rm -p8080:8080 mmmostrowski/php-java-react-snow-proxy snow-server
+docker run -it --rm -p8080:8080 --pull always mmmostrowski/php-java-react-snow-proxy snow-server
 ```
 Note: Press Ctrl+C to stop the proxy server.
 
@@ -87,7 +87,7 @@ To develop without an IDE, follow these steps:
 ```
 5. Run tests by executing the following command in the terminal:
 ```shell
-./dev docker compose run java-proxy test
+docker compose run --build --user devbox:devbox java-proxy test
 ```
 
 
