@@ -12,6 +12,7 @@ import techbit.snow.proxy.dto.SnowBasis;
 import techbit.snow.proxy.dto.SnowDataFrame;
 import techbit.snow.proxy.error.IncompatibleConfigException;
 import techbit.snow.proxy.snow.stream.SnowStream.ConsumerThreadException;
+import techbit.snow.proxy.snow.stream.SnowStream.SnowStreamFinishedEvent;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -158,7 +159,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.stop();
 
-        verify(buffer, atLeastOnce()).destroy();
+        verify(buffer, times(1)).destroy();
     }
 
     @Test
@@ -175,7 +176,7 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.startConsumingSnowData();
         snowStream.stop();
 
-        verify(buffer, atLeastOnce()).destroy();
+        verify(buffer, times(1)).destroy();
     }
 
     @Test
@@ -200,12 +201,12 @@ class SnowStreamTest extends SnowStreamBaseTest {
         snowStream.stop();
         snowStream.waitUntilConsumerThreadFinished();
 
-        verify(eventPublisher).publishEvent(any(SnowStream.SnowStreamFinishedEvent.class));
+        verify(eventPublisher, times(1)).publishEvent(any(SnowStreamFinishedEvent.class));
     }
 
     @Test
     void whenSnowStreamFinishedEventIsEmitted_thenItProvidesSessionId() {
-        SnowStream.SnowStreamFinishedEvent event = snowStream.createSnowStreamFinishedEvent();
+        SnowStreamFinishedEvent event = snowStream.createSnowStreamFinishedEvent();
         assertEquals("session-xyz", event.getSessionId());
     }
 

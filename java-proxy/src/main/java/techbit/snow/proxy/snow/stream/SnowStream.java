@@ -18,6 +18,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -45,11 +46,14 @@ public final class SnowStream {
     private volatile boolean running = false;
     private SnowAnimationMetadata metadata = SnowAnimationMetadata.NONE;
     private SnowBackground background = SnowBackground.NONE;
-    private final int maxWaitForStartPhpCliSec;
+    private final Duration maxWaitForStartPhpCli;
+    private final Duration maxWaitForStop;
 
     public SnowStream(String sessionId, PhpSnowConfig phpSnowConfig,
                       ServerMetadata serverMetadata, NamedPipe pipe, PhpSnowApp phpSnowApp,
-                      SnowDataBuffer buffer, StreamDecoder decoder, int maxWaitForStartPhpCliSec, ApplicationEventPublisher applicationEventPublisher
+                      SnowDataBuffer buffer, StreamDecoder decoder, 
+                      Duration maxWaitForStartPhpCli, Duration maxWaitForStop,
+                      ApplicationEventPublisher applicationEventPublisher
     ) {
         this.sessionId = sessionId;
         this.pipe = pipe;
@@ -59,7 +63,8 @@ public final class SnowStream {
         this.phpSnowConfig = phpSnowConfig;
         this.serverMetadata = serverMetadata;
         this.applicationEventPublisher = applicationEventPublisher;
-        this.maxWaitForStartPhpCliSec = maxWaitForStartPhpCliSec;
+        this.maxWaitForStartPhpCli = maxWaitForStartPhpCli;
+        this.maxWaitForStop = maxWaitForStop;
     }
 
     public boolean isActive() {
@@ -133,8 +138,8 @@ public final class SnowStream {
             consumerException = new ConsumerThreadException(e);
         } finally {
             buffer.destroy();
-            disableConsumerThread();
-            applicationEventPublisher.publishEvent(createSnowStreamFinishedEvent());
+            finishStreaming();
+            consumerGoingDownLock.release(Integer.MAX_VALUE);
         }
     }
 
@@ -184,7 +189,7 @@ public final class SnowStream {
     }
 
     private void waitForInputStream() throws IOException {
-        int counter = maxWaitForStartPhpCliSec * 10;
+        long counter = maxWaitForStartPhpCli.toSeconds() * 10;
         while (pipe.isMissing()) {
             if (--counter <= 0) {
                 throw new IOException("Cannot open pipe!");
@@ -211,9 +216,7 @@ public final class SnowStream {
     }
 
     public void stop() throws IOException, InterruptedException {
-        if (running) {
-            stopConsumerThread();
-        }
+        stopConsumerThread();
         phpSnowApp.stop();
         pipe.destroy();
         destroyed = true;
@@ -233,16 +236,18 @@ public final class SnowStream {
 
     private void stopConsumerThread() throws InterruptedException {
         running = false;
-        if (!consumerGoingDownLock.tryAcquire(2, TimeUnit.SECONDS)) {
+        if (!consumerGoingDownLock.tryAcquire(maxWaitForStop.toMillis() / 2, TimeUnit.MILLISECONDS)) {
             executor.shutdownNow();
-            disableConsumerThread();
-            buffer.destroy();
+            if (!executor.awaitTermination(maxWaitForStop.toMillis() / 2, TimeUnit.MILLISECONDS)) {
+                throw new InterruptedException("Cannot terminate consumer thread");
+            }
+            finishStreaming();
         }
     }
 
-    private void disableConsumerThread() {
+    private void finishStreaming() {
         running = false;
-        consumerGoingDownLock.release(Integer.MAX_VALUE);
+        applicationEventPublisher.publishEvent(createSnowStreamFinishedEvent());
     }
 
     SnowStreamFinishedEvent createSnowStreamFinishedEvent() {

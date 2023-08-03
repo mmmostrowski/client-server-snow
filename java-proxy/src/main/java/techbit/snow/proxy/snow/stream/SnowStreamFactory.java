@@ -31,12 +31,14 @@ public final class SnowStreamFactory {
     private final PhpSnowConfigConverter configProvider;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final int maxWaitForStartPhpCliSec;
+    private final int maxWaitForStopSec;
 
 
     public SnowStreamFactory(
             @Value("${phpsnow.buffer-size-in-milliseconds}") int bufferSize,
             @Value("${phpsnow.bootstrap}") String bootstrapLocation,
             @Value("${phpsnow.max-wait-for-php-cli-in-seconds}") int maxWaitForStartPhpCliSec,
+            @Value("${phpsnow.max-wait-for-stop-in-seconds}") int maxWaitForStopSec,
             ApplicationEventPublisher applicationEventPublisher,
             PhpSnowConfigConverter configProvider,
             String applicationPid,
@@ -45,6 +47,7 @@ public final class SnowStreamFactory {
         this.applicationEventPublisher = applicationEventPublisher;
         this.bufferSize = Duration.ofMillis(bufferSize);
         this.maxWaitForStartPhpCliSec = maxWaitForStartPhpCliSec;
+        this.maxWaitForStopSec = maxWaitForStopSec;
         this.bootstrapLocation = bootstrapLocation;
         this.applicationPid = applicationPid;
         this.configProvider = configProvider;
@@ -62,7 +65,8 @@ public final class SnowStreamFactory {
                 createBinaryStreamDecoder(),
                 serverMetadata,
                 applicationEventPublisher,
-                maxWaitForStartPhpCliSec);
+                maxWaitForStartPhpCliSec,
+                maxWaitForStopSec);
     }
 
     SnowStream createSnowStream(
@@ -71,7 +75,7 @@ public final class SnowStreamFactory {
             BinaryStreamDecoder binaryStreamDecoder,
             ServerMetadata serverMetadata,
             ApplicationEventPublisher applicationEventPublisher,
-            int maxWaitForStartPhpCliSec) {
+            int maxWaitForStartPhpCliSec, int maxWaitForStopSec) {
         return new SnowStream(sessionId,
                 phpSnowConfig,
                 serverMetadata,
@@ -79,7 +83,8 @@ public final class SnowStreamFactory {
                 phpSnowApp,
                 snowDataBuffer,
                 binaryStreamDecoder,
-                maxWaitForStartPhpCliSec,
+                Duration.ofSeconds(maxWaitForStartPhpCliSec),
+                Duration.ofSeconds(maxWaitForStopSec),
                 applicationEventPublisher
         );
     }

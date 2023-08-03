@@ -54,6 +54,7 @@ class SnowStreamFactoryTest {
                 1500,
                 "somewhere",
                 39,
+                2,
                 eventPublisher,
                 configProvider,
                 "131",
@@ -82,7 +83,8 @@ class SnowStreamFactoryTest {
                 eq("session-xyz"), eq(snowConfig), eq("131"), any(ProcessBuilder.class));
         doReturn(snowStream).when(factory).createSnowStream(
                 "session-xyz", snowConfig, namedPipe, phpSnowApp,
-                snowDataBuffer, streamDecoder, serverMetadata, eventPublisher, 39);
+                snowDataBuffer, streamDecoder, serverMetadata, eventPublisher,
+                39, 2);
 
         SnowStream result = factory.create("session-xyz", configMap);
 

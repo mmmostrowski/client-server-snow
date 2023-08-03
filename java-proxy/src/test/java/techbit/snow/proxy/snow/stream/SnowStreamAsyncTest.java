@@ -131,7 +131,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
                 verify(decoder, atLeastOnce()).decodeFrame(any());
                 verify(encoder, atLeastOnce()).encodeFrame(SnowDataFrame.LAST, outputStream);
             }
-        });
+        }, 10, 100);
     }
 
     @Test

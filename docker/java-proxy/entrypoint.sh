@@ -38,7 +38,7 @@ function main() {
         (
             mkdir -p "/snow/.pipes/";
             cd /snow/java-proxy/
-            gradle test
+            gradle "${@}"
         )
         return 0
     fi

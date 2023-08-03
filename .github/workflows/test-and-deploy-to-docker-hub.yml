@@ -3,7 +3,7 @@ name: deploy-to-docker-hub
 on:
   push:
     branches:
-      - 'main'
+      - '*'
 
 jobs:
   docker:
@@ -30,7 +30,7 @@ jobs:
       -
         name: Run tests
         run: docker compose run --user devbox:devbox java-proxy test
-      -
+#      -
 #        name: Generate report
 #        working-directory: java-proxy
 #        run: |

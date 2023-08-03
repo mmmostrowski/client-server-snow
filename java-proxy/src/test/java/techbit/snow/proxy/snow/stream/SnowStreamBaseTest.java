@@ -71,6 +71,8 @@ abstract public class SnowStreamBaseTest {
         lenient().when(pipe.inputStream()).thenReturn(new ByteArrayInputStream(EmptyArray.NO.BYTES));
 
         snowStream = new SnowStream("session-xyz", snowConfig, serverMetadata,
-                pipe, phpSnow, buffer, decoder, 1, eventPublisher);
+                pipe, phpSnow, buffer, decoder,
+                Duration.ofSeconds(1), Duration.ofSeconds(2),
+                eventPublisher);
     }
 }

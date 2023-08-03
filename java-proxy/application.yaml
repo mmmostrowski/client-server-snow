@@ -18,6 +18,7 @@ phpsnow:
     core-pool-size: '6'
   buffer-size-in-milliseconds: '2000'
   max-wait-for-php-cli-in-seconds: 120
+  max-wait-for-stop-in-seconds: 20
   bootstrap: ../php-cli
 logging:
   level:
