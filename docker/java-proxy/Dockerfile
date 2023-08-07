@@ -62,7 +62,8 @@ USER devbox
 
 RUN mkdir -p /snow/.pipes/  \
     && composer install \
-    && cp -rf /snow/app/vendor/ /data/app-vendor/ \
+    && mv /snow/app/vendor/ /data/app-vendor/ \
+    && mkdir -p /snow/app/vendor/ \
 ;
 
 
@@ -76,8 +77,10 @@ USER devbox
 
 RUN if [[ "${PHP_SNOW_APP_MODE}" == "production" ]]; then \
         gradle bootJar --project-dir /snow/java-proxy/ \
-        && cp -rf /snow/java-proxy/.gradle/ /data/app-gradle/ \
-        && cp -rf /snow/java-proxy/build/ /data/app-gradle-build/; \
+        && mv /snow/java-proxy/.gradle/ /data/app-gradle/ \
+        && mv /snow/java-proxy/build/ /data/app-gradle-build/ \
+        && mkdir -p /snow/java-proxy/.gradle/ \
+        && mkdir -p /snow/java-proxy/build/; \
     fi \
 ;
 

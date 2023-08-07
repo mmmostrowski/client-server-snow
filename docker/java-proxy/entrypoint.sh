@@ -27,7 +27,7 @@ function main() {
             mkdir -p "/snow/.pipes/";
             cd /snow/java-proxy/
             if [[ ! -e /snow/java-proxy/build/libs/proxy-0.0.1-SNAPSHOT.jar ]] || [[ ! -e  /data/app-gradle-build/ ]]; then
-                gradle bootJar --project-dir /snow/java-proxy/
+                gradle --no-daemon  bootJar --project-dir /snow/java-proxy/
             fi
             java -jar /snow/java-proxy/build/libs/proxy-0.0.1-SNAPSHOT.jar
         )

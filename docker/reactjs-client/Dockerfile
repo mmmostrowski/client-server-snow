@@ -25,14 +25,15 @@ RUN mkdir -p /data/ \
     && chown node:node -R /data/ \
     && chown node:node -R /snow/ \
     && npm install \
-    && cp -rf /snow/reactjs-client/node_modules/ /data/snow-node-modules/ \
     && if [[ ${PHP_SNOW_APP_MODE} == production ]]; then \
           npm run pack \
           && npm run build \
-          && cp -rf /snow/reactjs-client/build/ /data/snow-node-build/ \
-          && chown node:node -R /data/; \
+          && mv /snow/reactjs-client/build/ /data/snow-node-build/ \
+          && mkdir -p /snow/reactjs-client/build/; \
        fi \
-    && chown node:node -R /snow/ \
+    && mv /snow/reactjs-client/node_modules/ /data/snow-node-modules/ \
+    && mkdir -p /snow/reactjs-client/node_modules/ \
+    && chown node:node -R /snow/ /data/ \
 ;
 
 
