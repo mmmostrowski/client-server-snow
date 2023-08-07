@@ -102,3 +102,12 @@ docker compose down -v
 <br>
 Note: Please ensure that you have Docker installed and set up on your system before running the commands above.
 <br>
+
+
+## Stack
+* TODO1
+* TODO2
+
+Test Coverage:
+* ![Coverage](.github/badges/jacoco.svg)
+* ![Branches](.github/badges/branches.svg)

@@ -17,6 +17,10 @@ jacocoTestReport {
             ])
         }))
     }
+
+    reports {
+        csv.enabled true
+    }
 }
 
 java {
