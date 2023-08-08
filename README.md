@@ -111,4 +111,4 @@ Note: Please ensure that you have Docker installed and set up on your system bef
 Test Coverage:
 * ![Coverage](.github/badges/jacoco.svg)
 * ![Branches](.github/badges/branches.svg)
-* [Report](assets/jacoco-report/index.html)
+* [Report](https://mmmostrowski.github.io/php-java-react-snow/)
