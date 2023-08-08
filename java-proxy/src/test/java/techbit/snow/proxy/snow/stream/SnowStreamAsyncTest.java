@@ -7,6 +7,7 @@ import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import techbit.snow.proxy.dto.SnowDataFrame;
@@ -19,6 +20,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 import static techbit.snow.proxy.snow.stream.TestingFrames.frame;
 
@@ -351,6 +353,28 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
                 snowStream.streamTo(client);
             }
         }, 10, 30);
+    }
+
+    @Test
+    void givenStoppedStream_whenConsumerThreadCannotFinishWorkInTime_thenThrowException() throws IOException, InterruptedException {
+        var ref = new Object() {
+            boolean testing = true;
+        };
+        when(phpSnow.isAlive()).thenReturn(true);
+        SnowStream snowStream = Mockito.spy(this.snowStream);
+        when(snowStream.isActive()).thenReturn(true);
+        when(decoder.decodeFrame(any())).then(f -> {
+            int idle = 0;
+            while(ref.testing) {
+                ++idle;
+            }
+            throw new IllegalStateException("Break the consumer loop");
+        });
+
+        snowStream.startConsumingSnowData();
+        snowStream.waitUntilConsumerThreadStarted();
+        assertThrows(InterruptedException.class, snowStream::stop);
+        ref.testing = false;
     }
 
 }
