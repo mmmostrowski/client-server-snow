@@ -61,6 +61,8 @@ jobs:
         with:
           generate-branches-badge: true
           jacoco-csv-file: java-proxy/build/reports/jacoco/test/jacocoTestReport.csv
+          fail-if-coverage-less-than: 100
+          fail-if-branches-less-than: 100
 
       - name: Move JaCoCo Report to assets
         run: mv java-proxy/build/reports/jacoco/test/html/ assets/jacoco-report/

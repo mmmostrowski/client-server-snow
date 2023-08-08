@@ -36,6 +36,7 @@ public final class SnowStream {
     private final ServerMetadata serverMetadata;
     private final PhpSnowConfig phpSnowConfig;
     private final Semaphore consumerGoingDownLock = new Semaphore(0);
+    private final Semaphore consumerGoingUpLock = new Semaphore(0);
     private final ApplicationEventPublisher applicationEventPublisher;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(
             new ThreadFactoryBuilder().setNameFormat("snow-stream-consumer-thread-%d").build()
@@ -108,6 +109,7 @@ public final class SnowStream {
     }
 
     private void consumePhpSnowInAThread(InputStream stream) {
+        consumerGoingUpLock.release(Integer.MAX_VALUE);
         try (stream) {
             log.debug("consumeSnowFromPipeThread( {} ) | Start pipe", sessionId);
             final DataInputStream dataStream = new DataInputStream(stream);
@@ -206,6 +208,10 @@ public final class SnowStream {
             log.debug("streamTo( {} ) | Consumer Exception", sessionId);
             throw exception;
         }
+    }
+
+    public void waitUntilConsumerThreadStarted() throws InterruptedException {
+        consumerGoingUpLock.acquire();
     }
 
     public void waitUntilConsumerThreadFinished() throws InterruptedException {
