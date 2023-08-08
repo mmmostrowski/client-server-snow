@@ -7,12 +7,19 @@ on:
 
 jobs:
   job:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
+      id-token: write
     steps:
       - name: Git Checkout
         uses: actions/checkout@v2
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
 
       #      - name: Set up Docker QEMU
       #        uses: docker/setup-qemu-action@v1
@@ -64,8 +71,11 @@ jobs:
           default_author: github_actions
           message: 'Commit Jacoco Test Coverage Report'
           add: 'assets/jacoco-report/'
-      - name: Upload JaCoCo coverage report
-        uses: actions/upload-artifact@v2
+      - name: Upload JaCoCo Report
+        uses: actions/upload-pages-artifact@v2
         with:
           name: jacoco-report
           path: assets/jacoco-report/
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
