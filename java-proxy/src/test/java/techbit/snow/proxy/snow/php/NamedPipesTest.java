@@ -29,7 +29,6 @@ class NamedPipesTest {
 
     @Test
     void whenDestroyingAllPipes_thenFolderWithPipesMustBePurged() throws IOException {
-        Assertions.fail();
         Files.createFile(folder.resolve("particlesX"));
         Files.createFile(folder.resolve("particlesY"));
         Files.createFile(folder.resolve("z"));
