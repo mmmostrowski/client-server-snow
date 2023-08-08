@@ -18,58 +18,66 @@ jobs:
     steps:
       - name: Git Checkout
         uses: actions/checkout@v2
+
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
-      #      - name: Set up Docker QEMU
-      #        uses: docker/setup-qemu-action@v1
-      #
-      #      - name: Set up Docker Build
-      #        uses: docker/setup-buildx-action@v1
-      #
-      #      - name: Login to DockerHub
-      #        uses: docker/login-action@v1
-      #        with:
-      #          username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      #      -
-      #        name: Docker build
-      #        run: docker compose build --no-cache
+      - name: Set up Docker QEMU
+        uses: docker/setup-qemu-action@v1
 
-      #      - name: Run tests
-      #        run: docker compose run --user devbox:devbox java-proxy test
+      - name: Set up Docker Build
+        uses: docker/setup-buildx-action@v1
 
-      #      - name: Docker push
-      #        run: docker compose push
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker build
+        run: docker compose build --no-cache
+
+      - name: Run tests
+        run: docker compose run --user devbox:devbox java-proxy test
+
+      - name: Docker push
+        run: docker compose push
 
       - uses: actions/setup-java@v3
         with:
           distribution: zulu
           java-version: 17
+
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+
       - name: Generate JaCoCo Report
         working-directory: java-proxy
         run: |
           ./gradlew jacocoTestReport
+
       - name: Generate JaCoCo Badge
         uses: cicirello/jacoco-badge-generator@v2
         with:
           generate-branches-badge: true
           jacoco-csv-file: java-proxy/build/reports/jacoco/test/jacocoTestReport.csv
+
       - name: Move JaCoCo Report to assets
         run: mv java-proxy/build/reports/jacoco/test/html/ assets/jacoco-report/
+
       - name: Commit the Badge
         uses: EndBug/add-and-commit@v7
         with:
           default_author: github_actions
           message: 'Commit JaCoCo Test Coverage Badge'
           add: '*.svg'
+
       - name: Upload JaCoCo Report Artifact
         uses: actions/upload-pages-artifact@v2
         with:
           name: jacoco-report
           path: assets/jacoco-report/
+
       - name: Deploy JaCoCo Report to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
