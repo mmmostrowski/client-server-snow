@@ -1,3 +1,5 @@
+![Coverage](.github/badges/jacoco.svg) ![Branches](.github/badges/branches.svg) ( [Report](https://mmmostrowski.github.io/php-java-react-snow/) )
+
 # PHP Snow Live Stream Toy
 This project is a continuation of the [PHP Terminal Snow Toy](https://github.com/mmmostrowski/php-snow) project.<br>
 
@@ -47,6 +49,11 @@ The PHP Snow Live Stream Toy works as follows:
 ```shell
 docker compose up
 ```
+3. To access the application, visit http://localhost:3000/ in your web browser.
+4. When you are done, use the following command in the terminal to clean up the environment:
+```bash
+docker compose down -v
+```
 
 <br>
 
@@ -65,9 +72,12 @@ Follow these steps to develop using an IDE:
 ```shell
 ./dev docker compose run java-proxy bash 
 ```
-5. Run tests by executing the `test` Gradle action. 
-
-To access the application during development, visit http://localhost:8181/ in your web browser.
+5. Run tests by executing the `test` Gradle action.
+6. To access the application during development, visit http://localhost:8181/ in your web browser.
+7. When you are done, use the following command in the terminal to clean up the environment:
+```bash
+docker compose down -v
+```
 
 
 <br>
@@ -89,26 +99,29 @@ To develop without an IDE, follow these steps:
 ```shell
 docker compose run --build --user devbox:devbox java-proxy test
 ```
-
-
-<br>
-
-## Cleanup
-When you are done, use the following command in the terminal to clean up the environment:
+6. When you are done, use the following command in the terminal to clean up the environment:
 ```bash
 docker compose down -v
 ```
 
-<br>
-Note: Please ensure that you have Docker installed and set up on your system before running the commands above.
-<br>
 
+## Tech Stack
+* Backend
+  - Java 
+  - Spring Boot
+  - Junit
+  - Mockito
+  - MultithreadedTC
+  - Gradle
+  - Lombok
+  - Guava
+  - Apache Commons IO
+  - PHP 8
+* Frontend
+  - Java Script
+  - TypeScript
+  - React.js 
+* Docker
+* WebSocket
+* STOMP
 
-## Stack
-* TODO1
-* TODO2
-
-Test Coverage:
-* ![Coverage](.github/badges/jacoco.svg)
-* ![Branches](.github/badges/branches.svg)
-* [Report](https://mmmostrowski.github.io/php-java-react-snow/)
