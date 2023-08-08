@@ -24,7 +24,7 @@ docker run -it --rm -p8080:8080 --pull always mmmostrowski/php-java-react-snow-p
 Note: Press Ctrl+C to stop the proxy server.
 
 3. Once both the client and the proxy server are running, visit http://localhost:3000/ on multiple web browser tabs.
-   
+
 
 
 <br>
@@ -40,6 +40,8 @@ The PHP Snow Live Stream Toy works as follows:
   <img src="assets/diagram.png" alt="Application Diagram"/>
 </p>
 
+
+
 <br>
 
 ## Running the Project
@@ -54,6 +56,7 @@ docker compose up
 ```bash
 docker compose down -v
 ```
+
 
 <br>
 
@@ -104,6 +107,8 @@ docker compose run --build --user devbox:devbox java-proxy test
 docker compose down -v
 ```
 
+
+<br>
 
 ## Tech Stack
 * Backend
