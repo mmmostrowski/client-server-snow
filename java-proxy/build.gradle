@@ -19,7 +19,7 @@ jacocoTestReport {
     }
 
     reports {
-        csv.enabled true
+        csv.required = true
     }
 }
 
