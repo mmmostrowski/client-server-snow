@@ -125,7 +125,8 @@ docker compose down -v
 * Frontend
   - Java Script
   - TypeScript
-  - React.js 
+  - React.js
+  - Material UI
 * Docker
 * WebSocket
 * STOMP
