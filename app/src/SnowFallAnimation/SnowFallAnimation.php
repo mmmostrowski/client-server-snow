@@ -3,41 +3,27 @@
 namespace TechBit\Snow\SnowFallAnimation;
 
 use TechBit\Snow\SnowFallAnimation\Config\Config;
-use TechBit\Snow\SnowFallAnimation\Config\StartupConfig;
 use TechBit\Snow\SnowFallAnimation\Frame\IFramePainter;
 use TechBit\Snow\SnowFallAnimation\Object\AnimationObjects;
 use TechBit\Snow\App\IAnimation;
-use TechBit\Snow\Console\IConsole;
-use TechBit\Snow\Console\InvalidConsoleSizeException;
 
 
 final class SnowFallAnimation implements IAnimation
 {
 
-    private IConsole $console;
     private IFramePainter $painter;
 
     public function __construct(
         private readonly AnimationContext $context,
         private readonly AnimationObjects $objects,
         private readonly Config $config,
-        private readonly StartupConfig $startupConfig,
     )
     {
-        $this->console = $this->context->console();
         $this->painter = $this->context->painter();
     }
     
-    /**
-     * @throws InvalidConsoleSizeException
-     */
     public function initialize(): void
     {
-        $this->console->ensureConsoleValidSize(
-            $this->startupConfig->minRequiredConsoleWidth(),
-            $this->startupConfig->minRequiredConsoleHeight(),
-        );
-
         foreach ($this->objects->allConfigurableObjects() as $object) {
             $object->onConfigChange($this->config);
         }        

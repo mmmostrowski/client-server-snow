@@ -141,7 +141,9 @@ public final class ProxyService implements ApplicationListener<SnowStreamFinishe
     @Override
     @SneakyThrows
     public void onApplicationEvent(SnowStreamFinishedEvent event) {
-        stopSession(event.getSessionId());
+        if (session.exists(event.getSessionId())) {
+            stopSession(event.getSessionId());
+        }
     }
 
     private Object sessionLock(String sessionId) {

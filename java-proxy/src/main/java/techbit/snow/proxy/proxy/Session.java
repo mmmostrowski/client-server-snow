@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 public final class Session {
 
     private final Pattern sessionIdValidator = Pattern.compile("^[a-z0-9-]+$");
-    private final Set<String> sessions = Sets.newHashSet();
+    private final Set<String> sessions = Sets.newConcurrentHashSet();
 
 
     public void create(String sessionId) {

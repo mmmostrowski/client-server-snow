@@ -10,29 +10,18 @@ class Console implements IConsole
 
     protected float $rows = 0.0;
 
-    private int $refreshingCounter = 0;
-
 
     public function __construct()
     {
         $this->refreshConsoleSize();
+        $this->initialize();
+    }
+
+    protected function initialize(): void
+    {
         register_shutdown_function(function () {
             echo "\033[?25h";
         });
-    }
-
-    /**
-     * @throws InvalidConsoleSizeException
-     */
-    public function ensureConsoleValidSize(int $minWidth, int $minHeight): void
-    {
-        $width = $this->width();
-        $height = $this->height();
-
-        // if ($width < $minWidth || $height < $minHeight) {
-        //     throw new InvalidConsoleSizeException("Console size must be at least {$minWidth}x{$minHeight}!\n" .
-        //         "Current console size is {$width}x{$height}.\n\nPlease make your terminal window larger!");
-        // }
     }
 
     public function refreshConsoleSize(): void
@@ -44,11 +33,6 @@ class Console implements IConsole
     public function switchToColor(ConsoleColor $color): void
     {
         echo $color->terminalCode();
-    }
-
-    public function resetColor(): void
-    {
-        echo ConsoleColor::RESET->terminalCode();
     }
 
     public function width(): float
@@ -116,7 +100,7 @@ class Console implements IConsole
 
         # move cursor
         echo "\033[?25l";
-        echo "\033[{$y};{$x}H";
+        echo "\033[$y;{$x}H";
 
         # print
         echo $txt;

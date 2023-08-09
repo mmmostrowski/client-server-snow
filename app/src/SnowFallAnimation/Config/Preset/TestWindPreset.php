@@ -13,7 +13,6 @@ final class TestWindPreset extends DefaultConfig
         return false;
     }
 
-
     public function windBlowsMaxStrength(): int
     {
         return parent::windBlowsMaxStrength() * 3;
@@ -23,11 +22,6 @@ final class TestWindPreset extends DefaultConfig
     {
         return parent::windBlowsMinStrength() * 3;
     }
-
-//    public function fps()
-//    {
-//        return 100000;
-//    }
 
     // public function snowProbabilityOfProducingFromTop(): int
     // {

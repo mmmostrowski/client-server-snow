@@ -2,7 +2,9 @@
 
 namespace TechBit\Snow\App\Exception;
 
-abstract class AppException extends \Exception
+use Exception;
+
+abstract class AppException extends Exception
 {
 
 }

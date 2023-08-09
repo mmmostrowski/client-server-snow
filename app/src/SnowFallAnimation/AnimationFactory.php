@@ -98,7 +98,6 @@ final class AnimationFactory implements IAnimationFactory
                 $this->console, $this->renderer,
                 $wind,
                 $this->flakeShapes,
-                $config,
                 $startupConfig,
                 $this->snowBasis,
                 new SnowParticles(),
@@ -110,7 +109,6 @@ final class AnimationFactory implements IAnimationFactory
                 $config,
             ]),
             $config,
-            $startupConfig,
         );
     }
 

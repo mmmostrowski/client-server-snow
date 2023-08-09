@@ -2,6 +2,7 @@
 
 namespace TechBit\Snow\SnowFallAnimation\Config\PresetSlider;
 
+use InvalidArgumentException;
 use TechBit\Snow\Math\Interpolation\Interpolation;
 use TechBit\Snow\Math\WeightedRandom;
 use TechBit\Snow\SnowFallAnimation\AnimationContext;
@@ -32,7 +33,7 @@ final class ConfigPresetSlider implements Config, IAnimationAliveObject
 		private readonly Interpolation $interpolation,
 	) {
 		if (empty($this->presets)) {
-			throw new \InvalidArgumentException("Slider must have at least one preset provided!");
+			throw new InvalidArgumentException("Slider must have at least one preset provided!");
 		}
 		$this->targetPreset = $this->randomNextPreset(false);
 		$this->startNextPreset();

@@ -2,6 +2,7 @@
 
 namespace TechBit\Snow\Server;
 
+use Exception;
 use TechBit\Snow\SnowFallAnimation\AnimationContext;
 use TechBit\Snow\SnowFallAnimation\Config\StartupConfig;
 use TechBit\Snow\SnowFallAnimation\Frame\IFramePainter;
@@ -16,9 +17,12 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
 
     private readonly SnowParticles $particles;
 
-    private int $frameCounter = 0;
-
+    /**
+     * @var resource
+     */
     private $pipe;
+
+    private int $frameCounter = 0;
 
     private array $particlesBuffer = [];
 
@@ -32,7 +36,7 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
 
     public function __construct(
         private readonly string $sessionId,
-        private readonly string $pipesDir,        
+        private readonly string $pipesDir,
         private readonly StartupConfig $startupConfig,
         private readonly int $canvasWidth,
         private readonly int $canvasHeight,
@@ -43,24 +47,27 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function initialize(AnimationContext $context): void
     {
         $this->particles = $context->snowParticles();
 
-        $pipeFile = $this->pipesDir . "/" . $this->sessionId;        
+        $pipeFile = $this->pipesDir . "/" . $this->sessionId;
 
         if (file_exists($pipeFile) && !unlink($pipeFile)) {
-            throw new \Exception("Cannot delete: {$pipeFile}");
+            throw new Exception("Cannot delete: $pipeFile");
         }
 
         if (!posix_mkfifo($pipeFile, 0777)) {
-            throw new \Exception("Cannot create a named pipe: {$pipeFile}");
+            throw new Exception("Cannot create a named pipe: $pipeFile");
         }
 
         if (!$this->debugToScreen) {
             $this->pipe = fopen($pipeFile, "w");
 
-            stream_set_blocking($this->pipe, true); 
+            stream_set_blocking($this->pipe, true);
 
             fwrite($this->pipe, "hello-php-snow");
         }
@@ -68,53 +75,53 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
 
     public function startAnimation(): void
     {
-        $this->fwriteData('NNN', 
+        $this->writeData('NNN',
             $this->canvasWidth,
             $this->canvasHeight,
             $this->startupConfig->targetFps(),
         );
     }
 
-	public function startFirstFrame(): void 
+    public function startFirstFrame(): void
     {
         $this->backgroundPixels = [];
-	}
-	
-	public function endFirstFrame(): void 
+    }
+
+    public function endFirstFrame(): void
     {
         // background
         if (!$this->backgroundPixels) {
-            $this->fwriteData('C', 0);
+            $this->writeData('C', 0);
             return;
-        }        
-        $this->fwriteData('C', 1);
-        $this->fwriteData('N', $this->canvasWidth);
-        $this->fwriteData('N', $this->canvasHeight);
+        }
+        $this->writeData('C', 1);
+        $this->writeData('N', $this->canvasWidth);
+        $this->writeData('N', $this->canvasHeight);
         for ($y = 0; $y < $this->canvasHeight; ++$y) {
             for ($x = 0; $x < $this->canvasWidth; ++$x) {
-                $this->fwriteData('C', $this->backgroundPixels[$x][$y] ?? 0);
+                $this->writeData('C', $this->backgroundPixels[$x][$y] ?? 0);
             }
         }
         $this->backgroundPixels = [];
-	}
+    }
 
-	public function startFrame(): void 
+    public function startFrame(): void
     {
         $this->particlesBuffer = [];
         $this->basisPixels = [];
         $this->basisPixelsCount = 0;
-	}
+    }
 
     public function renderParticle(int $idx): void
     {
         $x = $this->particles->x($idx);
         if ($x < 0 || $x >= $this->canvasWidth) {
-            return;            
+            return;
         }
 
         $y = $this->particles->y($idx);
         if ($y < 0  || $y >= $this->canvasHeight) {
-            return;            
+            return;
         }
 
         $this->particlesBuffer[] = [
@@ -133,44 +140,44 @@ final class StreamFramePainter implements IFramePainter, IAnimationObject
         $this->backgroundPixels[(int)$x][(int)$y] = ord($char);
     }
 
-	public function eraseParticle(int $idx): void 
+    public function eraseParticle(int $idx): void
     {
-	}
+    }
 
     public function endFrame(): void
-    {                
+    {
         // frame num
-        $this->fwriteData('NN', 
-            ++$this->frameCounter, 
+        $this->writeData('NN',
+            ++$this->frameCounter,
             count($this->particlesBuffer),
         );
-        
+
         // particles
         foreach($this->particlesBuffer as $particle) {
-            $this->fwriteData('GGC', 
-                $particle[0], // X 
+            $this->writeData('GGC',
+                $particle[0], // X
                 $particle[1], // Y
-                $particle[2], // c
+                $particle[2]  // c
             );
         }
 
         // basis
-        $this->fwriteData('N', $this->basisPixelsCount);
+        $this->writeData('N', $this->basisPixelsCount);
         foreach($this->basisPixels as $x => $colum) {
             foreach($colum as $y => $pixel) {
-                $this->fwriteData('NNC', $x, $y, $pixel);
+                $this->writeData('NNC', $x, $y, $pixel);
             }
         }
     }
 
-	public function stopAnimation(): void 
+    public function stopAnimation(): void
     {
-        $this->fwriteData('N', 0xffffffff);
+        $this->writeData('N', 0xffffffff);
     }
 
-    private function fwriteData(string $code, mixed... $args) 
+    private function writeData(string $code, mixed... $args): void
     {
-        if ($this->debugToScreen) {            
+        if ($this->debugToScreen) {
             var_dump($args);
             return;
         }

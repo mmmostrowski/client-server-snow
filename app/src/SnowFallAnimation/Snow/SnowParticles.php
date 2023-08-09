@@ -71,10 +71,6 @@ final class SnowParticles
     {
         return $this->particles[$idx][self::SHAPE];
     }
-    public function shapeIdx(int $idx): string
-    {
-        return $this->particles[$idx][self::SHAPE];
-    }
 
     public function moveByX(int $idx, float $dx): void
     {

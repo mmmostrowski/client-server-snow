@@ -7,7 +7,6 @@ use TechBit\Snow\App\Exception\AppUserException;
 use TechBit\Snow\Server\MockConsole;
 use TechBit\Snow\Server\StreamFramePainter;
 use TechBit\Snow\SnowFallAnimation\AnimationFactory;
-use TechBit\Snow\SnowFallAnimation\Config\StartupConfig;
 use TechBit\Snow\SnowFallAnimation\Config\StartupConfigFactory;
 use TechBit\Snow\SnowFallAnimation\Snow\SnowFlakeShape;
 use Throwable;
@@ -15,9 +14,9 @@ use Throwable;
 final class Bootstrap
 {
 
-    public static function createArguments(array $argv, string $projectRootDir, bool $isDeveloperMode, array $additional): AppArguments
+    public static function createArguments(array $argv, bool $isDeveloperMode, array $additional): AppArguments
     {
-        return (new AppArgumentsFactory())->create($argv, $projectRootDir, $isDeveloperMode, $additional);
+        return (new AppArgumentsFactory())->create($argv, $isDeveloperMode, $additional);
     }
 
     public static function createApp(AppArguments $appArguments): IApp
@@ -26,11 +25,6 @@ final class Bootstrap
             $startupConfig = (new StartupConfigFactory())->create($appArguments);
             $flakeShapes = new SnowFlakeShape();
             return new App(new AnimationFactory(
-                console: new MockConsole(
-                    $appArguments->serverCanvasWidth(), 
-                    $appArguments->serverCanvasHeight(),
-                ),
-                startupConfig : $startupConfig,
                 renderer : new StreamFramePainter(
                     $appArguments->serverSessionId(),
                     $appArguments->serverPipesDir(),
@@ -40,6 +34,11 @@ final class Bootstrap
                     $flakeShapes
                 ),
                 flakeShapes : $flakeShapes,
+                console: new MockConsole(
+                    $appArguments->serverCanvasWidth(),
+                    $appArguments->serverCanvasHeight(),
+                ),
+                startupConfig : $startupConfig,
             ));
         }
         return new App();

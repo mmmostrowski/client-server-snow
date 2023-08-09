@@ -29,10 +29,4 @@ interface IConsole
 
     public function switchToColor(ConsoleColor $color): void;
 
-    public function resetColor(): void;
-
-    /**
-     * @throws InvalidConsoleSizeException
-     */
-    public function ensureConsoleValidSize(int $minWidth, int $minHeight): void;
 }
