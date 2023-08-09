@@ -34,7 +34,7 @@ function main() (
 
 function dockerSnowApp() {
     docker build \
-        --file "docker/Dockerfile" \
+        --file "docker/java-proxy/Dockerfile" \
         --build-arg="UID=$(id -u)" \
         --build-arg="GID=$(id -g)" \
         --build-arg="PHP_SNOW_APP_MODE" \

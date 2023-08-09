@@ -11,7 +11,6 @@ final class AppArguments
      * @param string[]|class-string<IWind>[]|null $windForces
      */
     public function __construct(
-        private readonly string $projectRootDir,
         private readonly bool $isDeveloperMode,
         private readonly ?array $windForces,
         private readonly string $presetName,
@@ -24,11 +23,6 @@ final class AppArguments
         private readonly String $serverPipesDir, 
     )
     {
-    }
-
-    public function projectRootDir(): string
-    {
-        return realpath($this->projectRootDir);
     }
 
     public function targetFps(): int

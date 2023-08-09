@@ -12,7 +12,6 @@ import static org.springframework.beans.factory.config.ConfigurableBeanFactory.S
 
 @Component
 @Scope(SCOPE_PROTOTYPE)
-@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 public final class BlockingBag<K, V> {
 
     private final Map<K, V> map = Maps.newConcurrentMap();

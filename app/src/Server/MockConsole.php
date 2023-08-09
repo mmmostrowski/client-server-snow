@@ -10,11 +10,12 @@ final class MockConsole extends Console
 
     public function __construct(int $cols, int $rows)
     {
+        parent::__construct();
         $this->cols = $cols;
         $this->rows = $rows;
     }
 
-    public function ensureConsoleValidSize(int $minWidth, int $minHeight): void
+    protected function initialize(): void
     {
     }
 

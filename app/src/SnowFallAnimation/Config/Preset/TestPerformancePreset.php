@@ -13,11 +13,6 @@ final class TestPerformancePreset extends DefaultConfig
         return true;
     }
 
-    public function targetFps(): int
-    {
-        return 10000;
-    }
-
     public function snowProducingTempo(): int
     {
         return parent::snowProducingTempo() * 150;

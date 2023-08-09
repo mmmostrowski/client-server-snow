@@ -2,7 +2,9 @@
 
 namespace TechBit\Snow\App;
 
-final class AppLog 
+use Exception;
+
+final class AppLog
 {
     private static bool $firstTime = true;
 
@@ -14,8 +16,8 @@ final class AppLog
         }
 
         try{
-            throw new \Exception("Give me stack trace");
-        } catch (\Exception $e) {
+            throw new Exception("Give me stack trace");
+        } catch (Exception $e) {
             $class = $e->getTrace()[1]['class'];
             $method = $e->getTrace()[1]['function'];
 

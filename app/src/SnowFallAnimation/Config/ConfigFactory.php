@@ -2,6 +2,7 @@
 
 namespace TechBit\Snow\SnowFallAnimation\Config;
 
+use InvalidArgumentException;
 use TechBit\Snow\Math\WeightedRandom;
 use TechBit\Snow\SnowFallAnimation\Config\PresetSlider\IConfigPresetSliderFactory;
 
@@ -59,7 +60,7 @@ final class ConfigFactory implements IConfigFactory
 
         $unknownPresets = array_filter($presetClasses, fn($class) => !class_exists($class));
         if ($unknownPresets) {
-            throw new \InvalidArgumentException("Unknown presets:\n" . implode("\n - ", [null, ...$unknownPresets] ) . "\n\n");
+            throw new InvalidArgumentException("Unknown presets:\n" . implode("\n - ", [null, ...$unknownPresets] ) . "\n\n");
         }
 
         return $this->configPresetSliderFactory->create(array_map(fn() => 10, array_flip($presetClasses)));

@@ -2,7 +2,6 @@
 
 namespace TechBit\Snow\SnowFallAnimation;
 
-use TechBit\Snow\SnowFallAnimation\Config\Config;
 use TechBit\Snow\SnowFallAnimation\Config\StartupConfig;
 use TechBit\Snow\SnowFallAnimation\Frame\IFramePainter;
 use TechBit\Snow\SnowFallAnimation\Snow\ISnowFlakeShape;
@@ -19,7 +18,6 @@ final class AnimationContext
         private readonly IFramePainter $painter,
         private readonly IWind $wind,
         private readonly ISnowFlakeShape $snowFlakeShape,
-        private readonly Config $config,
         private readonly StartupConfig $startupConfig,
         private readonly SnowBasis $snowBasis,
         private readonly SnowParticles $snowParticles,

@@ -2,10 +2,12 @@
 
 namespace TechBit\Snow\App;
 
+use InvalidArgumentException;
+
 final class AppArgumentsFactory
 {
 
-    public function create(array $argv, string $projectRootDir, bool $isDeveloperMode, array $additional): AppArguments
+    public function create(array $argv, bool $isDeveloperMode, array $additional): AppArguments
     {
         array_shift($argv);
 
@@ -26,14 +28,14 @@ final class AppArgumentsFactory
             $animationDurationSec = (int)$this->read($argv);
 
             if (!$serverSessionId || $targetFps <= 0 || $animationDurationSec <= 0 || $serverCanvasWidth <= 0 || $serverCanvasHeight <= 0) {
-                throw new \InvalidArgumentException("Invalid parameters. Expected: snow server [sessionid] [width] [height] [fps] [duration]");
+                throw new InvalidArgumentException("Invalid parameters. Expected: snow server [sessionid] [width] [height] [fps] [duration]");
             }
         }
         $customScene = $this->isResource($argv) ? $this->readResource($argv) : null;
         $presetName = $this->read($argv);
         $windForces = getenv('WIND') === false ? null : explode(',', getenv('WIND'));
 
-        return new AppArguments($projectRootDir, $isDeveloperMode,
+        return new AppArguments($isDeveloperMode,
             $windForces, $presetName, $customScene,
             $targetFps, $animationDurationSec,
             $serverSessionId, $serverCanvasWidth, $serverCanvasHeight, 

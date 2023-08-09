@@ -7,14 +7,14 @@ final class WeightedRandom {
 
     private readonly array $items;
 
-    private int $totalWeight = 0;
+    private readonly int $totalWeight;
 
     public function __construct(array $itemsWeightMap) { 
         $this->items = $itemsWeightMap;
         $this->totalWeight = array_sum($itemsWeightMap);
     }
 
-    public function next(): mixed
+    public function next(): string|int
     {
         $random = rand(0, $this->totalWeight);
         

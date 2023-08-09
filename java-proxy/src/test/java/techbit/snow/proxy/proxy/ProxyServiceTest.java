@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import techbit.snow.proxy.config.PhpSnowConfig;
@@ -202,7 +203,7 @@ class ProxyServiceTest {
     }
 
     @Test
-    void whenSnowStreamFinishEventOccurs_thenStopSession() throws IOException, InterruptedException {
+    void givenSession_whenSnowStreamFinishEventOccurs_thenStopSession() throws IOException, InterruptedException {
         when(session.exists("session-abc")).thenReturn(true);
         when(streamFinishedEvent.getSessionId()).thenReturn("session-abc");
         when(streams.get("session-abc")).thenReturn(snowStream);
@@ -210,6 +211,16 @@ class ProxyServiceTest {
         proxyServiceSpyStreams.onApplicationEvent(streamFinishedEvent);
 
         verify(snowStream).stop();
+    }
+
+    @Test
+    void givenNoSession_whenSnowStreamFinishEventOccurs_thenStopSession() throws IOException, InterruptedException {
+        when(session.exists("session-abc")).thenReturn(false);
+        when(streamFinishedEvent.getSessionId()).thenReturn("session-abc");
+
+        proxyServiceSpyStreams.onApplicationEvent(streamFinishedEvent);
+
+        verify(snowStream, never()).stop();
     }
 
     @Test

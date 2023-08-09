@@ -5,7 +5,7 @@ use TechBit\Snow\App\Bootstrap;
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/lib/Perlin.php';
 
-$arguments = Bootstrap::createArguments($argv, __DIR__,
+$arguments = Bootstrap::createArguments($argv,
     isDeveloperMode: getenv("PHP_SNOW_APP_MODE") === 'develop',
     additional: ['pipesDir' => __DIR__ . '/../.pipes' ]
 );
