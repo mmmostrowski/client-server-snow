@@ -5,12 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import techbit.snow.proxy.config.PhpSnowConfig;
 import techbit.snow.proxy.config.PhpSnowConfigConverter;
-import techbit.snow.proxy.error.InvalidSessionException;
 import techbit.snow.proxy.snow.stream.SnowStream;
 import techbit.snow.proxy.snow.stream.SnowStream.ConsumerThreadException;
 import techbit.snow.proxy.snow.stream.SnowStreamClient;
@@ -19,7 +17,6 @@ import techbit.snow.proxy.snow.transcoding.StreamEncoder;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -101,7 +98,7 @@ class ProxyServiceTest {
 
     @Test
     void givenCustomClient_whenStream_thenStreamToANewStream() throws IOException, InterruptedException, ConsumerThreadException {
-        when(snowFactory.create(eq("session-abc"), eq(Collections.emptyMap()))).thenReturn(snowStream);
+        when(snowFactory.create(eq("session-abc"), eq(Map.of()))).thenReturn(snowStream);
 
         proxyService.streamSessionTo("session-abc", snowDataClient);
 
@@ -109,6 +106,16 @@ class ProxyServiceTest {
         verify(snowStream).startPhpApp();
         verify(snowStream).startConsumingSnowData();
         verify(snowStream).streamTo(snowDataClient);
+    }
+
+    @Test
+    void givenIssuesWithStartingStream_whenStream_thenStreamIsStopped() throws IOException, InterruptedException, ConsumerThreadException {
+        when(session.exists("session-abc")).thenReturn(false, true);
+        when(snowFactory.create("session-abc", configMap)).thenReturn(snowStream);
+        doThrow(IOException.class).when(snowStream).startPhpApp();
+
+        assertThrows(Exception.class, () -> proxyService.startSession("session-abc", configMap));
+        verify(snowStream, times(1)).stop();
     }
 
     @Test
@@ -185,7 +192,7 @@ class ProxyServiceTest {
 
     @Test
     void givenValidSession_whenAskingForDetails_thenProvideThemFromProxyService() {
-        Map<String, Object> expected = Collections.emptyMap();
+        Map<String, Object> expected = Map.of();
         when(session.exists("session-abc")).thenReturn(true);
         when(streams.get("session-abc")).thenReturn(snowStream);
         when(snowStream.config()).thenReturn(config);
@@ -197,9 +204,18 @@ class ProxyServiceTest {
     }
 
     @Test
-    void givenInvalidSession_whenAskingForDetails_thenThrowException() {
-        assertThrows(InvalidSessionException.class,
-                () -> proxyService.sessionDetails("session-abc"));
+    void givenStreamMeanwhileRemoved_whenAskingForDetails_thenProvideEmptyResponse() {
+        when(session.exists("session-abc")).thenReturn(true);
+        Map<String, Object> details = proxyServiceSpyStreams.sessionDetails("session-abc");
+
+        assertEquals(Map.of(), details);
+    }
+
+    @Test
+    void givenInvalidSession_whenAskingForDetails_thenEmptyResponse() {
+        Map<String, Object> response = proxyService.sessionDetails("unknown-session");
+
+        assertEquals(Map.of(), response);
     }
 
     @Test
@@ -254,7 +270,7 @@ class ProxyServiceTest {
         when(streams.get("session-abc")).thenReturn(snowStream);
         PhpSnowConfig snowSetup = mock(PhpSnowConfig.class);
 
-        proxyServiceSpyStreams.streamSessionTo("session-abc", out, streamEncoder, Collections.emptyMap());
+        proxyServiceSpyStreams.streamSessionTo("session-abc", out, streamEncoder, Map.of());
 
         verify(snowStream, never()).ensureCompatibleWithConfig("session-abc", snowSetup);
     }

@@ -191,7 +191,7 @@ export class SnowAnimationController {
             if (!this.checkingEnabled || response === AbortedEndpointResponse) {
                 return;
             }
-            if (response.running) {
+            if (response.exists) {
                 this.onFound(response, periodicCheck);
             } else {
                 if (!this.isLastFrameInBuffer
@@ -245,6 +245,10 @@ export class SnowAnimationController {
 
         if (this.isLastFrame(snowFrame)) {
             this.isLastFrameInBuffer = true;
+        } else if (snowFrame.isEndOfStream) {
+            this.turnOff();
+            this.onFinish();
+            return;
         }
 
         if (this.isBufferOverflowed()) {
@@ -329,7 +333,10 @@ export class SnowAnimationController {
         if (this.streamHandler) {
             throw Error("Please stopStream() first!");
         }
-        this.streamHandler = startSnowDataStream(startResponse, onData);
+        this.streamHandler = startSnowDataStream(startResponse, onData, () => {
+            this.turnOff();
+            this.onFinish();
+        });
     }
 
     private stopStream(): void {

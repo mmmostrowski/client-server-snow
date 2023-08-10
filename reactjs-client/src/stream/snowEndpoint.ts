@@ -117,19 +117,29 @@ export type SnowClientHandler = number;
 const stompClients = new Map<SnowClientHandler, Client>();
 let stompClientsCounter = 0;
 
-export function startSnowDataStream(startResponse: StartEndpointResponse, handleMessage: (data: DataView) => void): SnowClientHandler {
+export function startSnowDataStream(
+    startResponse: StartEndpointResponse,
+    onMessage: (data: DataView) => void,
+    onDisconnect: () => void): SnowClientHandler
+{
     const stompClient = new Client({
         brokerURL: startResponse.streamWebsocketsStompBrokerUrl,
         onConnect: (frame: IFrame) => {
             const userId = frame.headers['user-name'];
 
             stompClient.subscribe('/user/' + userId + '/stream/',
-                (message: IMessage) => handleMessage(new DataView(message.binaryBody.buffer)));
+                (message: IMessage) => onMessage(new DataView(message.binaryBody.buffer)));
 
             stompClient.publish({
                 destination: startResponse.streamWebsocketsUrl,
             });
         },
+        onWebSocketClose:() => {
+            onDisconnect();
+        },
+        onDisconnect: (frame: IFrame) => {
+            onDisconnect();
+        }
     });
 
     stompClient.activate();

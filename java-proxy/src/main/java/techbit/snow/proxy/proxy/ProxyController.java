@@ -14,7 +14,6 @@ import techbit.snow.proxy.snow.stream.SnowStream;
 import techbit.snow.proxy.snow.transcoding.PlainTextStreamEncoder;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -41,8 +40,7 @@ public class ProxyController {
     @GetMapping("/start/{sessionId}/{*configuration}")
     public Map<String, Object> startSession(
             @PathVariable String sessionId,
-            @PathVariable String configuration, HttpServletRequest request) throws IOException
-    {
+            @PathVariable String configuration, HttpServletRequest request) throws IOException, InterruptedException {
         log.debug("startSession( {}, {} )", sessionId, configuration.isBlank() ? "<default-config>" : configuration);
 
         streaming.startSession(sessionId, toConfMap(configuration));
@@ -91,9 +89,7 @@ public class ProxyController {
     public Map<String, Object> streamDetails(@PathVariable String sessionId, HttpServletRequest request) {
         log.debug("streamDetails( {} )", sessionId);
 
-        Map<String, Object> map = streaming.hasSession(sessionId)
-                ? Maps.newHashMap(streaming.sessionDetails(sessionId))
-                : Maps.newHashMap();
+        Map<String, Object> map = Maps.newHashMap(streaming.sessionDetails(sessionId));
 
         map.putAll(Map.of(
                 "status", true,
@@ -110,7 +106,7 @@ public class ProxyController {
 
     private Map<String, String> toConfMap(String configuration) {
         if (configuration.isBlank() || configuration.equals("/")) {
-            return Collections.emptyMap();
+            return Map.of();
         }
 
         final String[] elements = configuration.substring(1).split("/");
