@@ -14,7 +14,6 @@ import techbit.snow.proxy.snow.transcoding.PlainTextStreamEncoder;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -57,15 +56,15 @@ class ProxyControllerTest {
     }
 
     @Test
-    void givenNoCustomConfiguration_whenStartSession_thenStreamWithEmptyConfigMap() throws IOException {
+    void givenNoCustomConfiguration_whenStartSession_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException {
         Map<?, ?> details = controller.startSession("session-abc", "", request);
 
-        verify(streaming).startSession("session-abc", Collections.emptyMap());
+        verify(streaming).startSession("session-abc", Map.of());
         assertFalse(details.isEmpty());
     }
 
     @Test
-    void givenNoCustomConfiguration_whenStartSession_thenProvideDetails() throws IOException {
+    void givenNoCustomConfiguration_whenStartSession_thenProvideDetails() throws IOException, InterruptedException {
         when(streaming.hasSession("session-abc")).thenReturn(true);
         when(streaming.isSessionRunning("session-abc")).thenReturn(true);
 
@@ -77,7 +76,7 @@ class ProxyControllerTest {
     }
 
     @Test
-    void givenCustomConfiguration_whenStartSession_thenStartSessionWithCustomParams() throws IOException {
+    void givenCustomConfiguration_whenStartSession_thenStartSessionWithCustomParams() throws IOException, InterruptedException {
         when(streaming.hasSession("session-abc")).thenReturn(true);
         when(streaming.isSessionRunning("session-abc")).thenReturn(true);
 
@@ -105,7 +104,7 @@ class ProxyControllerTest {
     void givenNoCustomConfiguration_whenStreamTextToClient_thenStreamWithEmptyConfigMap() throws IOException, InterruptedException, ExecutionException, ConsumerThreadException {
         controller.streamTextToClient("session-abc", "").get().writeTo(out);
 
-        verify(streaming).streamSessionTo("session-abc", out, textStreamEncoder, Collections.emptyMap());
+        verify(streaming).streamSessionTo("session-abc", out, textStreamEncoder, Map.of());
     }
 
     @Test
@@ -165,7 +164,7 @@ class ProxyControllerTest {
     @Test
     void whenClientAbortDuringStreaming_thenNoErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
         doThrow(ClientAbortException.class).when(streaming).streamSessionTo(
-                "session-abc", out, textStreamEncoder, Collections.emptyMap());
+                "session-abc", out, textStreamEncoder, Map.of());
 
         assertDoesNotThrow(() -> controller.streamTextToClient("session-abc", "").get().writeTo(out));
     }
@@ -173,7 +172,7 @@ class ProxyControllerTest {
     @Test
     void whenThreadInterruptedDuringStreaming_thenErrorOccurs() throws IOException, InterruptedException, ConsumerThreadException {
         doThrow(InterruptedException.class).when(streaming).streamSessionTo(
-                "session-abc", out, textStreamEncoder, Collections.emptyMap());
+                "session-abc", out, textStreamEncoder, Map.of());
 
         assertThrows(IOException.class, () -> controller.streamTextToClient("session-abc", "").get().writeTo(out));
     }

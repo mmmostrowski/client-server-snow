@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
 import techbit.snow.proxy.config.PhpSnowConfigConverter;
-import techbit.snow.proxy.error.InvalidSessionException;
 import techbit.snow.proxy.snow.stream.SnowStream;
 import techbit.snow.proxy.snow.stream.SnowStream.ConsumerThreadException;
 import techbit.snow.proxy.snow.stream.SnowStream.SnowStreamFinishedEvent;
@@ -18,7 +17,6 @@ import techbit.snow.proxy.snow.transcoding.StreamEncoder;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.Map;
 
 @Log4j2
@@ -37,10 +35,10 @@ public final class ProxyService implements ApplicationListener<SnowStreamFinishe
             SnowStreamFactory snowStreamProvider,
             PhpSnowConfigConverter configConverter
     ) {
-        this(session, snowStreamProvider, configConverter, Maps.newHashMap());
+        this(session, snowStreamProvider, configConverter, Maps.newConcurrentMap());
     }
 
-    public ProxyService(
+    ProxyService(
             Session session,
             SnowStreamFactory snowStreamProvider,
             PhpSnowConfigConverter configConverter,
@@ -52,7 +50,7 @@ public final class ProxyService implements ApplicationListener<SnowStreamFinishe
         this.streams = streams;
     }
 
-    public void startSession(String sessionId, Map<String, String> config) throws IOException {
+    public void startSession(String sessionId, Map<String, String> config) throws IOException, InterruptedException {
         snowStream(sessionId, config);
     }
 
@@ -65,7 +63,7 @@ public final class ProxyService implements ApplicationListener<SnowStreamFinishe
     public void streamSessionTo(String sessionId, SnowStreamClient client)
             throws IOException, InterruptedException, ConsumerThreadException
     {
-        snowStream(sessionId, Collections.emptyMap()).streamTo(client);
+        snowStream(sessionId, Map.of()).streamTo(client);
     }
 
     public void stopSession(String sessionId) throws IOException, InterruptedException {
@@ -82,16 +80,17 @@ public final class ProxyService implements ApplicationListener<SnowStreamFinishe
     }
 
     public Map<String, Object> sessionDetails(String sessionId) {
-        synchronized (sessionLock(sessionId)) {
-            if (!session.exists(sessionId)) {
-                throw new InvalidSessionException("Unknown snow streaming session:" + sessionId);
-            }
-            final SnowStream stream = streams.get(sessionId);
-            return configConverter.toMap(stream.config());
+        if (!session.exists(sessionId)) {
+            return Map.of();
         }
+        final SnowStream stream = streams.get(sessionId);
+        if (stream == null) {
+            return Map.of();
+        }
+        return configConverter.toMap(stream.config());
     }
 
-    private SnowStream snowStream(String sessionId, Map<String, String> config) throws IOException {
+    private SnowStream snowStream(String sessionId, Map<String, String> config) throws IOException, InterruptedException {
         synchronized (sessionLock(sessionId)) {
             if (session.exists(sessionId)) {
                 return existingStream(sessionId, config);
@@ -110,32 +109,33 @@ public final class ProxyService implements ApplicationListener<SnowStreamFinishe
         return stream;
     }
 
-    private SnowStream createStream(String sessionId, Map<String, String> config) throws IOException {
+    private SnowStream createStream(String sessionId, Map<String, String> config) throws IOException, InterruptedException {
         log.debug("snowStream( {} ) | Creating new stream | {}", sessionId, config);
         SnowStream stream = snowStreamProvider.create(sessionId, config);
-        stream.startPhpApp();
-        stream.startConsumingSnowData();
         streams.put(sessionId, stream);
         session.create(sessionId);
-        return stream;
+        try {
+            stream.startPhpApp();
+            stream.startConsumingSnowData();
+            return stream;
+        } catch (Exception e) {
+            stopSession(sessionId);
+            throw e;
+        }
     }
 
-    private synchronized void removeStream(String sessionId) {
+    private void removeStream(String sessionId) {
         log.debug("stopStream( {} ) | Removing stream", sessionId);
         session.delete(sessionId);
         streams.remove(sessionId);
     }
 
     public boolean hasSession(String sessionId) {
-        synchronized (sessionLock(sessionId)) {
-            return session.exists(sessionId);
-        }
+        return session.exists(sessionId);
     }
 
     public boolean isSessionRunning(String sessionId) {
-        synchronized (sessionLock(sessionId)) {
-            return session.exists(sessionId) && streams.get(sessionId).isActive();
-        }
+        return session.exists(sessionId) && streams.get(sessionId).isActive();
     }
 
     @Override

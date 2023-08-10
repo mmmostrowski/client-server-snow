@@ -11,7 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,7 +38,7 @@ class PhpSnowConfigConverterTest {
 
     @Test
     void givenEmptyConfigMap_whenConvertFromMap_thenReturnsConfigObjectWithDefaults() {
-        PhpSnowConfig config = converter.fromMap(Collections.emptyMap());
+        PhpSnowConfig config = converter.fromMap(Map.of());
 
         assertEquals(Duration.ofMinutes(3), config.duration());
         assertEquals("somePreset", config.presetName());
