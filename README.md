@@ -1,6 +1,6 @@
 ![Coverage](.github/badges/jacoco.svg) ![Branches](.github/badges/branches.svg) ( [Report](https://mmmostrowski.github.io/php-java-react-snow/) )
 
-# PHP Snow Live Stream Toy
+# Snow Live Stream Toy
 This project is a continuation of the [PHP Terminal Snow Toy](https://github.com/mmmostrowski/php-snow) project.<br>
 
 <p align="center">
