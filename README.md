@@ -30,7 +30,7 @@ Note: Press Ctrl+C to stop the proxy server.
 <br>
 
 ## How it works ?
-The PHP Snow Live Stream Toy works as follows:
+The Snow Live Stream Toy works as follows:
 
 1. A single PHP CLI process generates an animation and sends it to a pipe.
 2. A Java Proxy Server receives the animation from the pipe and buffers it.
