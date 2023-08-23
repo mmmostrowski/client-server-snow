@@ -137,7 +137,7 @@ export function startSnowDataStream(
         onWebSocketClose:() => {
             onDisconnect();
         },
-        onDisconnect: (frame: IFrame) => {
+        onDisconnect: () => {
             onDisconnect();
         }
     });
