@@ -16,7 +16,7 @@ import java.time.Duration;
 public record PhpSnowConfig(
 
         @Nonnull
-        @Size(min = 1, message = "Invalid preset name!")
+        @Size(min = 1, max = 30, message = "Invalid preset name!")
         String presetName,
 
         @Nullable

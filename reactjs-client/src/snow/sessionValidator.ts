@@ -4,6 +4,10 @@ export function validateSessionId(sessionId : string): string|null {
         return "Cannot be empty";
     }
 
+    if (sessionId.length > 30) {
+        return "Cannot be more than 30 characters long"
+    }
+
     if (sessionId.match(/[A-Z]/)) {
         return "Allowed only lowercase characters"
     }
