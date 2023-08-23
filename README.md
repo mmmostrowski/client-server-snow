@@ -1,6 +1,6 @@
 ![Coverage](.github/badges/jacoco.svg) ![Branches](.github/badges/branches.svg) ( [Report](https://mmmostrowski.github.io/php-java-react-snow/) )
 
-# PHP Snow Live Stream Toy
+# Snow Live Stream Toy
 This project is a continuation of the [PHP Terminal Snow Toy](https://github.com/mmmostrowski/php-snow) project.<br>
 
 <p align="center">
@@ -30,7 +30,7 @@ Note: Press Ctrl+C to stop the proxy server.
 <br>
 
 ## How it works ?
-The PHP Snow Live Stream Toy works as follows:
+The Snow Live Stream Toy works as follows:
 
 1. A single PHP CLI process generates an animation and sends it to a pipe.
 2. A Java Proxy Server receives the animation from the pipe and buffers it.
