@@ -37,6 +37,9 @@ jobs:
       - name: Docker build
         run: docker compose build --no-cache
 
+      - name: Prepare tests
+        run: mkdir -p /snow-java-proxy-reports/ && chmod 777 /snow-java-proxy-reports/
+
       - name: Run tests
         run: docker compose run --user devbox:devbox --volume /snow-java-proxy-reports/:/snow/java-proxy/build/reports/ java-proxy test
 
