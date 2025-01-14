@@ -38,17 +38,17 @@ jobs:
         run: docker compose build --no-cache
 
       - name: Prepare tests
-        run: mkdir -p ~/snow-java-proxy-reports/ && chmod 777 ~/snow-java-proxy-reports/
+        run: mkdir -p ~/snow-java-proxy-build/ && chmod 777 ~/snow-java-proxy-build/
 
       - name: Run tests
-        run: docker compose run --user devbox:devbox --volume ~/snow-java-proxy-reports/:/snow/java-proxy/build/reports/ java-proxy test
+        run: docker compose run --user devbox:devbox --volume ~/snow-java-proxy-build/:/snow/java-proxy/build/ java-proxy test
 
       - name: Upload Unit Test Report Artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-execution-report
-          path: ~/snow-java-proxy-reports/
+          path: ~/snow-java-proxy-build/
 
       - name: Docker push
         run: docker compose push
