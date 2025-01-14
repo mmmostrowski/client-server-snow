@@ -46,12 +46,12 @@ services:
       - PHP_SNOW_APP_MODE=${PHP_SNOW_APP_MODE:-production}
       - XDEBUG_SESSION=1
     volumes:
-      - "./app/assets/:/snow/app/assets/"
-      - "./app/lib/:/snow/app/lib/"
-      - "./app/src/:/snow/app/src/"
-      - "./app/composer.json:/snow/app/composer.json"
-      - "./app/composer.lock:/snow/app/composer.lock"
-      - "./app/snow.php:/snow/app/snow.php"
+      - "./php-snow-app/assets/:/snow/app/assets/"
+      - "./php-snow-app/lib/:/snow/app/lib/"
+      - "./php-snow-app/src/:/snow/app/src/"
+      - "./php-snow-app/composer.json:/snow/app/composer.json"
+      - "./php-snow-app/composer.lock:/snow/app/composer.lock"
+      - "./php-snow-app/snow.php:/snow/app/snow.php"
       - ${PHP_CLI_VOLUME1:-snow_phpcli_app_vendor}:/snow/app/vendor/
       - "./java-proxy/gradle/:/snow/java-proxy/gradle/"
       - "./java-proxy/src/:/snow/java-proxy/src/"

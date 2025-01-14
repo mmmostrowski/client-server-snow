@@ -19,7 +19,7 @@ phpsnow:
   buffer-size-in-milliseconds: '2000'
   max-wait-for-php-cli-in-seconds: 120
   max-wait-for-stop-in-seconds: 20
-  bootstrap: ../php-cli
+  bootstrap: ../php-snow-app-cli
 logging:
   level:
     techbit:

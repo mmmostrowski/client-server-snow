@@ -13,8 +13,8 @@ main() {
     mkdir -p "${SELF_DIR}/reactjs-client/build/"
     export REACTJS_VOLUME2="${SELF_DIR}/reactjs-client/build/"
 
-    mkdir -p "${SELF_DIR}/app/vendor/"
-    export PHP_CLI_VOLUME1="${SELF_DIR}/app/vendor/"
+    mkdir -p "${SELF_DIR}/php-snow-app/vendor/"
+    export PHP_CLI_VOLUME1="${SELF_DIR}/php-snow-app/vendor/"
 
     mkdir -p "${SELF_DIR}/java-proxy/build/"
     export JAVA_PROXY_VOLUME1="${SELF_DIR}/java-proxy/build/"

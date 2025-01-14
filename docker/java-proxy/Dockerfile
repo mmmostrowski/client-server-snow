@@ -21,8 +21,8 @@ RUN addgroup -S devbox -g ${GID} \
     && ( \
       echo '#!/usr/bin/env bash'; \
       echo '( cd /snow/app/; php snow.php "${@}" )'; \
-    ) > /snow/php-cli \
-    && chmod a+x /snow/php-cli \
+    ) > /snow/php-snow-app-cli \
+    && chmod a+x /snow/php-snow-app-cli \
 ;
 
 
@@ -47,10 +47,10 @@ RUN if [[ "${PHP_SNOW_APP_MODE}" == "develop" ]]; then \
 
 
 COPY --from=composer:2.2.7 /usr/bin/composer /usr/local/bin/composer
-COPY /app/composer.json /snow/app/
-COPY /app/lib/ /snow/app/lib/
-COPY /app/snow.php /snow/app/snow.php
-COPY /app/src/ /snow/app/src/
+COPY /php-snow-app/composer.json /snow/app/
+COPY /php-snow-app/lib/ /snow/app/lib/
+COPY /php-snow-app/snow.php /snow/app/snow.php
+COPY /php-snow-app/src/ /snow/app/src/
 
 RUN mkdir -p /data/ \
     && chown devbox:devbox -R /snow/ \
