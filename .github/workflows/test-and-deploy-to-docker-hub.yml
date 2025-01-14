@@ -38,14 +38,14 @@ jobs:
         run: docker compose build --no-cache
 
       - name: Run tests
-        run: docker compose run --user devbox:devbox --volume /snow/java-proxy/build/reports/:/snow/java-proxy/build/reports/ java-proxy test
+        run: docker compose run --user devbox:devbox --volume /snow-java-proxy-reports/:/snow/java-proxy/build/reports/ java-proxy test
 
       - name: Upload Unit Test Report Artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-execution-report
-          path: /snow/java-proxy/build/reports/
+          path: /snow-java-proxy-reports/
 
       - name: Docker push
         run: docker compose push
