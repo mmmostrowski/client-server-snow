@@ -352,7 +352,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
                 snowStream.streamTo(client);
             }
-        }, 10, 30);
+        }, 100, 100);
     }
 
     @Test
