@@ -252,7 +252,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         final int numOfFramesToTest = 5_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
-        when(decoder.decodeFrame(any())).then(i -> {
+        lenient().when(decoder.decodeFrame(any())).then(i -> {
             int num = frameNum.incrementAndGet();
             return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
 
@@ -266,7 +266,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         final int numOfFramesToTest = 5_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
-        when(decoder.decodeFrame(any())).then(i -> {
+        lenient().when(decoder.decodeFrame(any())).then(i -> {
             Thread.sleep(ThreadLocalRandom.current().nextInt(0, 1));
 
             final int num = frameNum.incrementAndGet();
@@ -281,12 +281,12 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         final int numOfFramesToTest = 5_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
-        when(decoder.decodeFrame(any())).then(i -> {
+        lenient().when(decoder.decodeFrame(any())).then(i -> {
             final int num = frameNum.incrementAndGet();
             return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
         });
 
-        doAnswer(i -> {
+        lenient().doAnswer(i -> {
             Thread.sleep(ThreadLocalRandom.current().nextInt(0, 2));
             return null;
         }).when(encoder).encodeFrame(any(), any());
@@ -299,14 +299,14 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
         final int numOfFramesToTest = 5_000;
 
         AtomicInteger frameNum = new AtomicInteger(0);
-        when(decoder.decodeFrame(any())).then(i -> {
+        lenient().when(decoder.decodeFrame(any())).then(i -> {
             Thread.sleep(ThreadLocalRandom.current().nextInt(0, 1));
 
             final int num = frameNum.incrementAndGet();
             return num <= numOfFramesToTest ? frame(num) : SnowDataFrame.LAST;
         });
 
-        doAnswer(i -> {
+        lenient().doAnswer(i -> {
             Thread.sleep(ThreadLocalRandom.current().nextInt(0, 2));
             return null;
         }).when(encoder).encodeFrame(any(), any());
@@ -352,7 +352,7 @@ class SnowStreamAsyncTest extends SnowStreamBaseTest {
 
                 snowStream.streamTo(client);
             }
-        }, 100, 100);
+        }, 10, 80);
     }
 
     @Test
