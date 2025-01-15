@@ -64,7 +64,7 @@ jobs:
       - name: Generate JaCoCo Report
         working-directory: java-proxy
         run: |
-          ./gradlew jacocoTestReport
+          ./gradlew jacocoTestReport  --debug --stacktrace
 
       - name: Generate JaCoCo Badge
         uses: cicirello/jacoco-badge-generator@v2
