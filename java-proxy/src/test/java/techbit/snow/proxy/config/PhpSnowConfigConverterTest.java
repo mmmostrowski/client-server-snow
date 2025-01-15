@@ -83,31 +83,10 @@ class PhpSnowConfigConverterTest {
     }
 
     @Test
-    void givenInvalidFps_whenConvertFromMap_thenThrowException() {
+    void givenInvalidConfig_whenConvertFromMap_thenThrowException() {
         when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> converter.fromMap(Map.of("fps", "0")));
-        assertThrows(ConstraintViolationException.class, () -> converter.fromMap(Map.of("fps", "-1")));
-    }
 
-    @Test
-    void givenInvalidWidth_whenConvertFromMap_thenThrowException() {
-        when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> converter.fromMap(Map.of("width", "0")));
-        assertThrows(ConstraintViolationException.class, () -> converter.fromMap(Map.of("width", "-1")));
-    }
-
-    @Test
-    void givenInvalidHeight_whenConvertFromMap_thenThrowException() {
-        when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> converter.fromMap(Map.of("height", "0")));
-        assertThrows(ConstraintViolationException.class, () -> converter.fromMap(Map.of("height", "-1")));
-    }
-
-    @Test
-    void givenInvalidDuration_whenConvertFromMap_thenThrowException() {
-        when(validator.validate(any(PhpSnowConfig.class))).thenReturn(Set.of(issue));
-        assertThrows(ConstraintViolationException.class, () -> converter.fromMap(Map.of("duration", "0")));
-        assertThrows(ConstraintViolationException.class, () -> converter.fromMap(Map.of("duration", "-1")));
+        assertThrows(ConstraintViolationException.class, () -> converter.fromMap(Map.of("presetName", "!invalid!")));
     }
 
     @Test
